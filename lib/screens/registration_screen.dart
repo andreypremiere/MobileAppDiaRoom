@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:go_router/go_router.dart';
+import 'package:dia_room/api/user_api.dart';
 import 'package:http/http.dart' as http;
 
 class Registration extends StatefulWidget {
@@ -25,44 +26,19 @@ class _RegistrationState extends State<Registration> {
     super.dispose();
   }
 
-  Future<void> _sendRegistrationData() async {
-    // 1. Укажи адрес своего сервера (если используешь adb reverse, то localhost)
-    final url = Uri.parse('http://192.168.0.101:8081/newUser');
+  void _handleRegistration() async {
+    final String? userId = await requestRegistration(
+        _phoneController.text,
+        _roomIdController.text,
+        _roomNameController.text);
 
-    try {
-      // 2. Формируем тело запроса
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'numberPhone': _phoneController.text,
-          'roomId': _roomIdController.text,
-          'roomName': _roomNameController.text,
-        }),
-      );
-
-      // 3. Проверяем ответ сервера
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        final Map<String, dynamic> body = jsonDecode(response.body);
-        final String userId = body['id'];
-        if (mounted) {
-          context.push('/verifyCode', extra: userId);
-        }
+    if (userId != null) {
+      if (mounted) {
+        context.push('/verifyCode', extra: userId.toString());
       } else {
-        print("Ошибка сервера: ${response.statusCode}");
-        // Тут можно показать пользователю SnackBar с ошибкой
+        print("mounted is not true");
       }
-    } catch (e) {
-      print("Ошибка сети: $e");
     }
-  }
-
-  void _handleRegistration() {
-    print("Телефон: ${_phoneController.text}");
-    print("ID комнаты: ${_roomIdController.text}");
-    print("Имя комнаты: ${_roomNameController.text}");
-
-    _sendRegistrationData();
   }
 
   @override

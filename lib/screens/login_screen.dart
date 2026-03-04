@@ -1,8 +1,34 @@
+import 'package:dia_room/api/user_api.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-class Login extends StatelessWidget {
+class Login extends StatefulWidget {
   const Login({super.key});
+
+  @override
+  State<Login> createState() {
+    return _LoginState();
+  }
+}
+
+class _LoginState extends State<Login> {
+  final TextEditingController _valueController = TextEditingController();
+
+  @override
+  void dispose() {
+    _valueController.dispose();
+    super.dispose();
+  }
+
+  void _handleLogin() async {
+    String? userId = await requestLogin(_valueController.text);
+
+    if (userId != null) {
+      if (mounted) {
+        context.push('/verifyCode', extra: userId.toString());
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,14 +58,15 @@ class Login extends StatelessWidget {
                       style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.white,
                           elevation: 0,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10))
                       ),
                       child: const Text('Регистрация',
                         style: TextStyle(
                             fontFamily: 'SNPro',
                             fontWeight: FontWeight.w500,
                             fontSize: 16,
-                          color: Colors.black
+                            color: Colors.black
                         ),),
                     )
                 ),
@@ -54,7 +81,8 @@ class Login extends StatelessWidget {
                             color: Colors.black.withAlpha(10),
                             blurRadius: 18,
                             offset: const Offset(0, 0)
-                        )]
+                        )
+                        ]
                     ),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
@@ -69,6 +97,7 @@ class Login extends StatelessWidget {
 
                         const SizedBox(height: 10,),
                         TextField(
+                          controller: _valueController,
                           decoration: InputDecoration(
                             hintText: "user_id или номер телефона",
                             filled: true,
@@ -77,14 +106,15 @@ class Login extends StatelessWidget {
                               borderRadius: BorderRadius.circular(8),
                               borderSide: BorderSide.none,
                             ),
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                            contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 8),
                           ),
                           cursorColor: const Color(0xFF000000),
                         ),
                         const SizedBox(height: 10),
                         ElevatedButton(
                           onPressed: () {
-                            context.push('/verifyCode', extra: null);
+                            _handleLogin();
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF990000),
@@ -107,3 +137,4 @@ class Login extends StatelessWidget {
     );
   }
 }
+

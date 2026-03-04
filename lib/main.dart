@@ -38,7 +38,7 @@ final _router = GoRouter(
     GoRoute(
       path: '/verifyCode',
       builder: (context, state) {
-        final id = state.extra as String?;
+        final id = state.extra as String;
 
         return VerifyCode(userId: id);
       },

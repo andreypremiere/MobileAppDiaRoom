@@ -1,12 +1,14 @@
+import 'package:dia_room/api/user_api.dart';
+import 'package:dia_room/models/user.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 
 class VerifyCode extends StatefulWidget {
-  final String? userId;
+  final String userId;
 
-  const VerifyCode({super.key, this.userId});
+  const VerifyCode({super.key, required this.userId});
 
   @override
   State<VerifyCode> createState() {
@@ -15,6 +17,26 @@ class VerifyCode extends StatefulWidget {
 }
 
 class _VerifyCodeState extends State<VerifyCode> {
+  final TextEditingController _codeController = TextEditingController();
+
+  @override
+  void dispose() {
+    _codeController.dispose();
+    super.dispose();
+  }
+
+  void _handleSendCode() async {
+    User? user = await requestVerifyCode(widget.userId, _codeController.text);
+
+    if (user != null) {
+      if (mounted) {
+        print('Переход на главную страницу, а также передача объекта User');
+      }
+    }
+    else {
+      print('Ошибка верификации кода');
+    }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -70,6 +92,7 @@ class _VerifyCodeState extends State<VerifyCode> {
                       )),
                       SizedBox(height: 10,),
                       TextField(
+                        controller: _codeController,
                         textAlign: TextAlign.center,
                         decoration: InputDecoration(
                           // counterText: "",
@@ -88,7 +111,9 @@ class _VerifyCodeState extends State<VerifyCode> {
                           FilteringTextInputFormatter.digitsOnly, // Разрешает вводить ТОЛЬКО цифры (никаких точек и запятых)
                         ],
                       ),
-                      ElevatedButton(onPressed: () {},
+                      ElevatedButton(onPressed: () {
+                        _handleSendCode();
+                      },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF990000),
                         ),
