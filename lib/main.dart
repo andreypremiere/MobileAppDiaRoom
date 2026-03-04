@@ -1,5 +1,6 @@
 import 'package:dia_room/screens/login_screen.dart';
 import 'package:dia_room/screens/registration_screen.dart';
+import 'package:dia_room/screens/room_screen.dart';
 import 'package:dia_room/screens/verify_code_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -33,7 +34,7 @@ final _router = GoRouter(
   routes: [
     GoRoute(
       path: '/',
-      builder: (context, state) => const Login(),
+      builder: (context, state) => const Room(),
     ),
     GoRoute(
       path: '/verifyCode',
