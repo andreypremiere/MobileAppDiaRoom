@@ -15,14 +15,14 @@ class App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-        routerConfig: _router,
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-            colorScheme: ColorScheme.fromSeed(
-              seedColor: const Color(0xFF990000),
-              surface: const Color(0xFFE1DFDA),
-            )
+      routerConfig: _router,
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF990000),
+          surface: const Color(0xFFE1DFDA),
         ),
+      ),
       // home: VerifyCode()
     );
   }
@@ -32,10 +32,7 @@ class App extends StatelessWidget {
 final _router = GoRouter(
   initialLocation: '/', // Начальный экран
   routes: [
-    GoRoute(
-      path: '/',
-      builder: (context, state) => const Room(),
-    ),
+    GoRoute(path: '/', builder: (context, state) => const RoomScreen()),
     GoRoute(
       path: '/verifyCode',
       builder: (context, state) {
@@ -46,7 +43,8 @@ final _router = GoRouter(
     ),
     GoRoute(
       path: '/registration',
-      builder: (context, state) => const Registration())
+      builder: (context, state) => const Registration(),
+    ),
     // Пример маршрута с параметром
     // GoRoute(
     //   path: '/welcome/:name',
@@ -57,4 +55,3 @@ final _router = GoRouter(
     // ),
   ],
 );
-

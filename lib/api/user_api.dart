@@ -4,17 +4,22 @@ import 'package:dia_room/configuration/urls.dart';
 import 'package:dia_room/models/user.dart';
 import 'package:http/http.dart' as http;
 
-Future<String?> requestRegistration(String phone, String roomId, String roomName) async {
+Future<String?> requestRegistration(
+  String phone,
+  String roomId,
+  String roomName,
+) async {
   final url = Uri.parse(newUserUrl);
 
   try {
-    final response = await http.post(url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          "numberPhone": phone,
-          "roomId": roomId,
-          "roomName": roomName
-        })
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        "numberPhone": phone,
+        "roomId": roomId,
+        "roomName": roomName,
+      }),
     );
 
     if (response.statusCode == 200) {
@@ -37,9 +42,9 @@ Future<User?> requestVerifyCode(String userId, String code) async {
 
   try {
     final response = await http.post(
-        url,
-        headers: {'Content-Type': "application/json"},
-        body: jsonEncode({'userId': userId, 'code': code})
+      url,
+      headers: {'Content-Type': "application/json"},
+      body: jsonEncode({'userId': userId, 'code': code}),
     );
 
     if (response.statusCode == 200) {
@@ -61,9 +66,9 @@ Future<String?> requestLogin(String value) async {
 
   try {
     final response = await http.post(
-        url,
-        headers: {'Content-Type': "application/json"},
-        body: jsonEncode({'value': value})
+      url,
+      headers: {'Content-Type': "application/json"},
+      body: jsonEncode({'value': value}),
     );
 
     if (response.statusCode == 200) {

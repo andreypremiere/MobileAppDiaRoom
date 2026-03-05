@@ -28,9 +28,10 @@ class _RegistrationState extends State<Registration> {
 
   void _handleRegistration() async {
     final String? userId = await requestRegistration(
-        _phoneController.text,
-        _roomIdController.text,
-        _roomNameController.text);
+      _phoneController.text,
+      _roomIdController.text,
+      _roomNameController.text,
+    );
 
     if (userId != null) {
       if (mounted) {
@@ -47,7 +48,11 @@ class _RegistrationState extends State<Registration> {
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
         backgroundColor: Theme.of(context).colorScheme.surface,
-        appBar: AppBar(toolbarHeight: 0, elevation: 0, backgroundColor: Colors.transparent),
+        appBar: AppBar(
+          toolbarHeight: 0,
+          elevation: 0,
+          backgroundColor: Colors.transparent,
+        ),
         body: Stack(
           children: [
             // Кнопка назад
@@ -97,7 +102,7 @@ class _RegistrationState extends State<Registration> {
                       color: Colors.black.withOpacity(0.05),
                       blurRadius: 20,
                       offset: const Offset(0, 4),
-                    )
+                    ),
                   ],
                 ),
                 child: Column(
@@ -158,7 +163,7 @@ class _RegistrationState extends State<Registration> {
                           ),
                         ),
                       ),
-                    )
+                    ),
                   ],
                 ),
               ),
@@ -188,9 +193,11 @@ class _RegistrationState extends State<Registration> {
           borderRadius: BorderRadius.circular(8),
           borderSide: BorderSide.none,
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
       ),
     );
   }
 }
-

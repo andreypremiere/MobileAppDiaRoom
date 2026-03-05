@@ -3,6 +3,7 @@ import 'package:dia_room/utils/jwt_manager.dart';
 class User {
   final String token;
   final String userId;
+
   // final String roomId;
 
   User._({required this.token, required this.userId});
@@ -15,8 +16,4 @@ class User {
 
     return User._(token: token, userId: data['user_id']);
   }
-
-
-
-
 }
