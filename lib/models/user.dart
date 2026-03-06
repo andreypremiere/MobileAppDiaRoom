@@ -3,10 +3,9 @@ import 'package:dia_room/utils/jwt_manager.dart';
 class User {
   final String token;
   final String userId;
+  final String roomId;
 
-  // final String roomId;
-
-  User._({required this.token, required this.userId});
+  User._({required this.token, required this.userId, required this.roomId});
 
   static User? fromJwt(String token) {
     final data = decodeJwtToken(token);
@@ -14,6 +13,6 @@ class User {
       return null;
     }
 
-    return User._(token: token, userId: data['user_id']);
+    return User._(token: token, userId: data['user_id'], roomId: data['room_id']);
   }
 }

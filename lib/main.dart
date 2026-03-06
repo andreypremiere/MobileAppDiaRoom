@@ -1,4 +1,5 @@
 import 'package:dia_room/screens/login_screen.dart';
+import 'package:dia_room/screens/personal_posts_screen.dart';
 import 'package:dia_room/screens/registration_screen.dart';
 import 'package:dia_room/screens/room_screen.dart';
 import 'package:dia_room/screens/verify_code_screen.dart';
@@ -32,7 +33,7 @@ class App extends StatelessWidget {
 final _router = GoRouter(
   initialLocation: '/', // Начальный экран
   routes: [
-    GoRoute(path: '/', builder: (context, state) => const RoomScreen()),
+    GoRoute(path: '/', builder: (context, state) => const PersonalPostsScreen()),
     GoRoute(
       path: '/verifyCode',
       builder: (context, state) {
