@@ -176,13 +176,14 @@ class _StateMainPageScreen extends State<MainPageScreen> {
               padding: const EdgeInsets.symmetric(vertical: 2),
                 sliver: SliverList(
                 delegate: SliverChildListDelegate([
-                  PostComponent(),
-                  const SizedBox(height: 10), // Вместо spacing
-                  PostComponent(),
-                  const SizedBox(height: 10),
-                  PostComponent(),
-                  const SizedBox(height: 10),
-                  PostComponent(),
+                  for (int i=0; i <= 10; i++) ...[
+                    
+                    PostComponent(onTap: () {
+                      print("Пользователь нажал на пост, переходим...");
+                      // Здесь добавить навигация
+                    },),
+                    const SizedBox(height: 10),
+                  ],
                   SizedBox(height: MediaQuery.of(context).padding.bottom + 58)
                 ]),
               ),

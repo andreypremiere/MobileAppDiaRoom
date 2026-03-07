@@ -33,10 +33,12 @@ class App extends StatelessWidget {
 
 // Настройка маршрутов
 final _router = GoRouter(
-  initialLocation: '/', // Начальный экран
+  initialLocation: '/',
   routes: [
+    // Главный экран (рекомендуемые посты)
     GoRoute(path: '/',
-        builder: (context, state) => const ShowingPostScreen()),
+        builder: (context, state) => const MainPageScreen()),
+    // Экран ввода кода
     GoRoute(
       path: '/verifyCode',
       builder: (context, state) {
@@ -45,10 +47,30 @@ final _router = GoRouter(
         return VerifyCode(userId: id);
       },
     ),
+    // Экран регистрации
     GoRoute(
       path: '/registration',
       builder: (context, state) => const Registration(),
     ),
+    // Экран ввода телефона или room_name_id
+    GoRoute(
+      path: '/login',
+      builder: (context, state) => const Login(),
+    ),
+    // Страница поста
+    GoRoute(path: "/showPost",
+    builder: (context, state) => const ShowingPostScreen()),
+    // Страница комнаты
+    GoRoute(
+      path: '/room',
+      builder: (context, state) => const RoomScreen(),
+    ),
+    // Страница постов комнаты
+    GoRoute(
+      path: '/roomPosts',
+      builder: (context, state) => const PersonalPostsScreen(),
+    ),
+
     // Пример маршрута с параметром
     // GoRoute(
     //   path: '/welcome/:name',
