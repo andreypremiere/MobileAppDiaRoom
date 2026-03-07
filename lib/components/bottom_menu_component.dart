@@ -10,7 +10,12 @@ class BottomMenu extends StatelessWidget {
       padding: EdgeInsets.all(3),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(26)
+        borderRadius: BorderRadius.circular(26),
+        boxShadow: [BoxShadow(
+          blurRadius: 10,
+          color: Colors.black.withAlpha(30),
+          spreadRadius: 4
+        )]
       ),
       height: 52,
       child: Row(

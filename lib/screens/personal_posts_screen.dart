@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 
-import '../components/post.dart';
+import '../components/post_component.dart';
 import '../configuration/urls.dart';
 import '../utils/utils.dart';
 
