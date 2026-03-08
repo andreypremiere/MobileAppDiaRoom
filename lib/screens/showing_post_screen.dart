@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:go_router/go_router.dart';
 
 import '../components/post_component.dart';
 import '../configuration/urls.dart';
@@ -164,7 +165,9 @@ class _StateShowingPostScreen extends State<ShowingPostScreen> {
           backgroundColor: Color(0xFFB9B9B9),
           // backgroundColor: Colors.transparent.withAlpha(0),
           leading: IconButton(
-            onPressed: () {},
+            onPressed: () {
+              context.pop();
+            },
             icon: SvgPicture.asset(
               'assets/icons/button_back.svg',
               width: 30,

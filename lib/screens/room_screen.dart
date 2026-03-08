@@ -64,7 +64,9 @@ class _RoomState extends State<RoomScreen> {
         appBar: AppBar(
           backgroundColor: Color(0xFFFFA6A6).withAlpha(0),
           leading: IconButton(
-            onPressed: () {},
+            onPressed: () {
+              context.pop();
+            },
             icon: SvgPicture.asset(
               'assets/icons/button_back.svg',
               width: 30,
@@ -323,7 +325,9 @@ class _RoomState extends State<RoomScreen> {
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                   ),
-                                  onPressed: () {},
+                                  onPressed: () {
+                                    context.push('/roomPosts');
+                                  },
                                   child: Text(
                                     "Смотреть все",
                                     style: TextStyle(

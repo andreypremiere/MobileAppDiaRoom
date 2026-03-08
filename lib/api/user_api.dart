@@ -49,6 +49,7 @@ Future<User?> requestVerifyCode(String userId, String code) async {
 
     if (response.statusCode == 200) {
       User? user = User.fromJwt(jsonDecode(response.body)['token']);
+      print("User при получении после верификации из jwt: $user");
       return user;
     } else {
       final Map<String, dynamic> body = jsonDecode(response.body);

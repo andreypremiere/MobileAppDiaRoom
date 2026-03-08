@@ -35,7 +35,7 @@ class _RegistrationState extends State<Registration> {
 
     if (userId != null) {
       if (mounted) {
-        context.push('/verifyCode', extra: userId.toString());
+        context.go('/verifyCode', extra: userId.toString());
       } else {
         print("mounted is not true");
       }

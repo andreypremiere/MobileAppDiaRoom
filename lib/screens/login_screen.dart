@@ -25,7 +25,7 @@ class _LoginState extends State<Login> {
 
     if (userId != null) {
       if (mounted) {
-        context.push('/verifyCode', extra: userId.toString());
+        context.go('/verifyCode', extra: userId.toString());
       }
     }
   }

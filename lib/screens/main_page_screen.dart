@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
 import '../components/bottom_menu_component.dart';
 import '../components/post_component.dart';
 import '../configuration/urls.dart';
+import '../utils/auth_service.dart';
 import '../utils/utils.dart';
 
 class MainPageScreen extends StatefulWidget {
@@ -45,6 +48,8 @@ class _StateMainPageScreen extends State<MainPageScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final user = context.watch<AuthProvider>().user;
+
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
@@ -177,10 +182,9 @@ class _StateMainPageScreen extends State<MainPageScreen> {
                 sliver: SliverList(
                 delegate: SliverChildListDelegate([
                   for (int i=0; i <= 10; i++) ...[
-                    
+
                     PostComponent(onTap: () {
-                      print("Пользователь нажал на пост, переходим...");
-                      // Здесь добавить навигация
+                      context.push('/showPost');
                     },),
                     const SizedBox(height: 10),
                   ],

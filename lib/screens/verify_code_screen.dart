@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+
+import '../utils/auth_service.dart';
 
 class VerifyCode extends StatefulWidget {
   final String userId;
@@ -30,6 +33,7 @@ class _VerifyCodeState extends State<VerifyCode> {
 
     if (user != null) {
       if (mounted) {
+        context.read<AuthProvider>().login(user);
         print('Переход на главную страницу, а также передача объекта User');
       }
     } else {
@@ -54,26 +58,26 @@ class _VerifyCodeState extends State<VerifyCode> {
         ),
         body: Stack(
           children: [
-            Positioned(
-              top: 10,
-              left: 10,
-              child: Container(
-                // decoration: BoxDecoration(
-                //   color: Color(0xFFFFFFFF),
-                //   shape: BoxShape.circle
-                // ),
-                child: IconButton(
-                  onPressed: () {
-                    context.pop();
-                  },
-                  icon: SvgPicture.asset(
-                    'assets/icons/button_back.svg',
-                    width: 30,
-                    height: 30,
-                  ),
-                ),
-              ),
-            ),
+            // Positioned(
+            //   top: 10,
+            //   left: 10,
+            //   child: Container(
+            //     // decoration: BoxDecoration(
+            //     //   color: Color(0xFFFFFFFF),
+            //     //   shape: BoxShape.circle
+            //     // ),
+            //     child: IconButton(
+            //       onPressed: () {
+            //         context.pop();
+            //       },
+            //       icon: SvgPicture.asset(
+            //         'assets/icons/button_back.svg',
+            //         width: 30,
+            //         height: 30,
+            //       ),
+            //     ),
+            //   ),
+            // ),
             Center(
               child: Container(
                 margin: EdgeInsets.symmetric(horizontal: 10),
