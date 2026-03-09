@@ -93,7 +93,10 @@ class App extends StatelessWidget {
           // Профиль комнаты
           GoRoute(
             path: '/room',
-            builder: (context, state) => const RoomScreen(),
+            builder: (context, state) {
+              final roomId = state.extra as String;
+              return RoomScreen(roomId: roomId);
+            },
           ),
 
           // Список постов внутри комнаты

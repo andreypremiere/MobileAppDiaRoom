@@ -34,8 +34,9 @@ class BottomMenu extends StatelessWidget {
           // Кнопка перехода в профиль пользователя
           IconButton(
             onPressed: () {
+              final roomId = context.read<AuthProvider>().user!.roomId;
               // Навигация на экран комнаты через GoRouter
-              context.push('/room');
+              context.push('/room', extra: roomId);
             },
             icon: SvgPicture.asset(
               'assets/icons/profile.svg',

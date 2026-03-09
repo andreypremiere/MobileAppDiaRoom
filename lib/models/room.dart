@@ -45,21 +45,21 @@ class Room {
     try {
       room = Room(
         id: json['id'] as String,
-        userId: json['user_id'] as String,
-        roomName: json['room_name'] as String,
-        roomNameId: json['room_name_id'] as String,
+        userId: json['userId'] as String,
+        roomName: json['roomName'] as String,
+        roomNameId: json['roomNameId'] as String,
         // Преобразование списка динамических объектов в типизированный список Category
         categories:
             (json['categories'] as List<dynamic>?)
                 ?.map((e) => Category.fromJson(e as Map<String, dynamic>))
                 .toList() ??
             [],
-        avatarUrl: json['avatar_url'] as String?,
+        avatarUrl: json['avatarUrl'] as String?,
         bio: json['bio'] as String?,
         // Инициализация пустой мапой, если настройки не пришли с сервера
         settings: json['settings'] as Map<String, dynamic>? ?? {},
-        followersCount: json['followers_count'] as int? ?? 0,
-        followingCount: json['following_count'] as int? ?? 0,
+        followersCount: json['followersCount'] as int? ?? 0,
+        followingCount: json['followingCount'] as int? ?? 0,
       );
     } catch (e) {
       // Логирование ошибки в случае несоответствия типов в JSON
