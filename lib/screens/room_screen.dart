@@ -6,6 +6,7 @@ import 'package:dia_room/models/room.dart';
 import 'package:dia_room/utils/utils.dart';
 import 'package:dia_room/configuration/urls.dart';
 
+// RoomScreen отображает детальную информацию о конкретной комнате
 class RoomScreen extends StatefulWidget {
   const RoomScreen({super.key});
 
@@ -16,14 +17,13 @@ class RoomScreen extends StatefulWidget {
 }
 
 class _RoomState extends State<RoomScreen> {
-  // final TextEditingController _codeController = TextEditingController();
-  late Room room;
-  bool _isBioVisible = false;
+  late Room room; // Объект комнаты, инициализируемый в initState
+  bool _isBioVisible = false; // Состояние видимости длинного описания (био)
 
   @override
   void initState() {
     super.initState();
-    // 2. Присваиваем значение при инициализации состояния
+    // Инициализация моковых данных для верстки экрана
     room = Room(
       id: "8cfbc1a1-9588-4295-b016-76e8aa028aef",
       userId: "8cfbc1a1-9588-4295-b016-76e8aa028aegh",
@@ -34,39 +34,30 @@ class _RoomState extends State<RoomScreen> {
         Category(slug: 'video-production', name: 'Видеопроизводство'),
         Category(slug: 'photography', name: 'Фотография'),
       ],
-      bio:
-          "Lorem Ipsum - это просто фиктивный текст для полиграфической и наборной промышленности. Lorem Ipsum является стандартным фиктивным текстом в отрасли с 1500-х годов, когда неизвестный типограф взял образец шрифта и переработал его, чтобы создать книгу с образцами шрифтов. Он пережил не только пять столетий, но и переход на электронный набор текста, оставаясь практически неизменным. Он был популяризирован в 1960-х годах с выпуском листов Letraset, содержащих отрывки из Lorem Ipsum, и совсем недавно с появлением настольного издательского программного обеспечения, такого как Aldus PageMaker, включающего версии Lorem Ipsum.",
-      // avatarUrl: "avatars/8cfbc1a1-9588-4295-b016-76e8aa028aef/8cfbc1a1-9588-4295-b016-76e8aa028aef_1772691313.jpg",
+      bio: "Lorem Ipsum - это просто фиктивный текст...",
       settings: <String, dynamic>{},
       followersCount: 632,
       followingCount: 3,
     );
   }
 
-  // @override
-  // void dispose() {
-  //   super.dispose();
-  // }
-
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
+      // Убираем фокус с элементов ввода при нажатии на фон
       onTap: () {
         FocusScopeNode currentFocus = FocusScope.of(context);
-
         if (!currentFocus.hasPrimaryFocus) {
           currentFocus.unfocus();
         }
       },
       child: Scaffold(
-        // backgroundColor: Color(0xFFC9BBBB),
+        // Позволяет телу заходить под AppBar
         extendBodyBehindAppBar: true,
         appBar: AppBar(
-          backgroundColor: Color(0xFFFFA6A6).withAlpha(0),
+          backgroundColor: const Color(0xFFFFA6A6).withAlpha(0),
           leading: IconButton(
-            onPressed: () {
-              context.pop();
-            },
+            onPressed: () => context.pop(),
             icon: SvgPicture.asset(
               'assets/icons/button_back.svg',
               width: 30,
@@ -78,7 +69,7 @@ class _RoomState extends State<RoomScreen> {
           children: [
             Column(
               children: [
-                // Верхняя шторка
+                // Верхняя часть: Обложка профиля (Шторка)
                 Container(
                   width: double.infinity,
                   height: 220,
@@ -95,6 +86,7 @@ class _RoomState extends State<RoomScreen> {
                     ),
                     child: Stack(
                       children: [
+                        // Название комнаты поверх обложки с тенью для читаемости
                         Positioned(
                           bottom: 15,
                           left: 15,
@@ -105,7 +97,7 @@ class _RoomState extends State<RoomScreen> {
                               fontFamily: 'SNPro',
                               fontWeight: FontWeight.w500,
                               fontSize: 24,
-                              shadows: [
+                              shadows: const [
                                 Shadow(
                                   blurRadius: 15.0,
                                   color: Colors.black54,
@@ -115,6 +107,7 @@ class _RoomState extends State<RoomScreen> {
                             ),
                           ),
                         ),
+                        // Аватар и блок спонсора
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 20),
                           child: Center(
@@ -156,7 +149,7 @@ class _RoomState extends State<RoomScreen> {
                     ),
                   ),
                 ),
-                // Контент под шторкой
+                // Основной контент под шторкой
                 Expanded(
                   child: SingleChildScrollView(
                     child: Column(
@@ -164,79 +157,55 @@ class _RoomState extends State<RoomScreen> {
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 8),
                           child: Column(
-                            mainAxisSize: MainAxisSize.max,
                             crossAxisAlignment: CrossAxisAlignment.start,
-                            // Прижать содержимое влево
                             children: [
                               const SizedBox(height: 10),
-                              // Категории
-                              SizedBox(
-                                width: double.infinity,
-                                child: Wrap(
-                                  spacing: 8,
-                                  alignment: WrapAlignment.start,
-                                  children: room.categories.map((category) {
-                                    return Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 0,
-                                        vertical: 4,
+                              // Секция категорий (теги)
+                              Wrap(
+                                spacing: 8,
+                                children: room.categories.map((category) {
+                                  return Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      SvgPicture.asset(
+                                        'assets/icons/${category.slug}.svg',
+                                        width: 16,
+                                        height: 16,
                                       ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        // mainAxisAlignment: MainAxisAlignment.center,
-                                        spacing: 4,
-                                        children: [
-                                          SvgPicture.asset(
-                                            'assets/icons/${category.slug}.svg',
-                                            width: 16,
-                                            height: 16,
-                                          ),
-                                          Text(
-                                            category.name,
-                                            style: TextStyle(
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.w600,
-                                              fontFamily: 'SNPro',
-                                            ),
-                                          ),
-                                        ],
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        category.name,
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                          fontFamily: 'SNPro',
+                                        ),
                                       ),
-                                    );
-                                  }).toList(),
-                                ),
+                                    ],
+                                  );
+                                }).toList(),
                               ),
                               const SizedBox(height: 5),
-                              // Описание
+                              // Секция био с переключателем "Показать/Скрыть"
                               if (room.bio != null && room.bio!.isNotEmpty) ...[
-                                _isBioVisible
-                                    ? Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 16.0,
-                                          vertical: 4,
-                                        ),
-                                        child: Text(
-                                          room.bio!,
-                                          style: const TextStyle(
-                                            fontSize: 18,
-                                            fontFamily: 'Caveat',
-                                          ),
-                                        ),
-                                      )
-                                    : const SizedBox(width: double.infinity),
-                                // Пустота, когда скрыто
-
-                                // 3. Кнопка-переключатель
+                                if (_isBioVisible)
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16.0,
+                                      vertical: 4,
+                                    ),
+                                    child: Text(
+                                      room.bio!,
+                                      style: const TextStyle(
+                                        fontSize: 18,
+                                        fontFamily: 'Caveat',
+                                      ),
+                                    ),
+                                  ),
                                 InkWell(
-                                  splashColor: Colors.transparent,
-                                  // Убирает круги
-                                  highlightColor: Colors.transparent,
-                                  // Убирает блик при зажатии
-                                  hoverColor: Colors.transparent,
-                                  onTap: () {
-                                    setState(() {
-                                      _isBioVisible = !_isBioVisible;
-                                    });
-                                  },
+                                  onTap: () => setState(
+                                    () => _isBioVisible = !_isBioVisible,
+                                  ),
                                   child: Padding(
                                     padding: const EdgeInsets.symmetric(
                                       vertical: 4,
@@ -255,60 +224,52 @@ class _RoomState extends State<RoomScreen> {
                                 ),
                               ],
                               const SizedBox(height: 10),
-                              // Кнопка Дневник
+                              // Кнопка "Дневник"
                               ElevatedButton(
                                 style: ElevatedButton.styleFrom(
                                   minimumSize: const Size(double.infinity, 60),
                                   alignment: Alignment.centerLeft,
-                                  // padding: const EdgeInsets.all(6),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(14),
                                   ),
-                                  backgroundColor: Color(0xFF810202),
+                                  backgroundColor: const Color(0xFF810202),
                                 ),
                                 onPressed: () {},
-                                child: Text(
+                                child: const Text(
                                   "Дневник",
                                   style: TextStyle(
                                     fontFamily: "Caveat",
                                     fontSize: 24,
-                                    fontWeight: FontWeight.w700,
-                                    color: Color(0xFFFFFFFF),
+                                    color: Colors.white,
                                   ),
                                 ),
                               ),
                             ],
                           ),
                         ),
-                        // Витрина
                         const SizedBox(height: 12),
+                        // Секция "Витрина" с кнопкой перехода к постам
                         Container(
-                          padding: EdgeInsets.symmetric(
+                          padding: const EdgeInsets.symmetric(
                             vertical: 10,
                             horizontal: 14,
                           ),
                           width: double.infinity,
                           decoration: BoxDecoration(
-                            color: Color(0xFFE1DFDA),
+                            color: const Color(0xFFE1DFDA),
                             boxShadow: [
                               BoxShadow(
                                 color: Colors.black.withAlpha(30),
-                                // Очень слабая прозрачность
                                 blurRadius: 14,
-                                // Размытие
                                 spreadRadius: 4,
-                                // Растяжение
-                                offset: const Offset(0, 0), // Смещение вниз
                               ),
                             ],
                           ),
                           child: Column(
-                            mainAxisSize: MainAxisSize.max,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
+                              const Text(
                                 'Витрина',
-                                // textAlign: TextAlign.start ,
                                 style: TextStyle(
                                   fontWeight: FontWeight.w700,
                                   fontSize: 26,
@@ -318,22 +279,12 @@ class _RoomState extends State<RoomScreen> {
                               Align(
                                 alignment: Alignment.center,
                                 child: ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.white,
-                                    elevation: 1,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                  ),
-                                  onPressed: () {
-                                    context.push('/roomPosts');
-                                  },
-                                  child: Text(
+                                  onPressed: () => context.push('/roomPosts'),
+                                  child: const Text(
                                     "Смотреть все",
                                     style: TextStyle(
                                       fontFamily: 'SNPro',
                                       fontSize: 16,
-                                      fontWeight: FontWeight.w600,
                                       color: Colors.black,
                                     ),
                                   ),
@@ -343,21 +294,17 @@ class _RoomState extends State<RoomScreen> {
                           ),
                         ),
                         const SizedBox(height: 12),
-                        // Мастерская
+                        // Секция "Мастерская" с внешней кастомной тенью
                         Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 8),
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
                           child: Container(
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(14),
                               boxShadow: [
                                 BoxShadow(
                                   color: Colors.black.withAlpha(40),
-                                  // Прозрачность тени
                                   blurRadius: 10,
-                                  // Размытие
                                   spreadRadius: 4,
-                                  // Растяжение
-                                  offset: const Offset(0, 0), // Смещение вниз
                                 ),
                               ],
                             ),
@@ -365,12 +312,9 @@ class _RoomState extends State<RoomScreen> {
                               style: ElevatedButton.styleFrom(
                                 minimumSize: const Size(double.infinity, 60),
                                 alignment: Alignment.centerLeft,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(14),
-                                ),
                                 backgroundColor: const Color(0xFFE1DFDA),
                                 elevation:
-                                    0, // ОБЯЗАТЕЛЬНО: убираем родную тень кнопки
+                                    0, // Убираем стандартную тень кнопки в пользу BoxDecoration
                               ),
                               onPressed: () {},
                               child: const Text(
@@ -378,7 +322,6 @@ class _RoomState extends State<RoomScreen> {
                                 style: TextStyle(
                                   fontFamily: "Caveat",
                                   fontSize: 24,
-                                  fontWeight: FontWeight.w700,
                                   color: Colors.black,
                                 ),
                               ),
@@ -389,10 +332,10 @@ class _RoomState extends State<RoomScreen> {
                     ),
                   ),
                 ),
+                // Контейнер для нижнего меню
                 Container(
                   color: Colors.transparent,
                   height: 66,
-                  width: double.infinity,
                   child: Center(child: BottomMenu()),
                 ),
               ],

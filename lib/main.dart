@@ -10,15 +10,16 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import 'models/user.dart';
-
 void main() async {
+  // Гарантируем инициализацию связей с нативной платформой перед асинхронными вызовами
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Создаем экземпляр провайдера и предварительно загружаем данные пользователя из хранилища
   final authProvider = AuthProvider();
   await authProvider.loadUser();
 
   runApp(
+    // Оборачиваем все приложение в провайдер для доступа к состоянию авторизации
     ChangeNotifierProvider.value(
       value: authProvider,
       child: App(authProvider: authProvider),
@@ -28,63 +29,74 @@ void main() async {
 
 class App extends StatelessWidget {
   final AuthProvider authProvider;
+
   const App({super.key, required this.authProvider});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
+      // Настройка навигации через GoRouter
       routerConfig: GoRouter(
+        // Перенаправляем пользователя автоматически при изменении состояния в AuthProvider
         refreshListenable: authProvider,
         initialLocation: '/',
         redirect: (context, state) {
           final bool loggedIn = authProvider.isAuthenticated;
-
+          // Список путей, доступных без авторизации
           final publicRoutes = ['/login', '/registration', '/verifyCode'];
+          final bool isPublicPage = publicRoutes.contains(
+            state.matchedLocation,
+          );
 
-          final bool isPublicPage = publicRoutes.contains(state.matchedLocation);
-
+          // Если пользователь не в системе и пытается зайти на закрытый экран — на логин
           if (!loggedIn && !isPublicPage) {
             return '/login';
           }
 
+          // Если пользователь уже авторизован, не пускаем его на страницы входа/регистрации
           if (loggedIn && isPublicPage) {
             return '/';
           }
 
+          // В остальных случаях оставляем пользователя там, куда он шел
           return null;
         },
         routes: [
-          // Главный экран (рекомендуемые посты)
-          GoRoute(path: '/',
-              builder: (context, state) => const MainPageScreen()),
-          // Экран ввода кода
+          // Главный экран ленты
+          GoRoute(
+            path: '/',
+            builder: (context, state) => const MainPageScreen(),
+          ),
+
+          // Экран верификации с передачей userId через аргумент extra
           GoRoute(
             path: '/verifyCode',
             builder: (context, state) {
               final id = state.extra as String;
-
               return VerifyCode(userId: id);
             },
           ),
-          // Экран регистрации
+
+          // Экраны регистрации и входа
           GoRoute(
             path: '/registration',
             builder: (context, state) => const Registration(),
           ),
-          // Экран ввода телефона или room_name_id
+          GoRoute(path: '/login', builder: (context, state) => const Login()),
+
+          // Экран просмотра конкретного поста
           GoRoute(
-            path: '/login',
-            builder: (context, state) => const Login(),
+            path: "/showPost",
+            builder: (context, state) => const ShowingPostScreen(),
           ),
-          // Страница поста
-          GoRoute(path: "/showPost",
-              builder: (context, state) => const ShowingPostScreen()),
-          // Страница комнаты
+
+          // Профиль комнаты
           GoRoute(
             path: '/room',
             builder: (context, state) => const RoomScreen(),
           ),
-          // Страница постов комнаты
+
+          // Список постов внутри комнаты
           GoRoute(
             path: '/roomPosts',
             builder: (context, state) => const PersonalPostsScreen(),
@@ -92,14 +104,13 @@ class App extends StatelessWidget {
         ],
       ),
       debugShowCheckedModeBanner: false,
+      // Глобальная настройка темы приложения
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           seedColor: const Color(0xFF990000),
           surface: const Color(0xFFE1DFDA),
         ),
       ),
-      // home: VerifyCode()
     );
   }
 }
-

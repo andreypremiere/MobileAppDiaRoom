@@ -1,3 +1,5 @@
+// Canvas представляет собой класс содержимого поста (содержит текст,
+// ссылки на картинки, фото, аудио и тд)
 class Canvas {
   final String id;
   final List<Map<String, dynamic>> payload;

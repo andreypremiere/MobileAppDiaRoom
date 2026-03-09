@@ -6,6 +6,7 @@ import '../components/post_component.dart';
 import '../configuration/urls.dart';
 import '../utils/utils.dart';
 
+// PersonalPostsScreen отображает список постов конкретной комнаты
 class PersonalPostsScreen extends StatefulWidget {
   const PersonalPostsScreen({super.key});
 
@@ -16,20 +17,24 @@ class PersonalPostsScreen extends StatefulWidget {
 }
 
 class _StatePersonalPostsScreen extends State<PersonalPostsScreen> {
+  // Данные для тестов
   String? avatarUrl;
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
+      // Убираем фокус с полей ввода при нажатии на свободную область
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
         appBar: AppBar(
           centerTitle: true,
+          // Заголовок AppBar с аватаром и названием комнаты в центре
           title: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               CircleAvatar(
                 radius: 16,
+                // Проверка: загружать кастомный аватар из хранилища или дефолтный
                 backgroundImage: (avatarUrl != null && avatarUrl!.isNotEmpty)
                     ? NetworkImage(
                         createFullPathAvatar(objectStoragePath, avatarUrl!),
@@ -42,7 +47,7 @@ class _StatePersonalPostsScreen extends State<PersonalPostsScreen> {
                       ),
               ),
               const SizedBox(width: 10),
-              Text(
+              const Text(
                 'Room name',
                 style: TextStyle(
                   fontFamily: 'SNPro',
@@ -52,7 +57,9 @@ class _StatePersonalPostsScreen extends State<PersonalPostsScreen> {
               ),
             ],
           ),
-          backgroundColor: Color(0xFFFFA6A6).withAlpha(0),
+          // Установка прозрачного фона для AppBar (использование withAlpha для плавности)
+          backgroundColor: const Color(0xFFFFA6A6).withAlpha(0),
+          // Кастомная кнопка "Назад" с использованием SVG
           leading: IconButton(
             onPressed: () {
               context.pop();
@@ -64,15 +71,19 @@ class _StatePersonalPostsScreen extends State<PersonalPostsScreen> {
             ),
           ),
         ),
-        body: SingleChildScrollView(child: Column(
-          spacing: 10,
-          children: [
-            PostComponent(),
-            PostComponent(),
-            PostComponent(),
-            PostComponent(),
-          ],
-        ),),
+        // Прокручиваемая колонка с постами
+        body: SingleChildScrollView(
+          child: Column(
+            // Автоматические отступы между элементами списка
+            spacing: 10,
+            children: const [
+              PostComponent(),
+              PostComponent(),
+              PostComponent(),
+              PostComponent(),
+            ],
+          ),
+        ),
       ),
     );
   }

@@ -2,6 +2,7 @@ import 'package:dia_room/api/user_api.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+// Login представляет экран входа пользователя в систему
 class Login extends StatefulWidget {
   const Login({super.key});
 
@@ -12,19 +13,25 @@ class Login extends StatefulWidget {
 }
 
 class _LoginState extends State<Login> {
+  // Контроллер для извлечения текста из поля ввода (id или телефон)
   final TextEditingController _valueController = TextEditingController();
 
   @override
   void dispose() {
+    // Обязательное освобождение ресурсов контроллера при закрытии экрана
     _valueController.dispose();
     super.dispose();
   }
 
+  // _handleLogin вызывает API входа и перенаправляет на верификацию
   void _handleLogin() async {
+    // Вызов функции запроса из папки api
     String? userId = await requestLogin(_valueController.text);
 
     if (userId != null) {
+      // Проверка mounted гарантирует, что контекст еще существует после await
       if (mounted) {
+        // Переход на экран ввода кода с передачей userId через extra
         context.go('/verifyCode', extra: userId.toString());
       }
     }
@@ -32,22 +39,23 @@ class _LoginState extends State<Login> {
 
   @override
   Widget build(BuildContext context) {
+    // GestureDetector используется для скрытия клавиатуры при нажатии на пустую область
     return GestureDetector(
       onTap: () {
         FocusScopeNode currentFocus = FocusScope.of(context);
-
         if (!currentFocus.hasPrimaryFocus) {
           currentFocus.unfocus();
         }
       },
       child: Scaffold(
-        // backgroundColor: Theme.of(context).colorScheme.surface,
+        // Невидимый AppBar для корректного отображения системного статус-бара
         appBar: PreferredSize(
           preferredSize: const Size.fromHeight(0.0),
           child: AppBar(),
         ),
         body: Stack(
           children: [
+            // Кнопка перехода к регистрации в верхнем углу
             Positioned(
               top: 10,
               right: 10,
@@ -73,6 +81,7 @@ class _LoginState extends State<Login> {
                 ),
               ),
             ),
+            // Центрированная форма входа
             Center(
               child: Container(
                 margin: const EdgeInsets.symmetric(horizontal: 14),
@@ -99,8 +108,8 @@ class _LoginState extends State<Login> {
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-
                     const SizedBox(height: 10),
+                    // Поле ввода идентификатора пользователя
                     TextField(
                       controller: _valueController,
                       decoration: InputDecoration(
@@ -119,6 +128,7 @@ class _LoginState extends State<Login> {
                       cursorColor: const Color(0xFF000000),
                     ),
                     const SizedBox(height: 10),
+                    // Кнопка подтверждения входа
                     ElevatedButton(
                       onPressed: () {
                         _handleLogin();
@@ -126,7 +136,7 @@ class _LoginState extends State<Login> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF990000),
                       ),
-                      child: Text(
+                      child: const Text(
                         "Войти",
                         style: TextStyle(
                           fontFamily: "SNPro",

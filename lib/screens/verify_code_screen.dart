@@ -8,8 +8,9 @@ import 'package:provider/provider.dart';
 
 import '../utils/auth_service.dart';
 
+// VerifyCode — экран подтверждения входа/регистрации через SMS-код
 class VerifyCode extends StatefulWidget {
-  final String userId;
+  final String userId; // ID пользователя, полученный на предыдущем шаге
 
   const VerifyCode({super.key, required this.userId});
 
@@ -20,23 +21,29 @@ class VerifyCode extends StatefulWidget {
 }
 
 class _VerifyCodeState extends State<VerifyCode> {
+  // Контроллер для захвата введенного кода
   final TextEditingController _codeController = TextEditingController();
 
   @override
   void dispose() {
+    // Освобождаем ресурсы контроллера
     _codeController.dispose();
     super.dispose();
   }
 
+  // _handleSendCode отправляет код на проверку и авторизует пользователя
   void _handleSendCode() async {
+    // Запрос к API для верификации пары userId + code
     User? user = await requestVerifyCode(widget.userId, _codeController.text);
 
     if (user != null) {
       if (mounted) {
+        // Если код верный, сохраняем объект User в провайдере (авторизуем сессию)
         context.read<AuthProvider>().login(user);
         print('Переход на главную страницу, а также передача объекта User');
       }
     } else {
+      // Здесь можно добавить показ SnackBar с ошибкой
       print('Ошибка верификации кода');
     }
   }
@@ -44,9 +51,9 @@ class _VerifyCodeState extends State<VerifyCode> {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
+      // Убираем фокус (скрываем клавиатуру) при нажатии вне поля ввода
       onTap: () {
         FocusScopeNode currentFocus = FocusScope.of(context);
-
         if (!currentFocus.hasPrimaryFocus) {
           currentFocus.unfocus();
         }
@@ -58,30 +65,10 @@ class _VerifyCodeState extends State<VerifyCode> {
         ),
         body: Stack(
           children: [
-            // Positioned(
-            //   top: 10,
-            //   left: 10,
-            //   child: Container(
-            //     // decoration: BoxDecoration(
-            //     //   color: Color(0xFFFFFFFF),
-            //     //   shape: BoxShape.circle
-            //     // ),
-            //     child: IconButton(
-            //       onPressed: () {
-            //         context.pop();
-            //       },
-            //       icon: SvgPicture.asset(
-            //         'assets/icons/button_back.svg',
-            //         width: 30,
-            //         height: 30,
-            //       ),
-            //     ),
-            //   ),
-            // ),
             Center(
               child: Container(
-                margin: EdgeInsets.symmetric(horizontal: 10),
-                padding: EdgeInsets.all(10),
+                margin: const EdgeInsets.symmetric(horizontal: 10),
+                padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(12),
@@ -96,9 +83,9 @@ class _VerifyCodeState extends State<VerifyCode> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Удалить потом
-                    Text(widget.userId ?? 'id = null'),
-                    // Конец удалить потом
+                    // Отладочная информация (удалить перед релизом)
+                    Text(widget.userId),
+
                     const Text(
                       "Введите код",
                       style: TextStyle(
@@ -115,12 +102,12 @@ class _VerifyCodeState extends State<VerifyCode> {
                         fontWeight: FontWeight.w400,
                       ),
                     ),
-                    SizedBox(height: 10),
+                    const SizedBox(height: 10),
+                    // Поле ввода кода с жесткой валидацией формата
                     TextField(
                       controller: _codeController,
                       textAlign: TextAlign.center,
                       decoration: InputDecoration(
-                        // counterText: "",
                         filled: true,
                         fillColor: const Color(0xFFF3F3F3),
                         border: OutlineInputBorder(
@@ -134,11 +121,12 @@ class _VerifyCodeState extends State<VerifyCode> {
                       ),
                       cursorColor: const Color(0xFF000000),
                       keyboardType: TextInputType.number,
+                      // Цифровая клавиатура
                       maxLength: 6,
-                      // Устанавливает лимит в 6 символов
+                      // Лимит на длину кода
                       inputFormatters: [
+                        // Разрешаем ввод только цифр, предотвращаем вставку спецсимволов
                         FilteringTextInputFormatter.digitsOnly,
-                        // Разрешает вводить ТОЛЬКО цифры (никаких точек и запятых)
                       ],
                     ),
                     ElevatedButton(
@@ -148,7 +136,7 @@ class _VerifyCodeState extends State<VerifyCode> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF990000),
                       ),
-                      child: Text(
+                      child: const Text(
                         "Отправить",
                         style: TextStyle(
                           fontFamily: "SNPro",
