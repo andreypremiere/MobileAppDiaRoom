@@ -36,7 +36,7 @@ class BlockPost {
 }
 
 class BlockText extends BlockPost {
-  final String text;
+  String text;
   final Map<String, dynamic> metadata; // fontSize, fontColor, fontItalic, fontWeight, default
 
   BlockText({required super.id, required this.text, this.metadata = const {}}) : super(
@@ -45,7 +45,7 @@ class BlockText extends BlockPost {
 }
 
 class BlockPhoto extends BlockPost {
-  final String url;
+  String url;
   final Map<String, dynamic> metadata; // size
 
   BlockPhoto({required super.id, required this.url, this.metadata = const {}}) :
@@ -65,7 +65,7 @@ class BlockPhotos extends BlockPost {
 }
 
 class BlockVideo extends BlockPost {
-  final String url;
+  String url;
   final Map<String, dynamic> metadata; // preview_url, duration, size, quality
 
   BlockVideo({required super.id, required this.url, required this.metadata}) :
@@ -84,8 +84,8 @@ class BlockVideos extends BlockPost {
 }
 
 class BlockAudio extends BlockPost {
-  final String url;
-  final String audioName;
+  String url;
+  String audioName;
   final Map<String, dynamic> metadata; // type(wav, mp3), duration, size, showingFileName
 
   BlockAudio({required super.id, required this.url, this.audioName = "default", required this.metadata}) :
@@ -95,8 +95,8 @@ class BlockAudio extends BlockPost {
 }
 
 class BlockFile extends BlockPost {
-  final String url;
-  final String fileName;
+  String url;
+  String fileName;
   final Map<String, dynamic> metadata; // type(docx, excel, ...), size, showingFileName
 
   BlockFile({required super.id, required this.url, this.fileName = "default", required this.metadata}) :

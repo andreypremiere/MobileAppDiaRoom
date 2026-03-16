@@ -19,28 +19,28 @@ class ShowingPostScreen extends StatefulWidget {
 
 class _StateShowingPostScreen extends State<ShowingPostScreen> {
   // Тестовые данные для холста (Canvas). Эмулируют структуру, приходящую с бэкенда.
-  final testCanvas = canvCust.Canvas(
-    id: "canvas_id",
-    payload: [
-      {
-        "text":
-            "Привет! Это мой новый концепт для MASTERio. Оцените освещение на рендере ниже! 🎨",
-      },
-      {
-        "photo":
-            "https://img.freepik.com/free-photo/vividly-colored-hummingbird-nature_23-2151495435.jpg?semt=ais_hybrid&w=740&q=80",
-      },
-      {
-        "text":
-            "Кстати, я использовал Blender для моделирования и Octane для финального прохода.",
-      },
-      {
-        "video":
-            "https://rutube.ru/video/0d18fd147b83c840d0c8a67be4b5b21c/?r=wd",
-      },
-      {"text": "Скоро выложу туториал по этому проекту. Не переключайтесь! 🚀"},
-    ],
-  );
+  // final testCanvas = canvCust.Canvas(
+  //   id: "canvas_id",
+  //   payload: [
+  //     {
+  //       "text":
+  //           "Привет! Это мой новый концепт для MASTERio. Оцените освещение на рендере ниже! 🎨",
+  //     },
+  //     {
+  //       "photo":
+  //           "https://img.freepik.com/free-photo/vividly-colored-hummingbird-nature_23-2151495435.jpg?semt=ais_hybrid&w=740&q=80",
+  //     },
+  //     {
+  //       "text":
+  //           "Кстати, я использовал Blender для моделирования и Octane для финального прохода.",
+  //     },
+  //     {
+  //       "video":
+  //           "https://rutube.ru/video/0d18fd147b83c840d0c8a67be4b5b21c/?r=wd",
+  //     },
+  //     {"text": "Скоро выложу туториал по этому проекту. Не переключайтесь! 🚀"},
+  //   ],
+  // );
 
   String? avatarUrl;
 
@@ -174,9 +174,9 @@ class _StateShowingPostScreen extends State<ShowingPostScreen> {
               spacing: 10, // Современный способ задания отступов между блоками
               children: [
                 // Итерация по элементам холста и их динамическая отрисовка
-                for (var element in testCanvas.payload) ...[
-                  _buildCanvasElement(element.keys.first, element.values.first),
-                ],
+                // for (var element in testCanvas.payload) ...[
+                //   _buildCanvasElement(element.keys.first, element.values.first),
+                // ],
               ],
             ),
           ),
