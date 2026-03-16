@@ -13,25 +13,28 @@ import 'package:provider/provider.dart';
 
 void main() async {
   // Гарантируем инициализацию связей с нативной платформой перед асинхронными вызовами
-  WidgetsFlutterBinding.ensureInitialized();
-
-  // Создаем экземпляр провайдера и предварительно загружаем данные пользователя из хранилища
-  final authProvider = AuthProvider();
-  await authProvider.loadUser();
+  // WidgetsFlutterBinding.ensureInitialized();
+  //
+  // // Создаем экземпляр провайдера и предварительно загружаем данные пользователя из хранилища
+  // final authProvider = AuthProvider();
+  // await authProvider.loadUser();
 
   runApp(
     // Оборачиваем все приложение в провайдер для доступа к состоянию авторизации
-    ChangeNotifierProvider.value(
-      value: authProvider,
-      child: App(authProvider: authProvider),
-    ),
+    // ChangeNotifierProvider.value(
+    //   value: authProvider,
+    //   child: App(authProvider: authProvider),
+    // ),]
+    App()
   );
 }
 
 class App extends StatelessWidget {
-  final AuthProvider authProvider;
+  // final AuthProvider authProvider;
 
-  const App({super.key, required this.authProvider});
+  // const App({super.key, required this.authProvider});
+  const App();
+
 
   @override
   Widget build(BuildContext context) {
@@ -39,34 +42,34 @@ class App extends StatelessWidget {
       // Настройка навигации через GoRouter
       routerConfig: GoRouter(
         // Перенаправляем пользователя автоматически при изменении состояния в AuthProvider
-        refreshListenable: authProvider,
+        // refreshListenable: authProvider,
         initialLocation: '/',
-        redirect: (context, state) {
-          final bool loggedIn = authProvider.isAuthenticated;
-          // Список путей, доступных без авторизации
-          final publicRoutes = ['/login', '/registration', '/verifyCode'];
-          final bool isPublicPage = publicRoutes.contains(
-            state.matchedLocation,
-          );
-
-          // Если пользователь не в системе и пытается зайти на закрытый экран — на логин
-          if (!loggedIn && !isPublicPage) {
-            return '/login';
-          }
-
-          // Если пользователь уже авторизован, не пускаем его на страницы входа/регистрации
-          if (loggedIn && isPublicPage) {
-            return '/';
-          }
-
-          // В остальных случаях оставляем пользователя там, куда он шел
-          return null;
-        },
+        // redirect: (context, state) {
+        //   final bool loggedIn = authProvider.isAuthenticated;
+        //   // Список путей, доступных без авторизации
+        //   final publicRoutes = ['/login', '/registration', '/verifyCode'];
+        //   final bool isPublicPage = publicRoutes.contains(
+        //     state.matchedLocation,
+        //   );
+        //
+        //   // Если пользователь не в системе и пытается зайти на закрытый экран — на логин
+        //   if (!loggedIn && !isPublicPage) {
+        //     return '/login';
+        //   }
+        //
+        //   // Если пользователь уже авторизован, не пускаем его на страницы входа/регистрации
+        //   if (loggedIn && isPublicPage) {
+        //     return '/';
+        //   }
+        //
+        //   // В остальных случаях оставляем пользователя там, куда он шел
+        //   return null;
+        // },
         routes: [
           // Главный экран ленты
           GoRoute(
             path: '/',
-            builder: (context, state) => const MainPageScreen(),
+            builder: (context, state) => const NewPublicPostScreen(),
           ),
 
           // Экран верификации с передачей userId через аргумент extra
