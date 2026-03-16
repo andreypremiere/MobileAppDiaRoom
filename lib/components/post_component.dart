@@ -49,7 +49,7 @@ class _StatePostComponent extends State<PostComponent> {
                   aspectRatio: 16 / 9,
                   child: Ink.image(
                     image: const NetworkImage(
-                      'https://i.ytimg.com/vi/8pYzCQAgH6Y/maxresdefault.jpg?sqp=-oaymwEmCIAKENAF8quKqQMa8AEB-AH-CYAC0AWKAgwIABABGGUgZShlMA8=&amp;rs=AOn4CLB_SdsIPXNROLGTlBMTy3SFJY3PQg',
+                      'https://images.wallpaperscraft.com/image/single/lake_trees_silhouettes_882066_3840x2160.jpg',
                     ),
                     // Растягивание изображения на всю доступную область
                     fit: BoxFit.cover,

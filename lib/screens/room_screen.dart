@@ -24,13 +24,15 @@ class RoomScreen extends StatefulWidget {
 
 class _RoomState extends State<RoomScreen> {
   late Future<Map<String, dynamic>?> _roomFuture;
+  late String? currentRoomId;
   bool _isBioVisible = false; // Состояние, показано ли bio или нет
 
   @override
   void initState() {
     super.initState();
-    // 2. Инициализируем запрос при старте.
+    // Инициализируем запрос при старте.
     // context.read можно использовать в initState, если не слушать изменения.
+    currentRoomId = context.read<AuthProvider>().user?.roomId;
     final token = context.read<AuthProvider>().user?.token ?? "";
     _roomFuture = api.getRoomByRoomId(widget.roomId, token);
   }
@@ -87,6 +89,25 @@ class _RoomState extends State<RoomScreen> {
                   height: 30,
                 ),
               ),
+              actions: [
+                if (widget.roomId == currentRoomId)
+                  IconButton(
+                    onPressed: () => {
+                      //   Здесь делать редирект на страницу редактирования комнаты
+                    },
+                    icon: SvgPicture.asset(
+                      'assets/icons/edit.svg',
+                      width: 28,
+                      height: 28,
+                      colorFilter: const ColorFilter.mode(
+                        Color(0x80000000), // Цвет, в который хотим покрасить
+                        BlendMode
+                            .srcIn, // Режим наложения (srcIn — закрасить иконку целиком)
+                      ),
+                    ),
+                  ),
+                const SizedBox(width: 8),
+              ],
             ),
             body: Stack(
               children: [
@@ -305,13 +326,28 @@ class _RoomState extends State<RoomScreen> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Text(
-                                    'Витрина',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: 26,
-                                      fontFamily: 'Caveat',
-                                    ),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      const Text(
+                                        'Витрина',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: 26,
+                                          fontFamily: 'Caveat',
+                                        ),
+                                      ),
+                                      IconButton(
+                                        onPressed: () {
+                                          context.push('/newPublicPost');
+                                        },
+                                        icon: SvgPicture.asset(
+                                          'assets/icons/plus.svg',
+                                          width: 28,
+                                          height: 28,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                   Align(
                                     alignment: Alignment.center,

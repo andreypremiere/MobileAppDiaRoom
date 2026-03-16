@@ -1,5 +1,6 @@
 import 'package:dia_room/screens/login_screen.dart';
 import 'package:dia_room/screens/main_page_screen.dart';
+import 'package:dia_room/screens/new_public_post_screen.dart';
 import 'package:dia_room/screens/personal_posts_screen.dart';
 import 'package:dia_room/screens/registration_screen.dart';
 import 'package:dia_room/screens/room_screen.dart';
@@ -104,6 +105,10 @@ class App extends StatelessWidget {
             path: '/roomPosts',
             builder: (context, state) => const PersonalPostsScreen(),
           ),
+
+          // Новый пост для витрины
+          GoRoute(path: '/newPublicPost',
+          builder: (context, state) => const NewPublicPostScreen())
         ],
       ),
       debugShowCheckedModeBanner: false,

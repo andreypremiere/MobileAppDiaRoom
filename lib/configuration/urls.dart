@@ -1,5 +1,7 @@
 // Базовый адрес сервера
 const String baseUrl = 'http://192.168.0.101:8080';
+// const String baseUrl = 'http://10.142.132.227:8080';
+
 
 // Urls для user-microservice
 const String newUserUrl = '$baseUrl/auth/newUser';
