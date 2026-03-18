@@ -1,4 +1,6 @@
 import 'package:dia_room/models/canvas.dart';
+
+// import 'package:dia_room/screens/test.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
@@ -18,6 +20,22 @@ class NewPublicPostScreen extends StatefulWidget {
 class NewPublicPostState extends State<NewPublicPostScreen> {
   final List<BlockPost> _blocks = [];
   final ImagePicker _picker = ImagePicker();
+  int? _focusedIndex;
+
+  void _addBlock(BlockPostType type) {
+    setState(() {
+      if (type == BlockPostType.text) {
+        _addTextBlock();
+      }
+    });
+  }
+
+  void _addTextBlock() {
+    BlockText newTextBlock = BlockText();
+    _blocks.add(newTextBlock);
+    _focusedIndex = _blocks.length - 1;
+
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -122,6 +140,7 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
                       onSelected: (BlockPostType value) {
                         print("Выбрано: $value");
                         // Здесь вызываешь свои функции: _addText(), _addPhoto() и т.д.
+                        _addBlock(value);
                       },
 
                       // Сами пункты меню
@@ -155,12 +174,107 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
                   ],
                 ),
               )
-            : Text('В списке есть значения'),
+            : Stack(
+                children: [
+                  Positioned.fill(
+                    child: ListView.builder(
+                      itemCount: _blocks.length,
+                      itemBuilder: (context, index) {
+                        return _buildBlock(index);
+                      },
+                    ),
+                  ),
+                  Positioned(
+                    bottom: 10,
+                    right: 10,
+                    child: PopupMenuButton<BlockPostType>(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      // Цвет фона меню
+                      color: Colors.white,
+                      padding: EdgeInsets.zero,
+                      // Тень (делаем мягкую)
+                      elevation: 5,
+                      // Сдвигаем меню на 50 пикселей вниз, чтобы не перекрывать кнопку "+"
+                      offset: const Offset(10, 10),
+                      // Твоя кнопка теперь просто открывает меню
+                      child: ElevatedButton(
+                        onPressed: null,
+                        // Ставим null, так как за нажатие теперь отвечает PopupMenuButton
+                        style: ElevatedButton.styleFrom(
+                          disabledBackgroundColor: const Color(0xFF525252),
+                          // Твой цвет
+                          disabledForegroundColor: Colors.white,
+                          shape: const CircleBorder(),
+                          // Делаем кнопку круглой
+                          padding: const EdgeInsets.all(8),
+                        ),
+                        child: const Icon(Icons.add, size: 40),
+                      ),
+
+                      // Что делать при выборе пункта
+                      onSelected: (BlockPostType value) {
+                        print("Выбрано: $value");
+                        // Здесь вызываешь свои функции: _addText(), _addPhoto() и т.д.
+                        _addBlock(value);
+                      },
+
+                      // Сами пункты меню
+                      itemBuilder: (context) =>
+                          BlockPostType.values.map((type) {
+                            return PopupMenuItem<BlockPostType>(
+                              height: 40,
+                              value: type,
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    type.icon,
+                                    color: const Color(0xFF797979),
+                                    size: 22,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  // Отступ между иконкой и текстом
+                                  Text(
+                                    type.label,
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w500,
+                                      color: Color(0xFF333333),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }).toList(),
+                    ),
+                  ),
+                ],
+              ),
       ),
     );
   }
 
-  Widget _buildBlock(BlockPost block) {
-    return Container();
+  Widget _buildBlock(int index) {
+    return Container(
+      width: 40,
+      height: 50,
+      color: _focusedIndex == index ? Colors.red : Colors.amber,
+      child: Text(_blocks[index].type.label),
+    );
   }
+}
+
+class BlockPost {
+  final BlockPostType type;
+
+  BlockPost({required this.type});
+}
+
+class BlockText extends BlockPost {
+  String text;
+  Map<String, dynamic> metadata;
+
+  BlockText({this.text = "", this.metadata = const {}})
+    : super(type: BlockPostType.text);
 }
