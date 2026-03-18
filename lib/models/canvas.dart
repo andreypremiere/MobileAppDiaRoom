@@ -1,4 +1,6 @@
 // Canvas представляет собой класс содержимого поста
+import 'package:flutter/material.dart';
+
 class Canvas {
   final String id;
   final List<BlockPost> payload;
@@ -20,12 +22,32 @@ class Canvas {
 
 enum BlockPostType {
   text,
-  photo,
   photos,
-  video,
   videos,
   audio,
   file
+}
+
+extension BlockPostTypeExtension on BlockPostType {
+  String get label {
+    switch (this) {
+      case BlockPostType.text: return 'Текст';
+      case BlockPostType.photos: return 'Фотографии';
+      case BlockPostType.videos: return 'Видео';
+      case BlockPostType.audio: return 'Аудио';
+      case BlockPostType.file: return 'Файл';
+    }
+  }
+
+  IconData get icon {
+    switch (this) {
+      case BlockPostType.text: return Icons.text_fields;
+      case BlockPostType.photos: return Icons.photo;
+      case BlockPostType.videos: return Icons.videocam;
+      case BlockPostType.audio: return Icons.audiotrack;
+      case BlockPostType.file: return Icons.description;
+    }
+  }
 }
 
 class BlockPost {
@@ -44,18 +66,15 @@ class BlockText extends BlockPost {
   );
 }
 
-class BlockPhoto extends BlockPost {
+class Photo {
   String url;
   final Map<String, dynamic> metadata; // size
 
-  BlockPhoto({required super.id, required this.url, this.metadata = const {}}) :
-      super(
-        type: BlockPostType.photo
-      );
+  Photo({required this.url, this.metadata = const {}});
 }
 
 class BlockPhotos extends BlockPost {
-  final List<BlockPhoto> data;
+  final List<Photo> data;
   final Map<String, dynamic> metadata; // method_showing
 
   BlockPhotos({required super.id, required this.data, required this.metadata}) :
@@ -64,18 +83,15 @@ class BlockPhotos extends BlockPost {
       );
 }
 
-class BlockVideo extends BlockPost {
+class Video {
   String url;
   final Map<String, dynamic> metadata; // preview_url, duration, size, quality
 
-  BlockVideo({required super.id, required this.url, required this.metadata}) :
-        super(
-          type: BlockPostType.video
-      );
+  Video({required this.url, required this.metadata});
 }
 
 class BlockVideos extends BlockPost {
-  final List<BlockVideo> data;
+  final List<Video> data;
 
   BlockVideos({required super.id, required this.data}) :
         super(
