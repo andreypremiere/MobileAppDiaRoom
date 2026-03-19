@@ -5,7 +5,6 @@ import 'package:dia_room/screens/personal_posts_screen.dart';
 import 'package:dia_room/screens/registration_screen.dart';
 import 'package:dia_room/screens/room_screen.dart';
 import 'package:dia_room/screens/showing_post_screen.dart';
-import 'package:dia_room/screens/test.dart';
 import 'package:dia_room/screens/verify_code_screen.dart';
 import 'package:dia_room/utils/auth_service.dart';
 import 'package:flutter/material.dart';
