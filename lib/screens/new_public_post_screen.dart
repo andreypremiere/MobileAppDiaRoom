@@ -43,13 +43,14 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
   }
 
   void _addBlock(BlockPostType type) {
-    setState(() {
+    FocusManager.instance.primaryFocus?.unfocus();
+    FocusScope.of(context).unfocus();
+
       if (type == BlockPostType.text) {
         _addTextBlock();
       } else if (type == BlockPostType.photos) {
         _addPhotosBlock();
       }
-    });
   }
 
   void _moveUpBlock(int targetIndex) {
@@ -73,6 +74,7 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
   }
 
   void _deleteBlock(int index) {
+
     setState(() {
       _blocks.removeAt(index);
       _focusedIndex = null;
@@ -90,7 +92,7 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
 
     // Только один addPostFrameCallback и без лишнего setState
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      newBlock.focusNode.requestFocus();   // напрямую!
+      newBlock.focusNode.requestFocus();
     });
   }
 
@@ -102,6 +104,8 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
       _focusedIndex = _blocks.length - 1;
     });
 
+    // FocusScope.of(context).unfocus();
+
     // Для фото сразу убираем клавиатуру БЕЗ лишнего setState
     WidgetsBinding.instance.addPostFrameCallback((_) {
       FocusScope.of(context).unfocus();
@@ -112,10 +116,17 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
+        print('Объект в фокусе до: ${FocusManager.instance.primaryFocus}');
         FocusScope.of(context).unfocus();
-        _focusedIndex = null;
+        FocusManager.instance.primaryFocus?.unfocus();
+        setState(() {
+          _focusedIndex = null;
+        });
+        print("Фокус снят, индекс сброшен");
+        print("Build triggered with index: $_focusedIndex");
+        print('Объект в фокусе после: ${FocusManager.instance.primaryFocus}');
       },
-      behavior: HitTestBehavior.deferToChild,
+      behavior: HitTestBehavior.opaque,
       child: Scaffold(
         appBar: PreferredSize(
           preferredSize: Size.fromHeight(60),
@@ -181,10 +192,10 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
                       style: TextStyle(fontFamily: 'SNPro', fontSize: 24),
                     ),
                     PopupMenuButton<BlockPostType>(
-                      onOpened: () {
-                        // Жестко снимаем фокус до открытия меню
-                        FocusManager.instance.primaryFocus?.unfocus();
-                      },
+                      // onOpened: () {
+                      //   // Жестко снимаем фокус до открытия меню
+                      //   FocusManager.instance.primaryFocus?.unfocus();
+                      // },
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
