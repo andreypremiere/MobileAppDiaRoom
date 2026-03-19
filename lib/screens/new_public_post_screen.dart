@@ -28,17 +28,59 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
       if (type == BlockPostType.text) {
         _addTextBlock();
       }
+      else if (type == BlockPostType.photos) {
+        _addPhotosBlock();
+      }
+    });
+  }
+
+  void _moveUpBlock(int targetIndex) {
+    setState(() {
+      if (targetIndex == 0) return;
+      BlockPost targetValue = _blocks[targetIndex - 1];
+      _blocks[targetIndex - 1] = _blocks[targetIndex];
+      _blocks[targetIndex] = targetValue;
+      _focusBlock(targetIndex-1);
+    });
+  }
+
+  void _moveDownBlock(int targetIndex) {
+    setState(() {
+      if (targetIndex >= _blocks.length - 1) return;
+      BlockPost targetValue = _blocks[targetIndex + 1];
+      _blocks[targetIndex + 1] = _blocks[targetIndex];
+      _blocks[targetIndex] = targetValue;
+      _focusBlock(targetIndex + 1);
+    });
+  }
+
+  void _deleteBlock(int index) {
+    setState(() {
+      _blocks.removeAt(index);
+      _focusedIndex = null;
     });
   }
 
   void _addTextBlock() {
-    FocusScope.of(context).unfocus();
     TextEditingController newController = TextEditingController();
     BlockText newTextBlock = BlockText(controller: newController);
+
     _blocks.add(newTextBlock);
     _focusedIndex = _blocks.length - 1;
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      newTextBlock.focusNode.requestFocus();
+      _focusBlock(_focusedIndex!);
+    });
+  }
+
+  void _addPhotosBlock() {
+    BlockPhotos newPhotosBlock = BlockPhotos();
+
+    _blocks.add(newPhotosBlock);
+    _focusedIndex = _blocks.length - 1;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _focusBlock(_focusedIndex!);
     });
   }
 
@@ -47,10 +89,16 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
     return GestureDetector(
       onTap: () {
         FocusScopeNode currentFocus = FocusScope.of(context);
+
+        // Снимаем системный фокус (клавиатуру)
         if (!currentFocus.hasPrimaryFocus) {
           currentFocus.unfocus();
-          _focusedIndex = null;
         }
+
+        // Снимаем выделение с вашего блока (синюю рамку)
+        setState(() {
+          _focusedIndex = null;
+        });
       },
       child: Scaffold(
         appBar: PreferredSize(
@@ -357,7 +405,7 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
                       iconColor: const Color(0xFF797979),
                       onPressed: () {
                         print('Блок $index вниз');
-                        // TODO: Логика перемещения блока вниз
+                        _moveDownBlock(index);
                       },
                     ),
                     _buildActionButton(
@@ -365,7 +413,7 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
                       iconColor: const Color(0xFF797979),
                       onPressed: () {
                         print('Блок $index вверх');
-                        // TODO: Логика перемещения блока вверх
+                        _moveUpBlock(index);
                       },
                     ),
                     _buildActionButton(
@@ -373,6 +421,7 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
                       iconColor: Colors.redAccent, // Красный для удаления
                       onPressed: () {
                         print('Удалить блок $index');
+                        _deleteBlock(index);
                       },
                     ),
                   ],
@@ -388,6 +437,9 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
     if (block.type == BlockPostType.text) {
       return _buildTextBlock(block as BlockText, index);
     }
+    if (block.type == BlockPostType.photos) {
+      return _buildPhotosBlock(block as BlockPhotos, index);
+    }
     return SizedBox();
   }
 
@@ -402,6 +454,132 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
       default:
         return FontWeight.w400;
     }
+  }
+
+  Widget _buildPhotosBlock(BlockPhotos block, int index) {
+    const double blockHeight = 70;
+    const double borderRadius = 8;
+
+    // Вспомогательный виджет для рамки (кнопка добавления или контейнер для фото)
+    Widget _buildDecoratedBox({required Widget child, Color? backgroundColor}) {
+      return Container(
+        width: blockHeight, // Делаем квадратным
+        height: blockHeight,
+        decoration: BoxDecoration(
+          color: backgroundColor ?? Colors.white,
+          borderRadius: BorderRadius.circular(borderRadius),
+          border: Border.all(color: const Color(0xFFC9C9C9), width: 1),
+        ),
+        // ClipRRect нужен, чтобы изображение не вылезало за скругленные углы рамки
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(borderRadius - 1),
+          child: child,
+        ),
+      );
+    }
+
+    Future<void> _pickImagesForBlock(BlockPhotos block) async {
+      try {
+        // image_picker позволяет выбрать несколько фото за раз
+        final List<XFile> pickedFiles = await _picker.pickMultiImage(
+          // imageQuality: 50,
+        );
+
+        if (pickedFiles.isNotEmpty) {
+          setState(() {
+            // Добавляем пути к новым файлам в существующий список блока
+            block.paths.addAll(pickedFiles.map((file) => file.path));
+          });
+          print('Добавлено ${pickedFiles.length} фото. Всего в блоке: ${block.paths.length}');
+        }
+      } catch (e) {
+        print("Ошибка при выборе изображений: $e");
+        // Здесь можно показать пользователю SnackBar с ошибкой
+      }
+    }
+
+    return Container(
+      // Внутренние отступы самого блока, чтобы контент не прилипал к синей/серой рамке фокуса
+      padding: const EdgeInsets.all(8),
+      // Ограничиваем высоту всего блока
+      height: blockHeight + 32, // Высота контента + padding
+      child: SingleChildScrollView(
+        // clipBehavior: Clip.none,
+        scrollDirection: Axis.horizontal, // Прокрутка по горизонтали
+        child: Padding(padding: EdgeInsets.symmetric(vertical: 8), child: Row(
+          children: [
+            // 1. КНОПКА ДОБАВЛЕНИЯ (всегда первая)
+            GestureDetector(
+              onTap: () {
+                print('Нажата кнопка добавления фото в блок $index');
+                _pickImagesForBlock(block); // Вызываем метод выбора фото (см. ниже)
+              },
+              child: _buildDecoratedBox(
+                backgroundColor: const Color(0xFFF5F5F5),
+                child: const Icon(
+                  Icons.add_a_photo_outlined,
+                  color: Color(0xFF797979),
+                  size: 24,
+                ),
+              ),
+            ),
+
+            // Добавляем разделитель между кнопкой и первым фото, если фото есть
+            if (block.paths.isNotEmpty) const SizedBox(width: 8),
+
+            // 2. СПИСОК ВЫБРАННЫХ ФОТО
+            // Используем .asMap().entries.map, чтобы получить и путь, и индекс (для удаления)
+            ...block.paths.asMap().entries.map((entry) {
+              final int photoIndex = entry.key;
+              final String path = entry.value;
+
+              return Padding(
+                // Отступ между фотографиями
+                padding: const EdgeInsets.only(right: 8),
+                child: Stack(
+                  clipBehavior: Clip.none, // Чтобы кнопка удаления могла вылезать за пределы
+                  children: [
+                    // Сама миниатюра фото
+                    _buildDecoratedBox(
+                      child: Image.file(
+                        File(path),
+                        fit: BoxFit.cover, // Растягиваем фото, чтобы заполнить квадрат
+                      ),
+                    ),
+
+                    // КНОПКА УДАЛЕНИЯ ОДНОГО ФОТО (маленький крестик сверху справа)
+                    Positioned(
+                      top: -6,
+                      right: -6,
+                      child: GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            block.paths.removeAt(photoIndex); // Удаляем фото из списка
+                          });
+                          print('Удалено фото $photoIndex из блока $index');
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(2),
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFD3D3D3),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.close,
+                            size: 18,
+                            color: Color(0xFF2A2A2A),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
+          ],
+        ),)
+      ),
+    );
   }
 
   Widget _buildTextBlock(BlockText block, int index) {
@@ -486,4 +664,10 @@ class BlockText extends BlockPost {
     controller.dispose();
     focusNode.dispose();
   }
+}
+
+class BlockPhotos extends BlockPost {
+  List<String> paths;
+
+  BlockPhotos({List<String>? paths}) : paths = paths ?? [], super(type: BlockPostType.photos);
 }

@@ -19,7 +19,6 @@ class TextPostBlock extends PostBlock {
   })  : controller = TextEditingController(text: initialText),
         focusNode = FocusNode(),
         super(type: 'text');
-
 }
 
 class PhotoPostBlock extends PostBlock {
