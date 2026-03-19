@@ -27,8 +27,7 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
     setState(() {
       if (type == BlockPostType.text) {
         _addTextBlock();
-      }
-      else if (type == BlockPostType.photos) {
+      } else if (type == BlockPostType.photos) {
         _addPhotosBlock();
       }
     });
@@ -40,7 +39,7 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
       BlockPost targetValue = _blocks[targetIndex - 1];
       _blocks[targetIndex - 1] = _blocks[targetIndex];
       _blocks[targetIndex] = targetValue;
-      _focusBlock(targetIndex-1);
+      _focusBlock(targetIndex - 1);
     });
   }
 
@@ -304,11 +303,220 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
                           }).toList(),
                     ),
                   ),
+                  if (_focusedIndex != null)
+                    Positioned(
+                      bottom: 10,
+                      left: 10,
+                      child: Container(
+                        height: 56,
+                        width: 240,
+                        decoration: BoxDecoration(
+                          color: Colors.blueGrey,
+                          borderRadius: BorderRadius.circular(28),
+                        ),
+                        child: _buildToolbar(),
+                      ),
+                    ),
                 ],
               ),
       ),
     );
   }
+
+  Widget _buildToolbar() {
+    BlockPostType type = _blocks[_focusedIndex!].type;
+
+    SingleChildScrollView listView(Row content) => SingleChildScrollView(
+      // clipBehavior: Clip.none,
+      scrollDirection: Axis.horizontal,
+      child: Padding(padding: EdgeInsets.all(6), child: content),
+    );
+
+    if (type == BlockPostType.text) {
+      return listView(_buildTextToolbar());
+    }
+    if (type == BlockPostType.photos) {
+      return listView(_buildPhotoToolbar());
+    }
+
+    return Container();
+  }
+
+  Row _buildPhotoToolbar() {
+    BlockPhotos block = _blocks[_focusedIndex!] as BlockPhotos;
+    MethodViewPhoto currentType = block.methodView;
+
+    return Row(
+      children: [
+        PopupMenuButton<MethodViewPhoto>(
+          // Применяем твою стилизацию из шаблона
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          color: Colors.white,
+          padding: EdgeInsets.zero,
+          elevation: 5,
+          offset: const Offset(0, 45), // Сдвиг вниз, чтобы не перекрывать кнопку
+
+          // Внешний вид кнопки
+          child: Container(
+            width: 120, // Фиксированная ширина кнопки
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: const Color(0xFF525252), // Твой темный цвет
+              borderRadius: BorderRadius.circular(20), // Делаем кнопку овальной/круглой
+            ),
+            child: Center(
+              child: Text(
+                currentType.label,
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis, // Лишний текст превращается в "..."
+                style: const TextStyle(
+                  fontFamily: 'SNPro',
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.white, // Белый текст на темном фоне
+                ),
+              ),
+            ),
+          ),
+
+          onSelected: (MethodViewPhoto value) {
+            setState(() {
+              block.methodView = value;
+            });
+          },
+
+          // Стилизация пунктов меню по твоему шаблону
+          itemBuilder: (context) => MethodViewPhoto.values.map((type) {
+            return PopupMenuItem<MethodViewPhoto>(
+              height: 40,
+              value: type,
+              child: Row(
+                children: [
+                  // Иконка (если у TextType есть иконки, если нет — можно убрать или заменить на точку)
+                  Icon(
+                    type == TextType.header ? Icons.title : Icons.notes,
+                    color: const Color(0xFF797979),
+                    size: 18,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    type.label,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontFamily: 'SNPro',
+                      fontWeight: currentType == type ? FontWeight.w600 : FontWeight.w500,
+                      color: const Color(0xFF333333),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+
+  Row _buildTextToolbar() {
+    // Получаем текущий блок
+    BlockText textBlock = _blocks[_focusedIndex!] as BlockText;
+    TextType currentType = textBlock.textType;
+
+    return Row(
+      children: [
+        PopupMenuButton<TextType>(
+          // Применяем твою стилизацию из шаблона
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          color: Colors.white,
+          padding: EdgeInsets.zero,
+          elevation: 5,
+          offset: const Offset(0, 45),
+          // Сдвиг вниз, чтобы не перекрывать кнопку
+
+          // Внешний вид кнопки
+          child: Container(
+            width: 120, // Фиксированная ширина кнопки
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: const Color(0xFF525252), // Твой темный цвет
+              borderRadius: BorderRadius.circular(
+                20,
+              ), // Делаем кнопку овальной/круглой
+            ),
+            child: Center(
+              child: Text(
+                currentType.label,
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                // Лишний текст превращается в "..."
+                style: const TextStyle(
+                  fontFamily: 'SNPro',
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.white, // Белый текст на темном фоне
+                ),
+              ),
+            ),
+          ),
+
+          onSelected: (TextType value) {
+            setState(() {
+              textBlock.textType = value;
+              // Логика метаданных
+              if (value == TextType.header) {
+                textBlock.metadata['size'] = 22;
+                textBlock.metadata['weight'] = 800;
+              } else if (value == TextType.subtitle) {
+                textBlock.metadata['size'] = 18;
+                textBlock.metadata['weight'] = 600;
+              } else {
+                textBlock.metadata['size'] = 16;
+                textBlock.metadata['weight'] = 400;
+              }
+            });
+          },
+
+          // Стилизация пунктов меню по твоему шаблону
+          itemBuilder: (context) => TextType.values.map((type) {
+            return PopupMenuItem<TextType>(
+              height: 40,
+              value: type,
+              child: Row(
+                children: [
+                  // Иконка (если у TextType есть иконки, если нет — можно убрать или заменить на точку)
+                  Icon(
+                    type == TextType.header ? Icons.title : Icons.notes,
+                    color: const Color(0xFF797979),
+                    size: 18,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    type.label,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontFamily: 'SNPro',
+                      fontWeight: currentType == type
+                          ? FontWeight.w600
+                          : FontWeight.w500,
+                      color: const Color(0xFF333333),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+
+
 
   void _focusBlock(int index) {
     setState(() {
@@ -463,7 +671,8 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
     // Вспомогательный виджет для рамки (кнопка добавления или контейнер для фото)
     Widget _buildDecoratedBox({required Widget child, Color? backgroundColor}) {
       return Container(
-        width: blockHeight, // Делаем квадратным
+        width: blockHeight,
+        // Делаем квадратным
         height: blockHeight,
         decoration: BoxDecoration(
           color: backgroundColor ?? Colors.white,
@@ -490,7 +699,9 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
             // Добавляем пути к новым файлам в существующий список блока
             block.paths.addAll(pickedFiles.map((file) => file.path));
           });
-          print('Добавлено ${pickedFiles.length} фото. Всего в блоке: ${block.paths.length}');
+          print(
+            'Добавлено ${pickedFiles.length} фото. Всего в блоке: ${block.paths.length}',
+          );
         }
       } catch (e) {
         print("Ошибка при выборе изображений: $e");
@@ -506,78 +717,87 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
       child: SingleChildScrollView(
         // clipBehavior: Clip.none,
         scrollDirection: Axis.horizontal, // Прокрутка по горизонтали
-        child: Padding(padding: EdgeInsets.symmetric(vertical: 8), child: Row(
-          children: [
-            // 1. КНОПКА ДОБАВЛЕНИЯ (всегда первая)
-            GestureDetector(
-              onTap: () {
-                print('Нажата кнопка добавления фото в блок $index');
-                _pickImagesForBlock(block); // Вызываем метод выбора фото (см. ниже)
-              },
-              child: _buildDecoratedBox(
-                backgroundColor: const Color(0xFFF5F5F5),
-                child: const Icon(
-                  Icons.add_a_photo_outlined,
-                  color: Color(0xFF797979),
-                  size: 24,
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: 8),
+          child: Row(
+            children: [
+              // 1. КНОПКА ДОБАВЛЕНИЯ (всегда первая)
+              GestureDetector(
+                onTap: () {
+                  print('Нажата кнопка добавления фото в блок $index');
+                  _pickImagesForBlock(
+                    block,
+                  ); // Вызываем метод выбора фото (см. ниже)
+                },
+                child: _buildDecoratedBox(
+                  backgroundColor: const Color(0xFFF5F5F5),
+                  child: const Icon(
+                    Icons.add_a_photo_outlined,
+                    color: Color(0xFF797979),
+                    size: 24,
+                  ),
                 ),
               ),
-            ),
 
-            // Добавляем разделитель между кнопкой и первым фото, если фото есть
-            if (block.paths.isNotEmpty) const SizedBox(width: 8),
+              // Добавляем разделитель между кнопкой и первым фото, если фото есть
+              if (block.paths.isNotEmpty) const SizedBox(width: 8),
 
-            // 2. СПИСОК ВЫБРАННЫХ ФОТО
-            // Используем .asMap().entries.map, чтобы получить и путь, и индекс (для удаления)
-            ...block.paths.asMap().entries.map((entry) {
-              final int photoIndex = entry.key;
-              final String path = entry.value;
+              // 2. СПИСОК ВЫБРАННЫХ ФОТО
+              // Используем .asMap().entries.map, чтобы получить и путь, и индекс (для удаления)
+              ...block.paths.asMap().entries.map((entry) {
+                final int photoIndex = entry.key;
+                final String path = entry.value;
 
-              return Padding(
-                // Отступ между фотографиями
-                padding: const EdgeInsets.only(right: 8),
-                child: Stack(
-                  clipBehavior: Clip.none, // Чтобы кнопка удаления могла вылезать за пределы
-                  children: [
-                    // Сама миниатюра фото
-                    _buildDecoratedBox(
-                      child: Image.file(
-                        File(path),
-                        fit: BoxFit.cover, // Растягиваем фото, чтобы заполнить квадрат
+                return Padding(
+                  // Отступ между фотографиями
+                  padding: const EdgeInsets.only(right: 8),
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    // Чтобы кнопка удаления могла вылезать за пределы
+                    children: [
+                      // Сама миниатюра фото
+                      _buildDecoratedBox(
+                        child: Image.file(
+                          File(path),
+                          fit: BoxFit
+                              .cover, // Растягиваем фото, чтобы заполнить квадрат
+                        ),
                       ),
-                    ),
 
-                    // КНОПКА УДАЛЕНИЯ ОДНОГО ФОТО (маленький крестик сверху справа)
-                    Positioned(
-                      top: -6,
-                      right: -6,
-                      child: GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            block.paths.removeAt(photoIndex); // Удаляем фото из списка
-                          });
-                          print('Удалено фото $photoIndex из блока $index');
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.all(2),
-                          decoration: const BoxDecoration(
-                            color: Color(0xFFD3D3D3),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.close,
-                            size: 18,
-                            color: Color(0xFF2A2A2A),
+                      // КНОПКА УДАЛЕНИЯ ОДНОГО ФОТО (маленький крестик сверху справа)
+                      Positioned(
+                        top: -6,
+                        right: -6,
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              block.paths.removeAt(
+                                photoIndex,
+                              ); // Удаляем фото из списка
+                            });
+                            print('Удалено фото $photoIndex из блока $index');
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(2),
+                            decoration: const BoxDecoration(
+                              color: Color(0xFFD3D3D3),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.close,
+                              size: 18,
+                              color: Color(0xFF2A2A2A),
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-              );
-            }).toList(),
-          ],
-        ),)
+                    ],
+                  ),
+                );
+              }).toList(),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -645,6 +865,25 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
   }
 }
 
+enum TextType {
+  header('Заголовок'),
+  subtitle('Подзаголовок'),
+  text('Текст');
+
+  final String label;
+
+  const TextType(this.label);
+}
+
+enum MethodViewPhoto {
+  tiles('Плитки'),
+  slider('Слайдер');
+
+  final String label;
+
+  const MethodViewPhoto(this.label);
+}
+
 class BlockPost {
   final BlockPostType type;
 
@@ -654,11 +893,15 @@ class BlockPost {
 class BlockText extends BlockPost {
   TextEditingController controller;
   final FocusNode focusNode;
+  TextType textType;
   Map<String, dynamic> metadata;
 
-  BlockText({required this.controller, this.metadata = const {}})
-    : focusNode = FocusNode(),
-      super(type: BlockPostType.text);
+  BlockText({
+    required this.controller,
+    Map<String, dynamic>? metadata,
+    this.textType = TextType.text,
+  }) : focusNode = FocusNode(), metadata = metadata ?? {},
+       super(type: BlockPostType.text);
 
   void dispose() {
     controller.dispose();
@@ -668,6 +911,10 @@ class BlockText extends BlockPost {
 
 class BlockPhotos extends BlockPost {
   List<String> paths;
+  MethodViewPhoto methodView;
 
-  BlockPhotos({List<String>? paths}) : paths = paths ?? [], super(type: BlockPostType.photos);
+
+  BlockPhotos({List<String>? paths, this.methodView = MethodViewPhoto.tiles})
+    : paths = paths ?? [],
+      super(type: BlockPostType.photos);
 }
