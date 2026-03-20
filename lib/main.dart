@@ -74,7 +74,9 @@ class App extends StatelessWidget {
           // Главный экран ленты
           GoRoute(
             path: '/',
-            builder: (context, state) => const NewPublicPostScreen(),
+            // builder: (context, state) => const NewPublicPostScreen(),
+            builder: (context, state) => const PersonalPostsScreen(),
+
           ),
 
           // Экран верификации с передачей userId через аргумент extra
