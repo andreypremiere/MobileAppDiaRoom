@@ -1,3 +1,4 @@
+import 'package:dia_room/models/post_creator/post_creating.dart';
 import 'package:dia_room/screens/login_screen.dart';
 import 'package:dia_room/screens/main_page_screen.dart';
 import 'package:dia_room/screens/new_public_post_screen.dart';
@@ -5,6 +6,7 @@ import 'package:dia_room/screens/personal_posts_screen.dart';
 import 'package:dia_room/screens/post_preview_screen.dart';
 import 'package:dia_room/screens/registration_screen.dart';
 import 'package:dia_room/screens/room_screen.dart';
+import 'package:dia_room/screens/set_settings_for_post_screen.dart';
 import 'package:dia_room/screens/showing_post_screen.dart';
 import 'package:dia_room/screens/verify_code_screen.dart';
 import 'package:dia_room/utils/auth_service.dart';
@@ -86,10 +88,10 @@ class App extends StatelessWidget {
           GoRoute(path: '/post_preview',
             builder: (context, state) {
               // Извлекаем наш список блоков, который мы передадим при навигации
-              final blocks = state.extra as List<BlockPost>;
+              final post = state.extra as PostCreateRequest;
 
               // Возвращаем экран и передаем ему данные
-              return PostPreviewScreen(blocks: blocks);
+              return PostPreviewScreen(post: post);
             },),
 
           // Экраны регистрации и входа
@@ -103,6 +105,13 @@ class App extends StatelessWidget {
           GoRoute(
             path: "/showPost",
             builder: (context, state) => const ShowingPostScreen(),
+          ),
+          GoRoute(
+            path: '/set_settings',
+            builder: (context, state) {
+              final post = state.extra as PostCreateRequest;
+              return SetSettingsForPostScreen(post: post);
+            },
           ),
 
           // Профиль комнаты

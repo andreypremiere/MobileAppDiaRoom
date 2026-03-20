@@ -11,6 +11,7 @@ import '../models/enums/post_types.dart';
 import '../models/post_creator/block_photos.dart';
 import '../models/post_creator/block_post.dart';
 import '../models/post_creator/block_text.dart';
+import '../models/post_creator/post_creating.dart';
 
 class NewPublicPostScreen extends StatefulWidget {
   const NewPublicPostScreen({super.key});
@@ -171,7 +172,9 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
               ElevatedButton(
                 onPressed: () {
                   print('Отправлен дальше');
-                  context.push('/post_preview', extra: _blocks);
+                  final request = PostCreateRequest(blocks: _blocks);
+                  context.push('/post_preview', extra: request);
+                  // context.push('/post_preview', extra: _blocks);
                 },
                 style: ElevatedButton.styleFrom(
                   padding: EdgeInsets.symmetric(vertical: 4, horizontal: 12),

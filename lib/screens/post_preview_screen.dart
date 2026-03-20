@@ -8,17 +8,18 @@ import '../models/post_creator/block_post.dart';
 import '../models/post_creator/block_text.dart';
 import '../models/post_creator/block_photos.dart';
 import '../models/post_creator/block_video.dart';
+import '../models/post_creator/post_creating.dart';
 import '../utils/utils.dart';
 
 class PostPreviewScreen extends StatelessWidget {
-  final List<BlockPost> blocks;
+  final PostCreateRequest post;
 
-  const PostPreviewScreen({super.key, required this.blocks});
+  const PostPreviewScreen({super.key, required this.post});
 
   @override
   Widget build(BuildContext context) {
     // Фильтруем пустые текстовые блоки и блоки без медиа, чтобы не было пустых дыр
-    final validBlocks = blocks.where((block) {
+    final validBlocks = post.blocks.where((block) {
       if (block is BlockText) return block.controller.text.trim().isNotEmpty;
       if (block is BlockPhotos) return block.paths.isNotEmpty;
       if (block is BlockVideo) return block.path != null && block.previewPath != null;
@@ -47,6 +48,35 @@ class PostPreviewScreen extends StatelessWidget {
               fontFamily: 'SNPro',
             ),
           ),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                print('Отправлен дальше');
+                context.push('/set_settings', extra: post);
+              },
+              style: ElevatedButton.styleFrom(
+                padding: EdgeInsets.symmetric(vertical: 4, horizontal: 12),
+                backgroundColor: Color(0xFFC9C9C9),
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(
+                    12,
+                  ), // Чем больше число, тем круглее
+                  // Можно также добавить рамку самой кнопке:
+                  // side: BorderSide(color: Colors.black, width: 1),
+                ),
+              ),
+              child: Text(
+                'Далее',
+                style: TextStyle(
+                  fontFamily: 'SNPro',
+                  fontSize: 16,
+                  color: Colors.black54,
+                ),
+              ),
+            ),
+            SizedBox(width: 6),
+          ],
         ),
       ),
       body: ListView.separated(
