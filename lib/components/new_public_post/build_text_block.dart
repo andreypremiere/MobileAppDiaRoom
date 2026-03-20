@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../models/post_creator/block_text.dart';
+import '../../utils/utils.dart';
 
 class TextBlockWidget extends StatelessWidget {
   final BlockText block;
@@ -10,15 +11,6 @@ class TextBlockWidget extends StatelessWidget {
     required this.block,
     required this.onFocus,
   });
-
-  FontWeight _getFontWeight(int value) {
-    switch (value) {
-      case 400: return FontWeight.w400;
-      case 600: return FontWeight.w600;
-      case 800: return FontWeight.w800;
-      default: return FontWeight.w400;
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +27,7 @@ class TextBlockWidget extends StatelessWidget {
         style: TextStyle(
           fontFamily: 'SNPro',
           fontSize: block.metadata['size']?.toDouble() ?? 16,
-          fontWeight: _getFontWeight(block.metadata['weight'] ?? 0),
+          fontWeight: getFontWeight(block.metadata['weight'] ?? 0),
           color: Colors.black87,
         ),
         decoration: InputDecoration(

@@ -1,3 +1,4 @@
+import 'package:dia_room/models/post_creator/block_video.dart';
 import 'package:flutter/material.dart';
 import '../../models/enums/post_types.dart';
 import '../../models/post_creator/block_post.dart';
@@ -7,6 +8,7 @@ import '../../models/post_creator/block_text.dart';
 // Импортируй созданные выше виджеты
 import 'build_text_block.dart';
 import 'build_photos_block.dart';
+import 'build_video_block.dart';
 
 class PostBlockWrapper extends StatelessWidget {
   final BlockPost block;
@@ -66,6 +68,12 @@ class PostBlockWrapper extends StatelessWidget {
       return PhotosBlockWidget(
         block: block as BlockPhotos,
         onChanged: onChanged, // Передаем колбэк для обновления фото
+      );
+    }
+    if (block is BlockVideo) {
+      return VideoBlockWidget(
+        block: block as BlockVideo,
+        onChanged: onChanged,
       );
     }
     return const SizedBox();

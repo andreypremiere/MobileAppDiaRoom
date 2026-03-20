@@ -2,6 +2,7 @@ import 'package:dia_room/screens/login_screen.dart';
 import 'package:dia_room/screens/main_page_screen.dart';
 import 'package:dia_room/screens/new_public_post_screen.dart';
 import 'package:dia_room/screens/personal_posts_screen.dart';
+import 'package:dia_room/screens/post_preview_screen.dart';
 import 'package:dia_room/screens/registration_screen.dart';
 import 'package:dia_room/screens/room_screen.dart';
 import 'package:dia_room/screens/showing_post_screen.dart';
@@ -10,6 +11,8 @@ import 'package:dia_room/utils/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+
+import 'models/post_creator/block_post.dart';
 
 void main() async {
   // Гарантируем инициализацию связей с нативной платформой перед асинхронными вызовами
@@ -80,6 +83,14 @@ class App extends StatelessWidget {
               return VerifyCode(userId: id);
             },
           ),
+          GoRoute(path: '/post_preview',
+            builder: (context, state) {
+              // Извлекаем наш список блоков, который мы передадим при навигации
+              final blocks = state.extra as List<BlockPost>;
+
+              // Возвращаем экран и передаем ему данные
+              return PostPreviewScreen(blocks: blocks);
+            },),
 
           // Экраны регистрации и входа
           GoRoute(

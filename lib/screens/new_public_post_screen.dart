@@ -1,8 +1,9 @@
+import 'package:dia_room/models/post_creator/block_video.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
-import 'dart:io'; // Для работы с File
-import 'package:image_picker/image_picker.dart';
+// import 'dart:io'; // Для работы с File
+// import 'package:image_picker/image_picker.dart';
 
 import '../components/new_public_post/block_toolbar.dart';
 import '../components/new_public_post/post_block_widget.dart';
@@ -22,7 +23,7 @@ class NewPublicPostScreen extends StatefulWidget {
 
 class NewPublicPostState extends State<NewPublicPostScreen> {
   final List<BlockPost> _blocks = [];
-  final ImagePicker _picker = ImagePicker();
+  // final ImagePicker _picker = ImagePicker();
   int? _focusedIndex;
 
   void _focusBlock(int index) {
@@ -50,6 +51,8 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
         _addTextBlock();
       } else if (type == BlockPostType.photos) {
         _addPhotosBlock();
+      } else if (type == BlockPostType.videos) {
+        _addVideoBlock();
       }
   }
 
@@ -112,6 +115,20 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
     });
   }
 
+  void _addVideoBlock() {
+    final newBlock = BlockVideo();
+
+    setState(() {
+      _blocks.add(newBlock);
+      _focusedIndex = _blocks.length - 1;
+    });
+
+    // Для фото сразу убираем клавиатуру БЕЗ лишнего setState
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      FocusScope.of(context).unfocus();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -154,6 +171,7 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
               ElevatedButton(
                 onPressed: () {
                   print('Отправлен дальше');
+                  context.push('/post_preview', extra: _blocks);
                 },
                 style: ElevatedButton.styleFrom(
                   padding: EdgeInsets.symmetric(vertical: 4, horizontal: 12),
