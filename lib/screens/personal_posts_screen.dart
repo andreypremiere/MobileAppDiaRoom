@@ -57,6 +57,21 @@ class _StatePersonalPostsScreen extends State<PersonalPostsScreen> {
               ),
             ],
           ),
+          actions: [
+            Padding(padding: EdgeInsets.only(right: 0),
+                child: IconButton(onPressed: () {
+                  print('Переход в черновики');
+                }, icon: Icon(Icons.folder_copy_outlined,
+                  size: 30,
+                  color: Color(0xFF1F1F1F),))),
+            // SizedBox(width: 2,),
+            Padding(padding: EdgeInsets.only(right: 4),
+            child: IconButton(onPressed: () {
+              context.push('/newPublicPost');
+            }, icon: Icon(Icons.add,
+            size: 34,
+            color: Color(0xFF1F1F1F),))),
+          ],
           // Установка прозрачного фона для AppBar (использование withAlpha для плавности)
           backgroundColor: const Color(0xFFFFA6A6).withAlpha(0),
           // Кастомная кнопка "Назад" с использованием SVG
@@ -64,11 +79,8 @@ class _StatePersonalPostsScreen extends State<PersonalPostsScreen> {
             onPressed: () {
               context.pop();
             },
-            icon: SvgPicture.asset(
-              'assets/icons/button_back.svg',
-              width: 30,
-              height: 30,
-            ),
+            icon: Icon(Icons.arrow_back_rounded, size: 34,
+              color: Color(0xFF1F1F1F),)
           ),
         ),
         // Прокручиваемая колонка с постами
