@@ -123,11 +123,23 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
   }
 
   /// Удаление блока из черновика
-  void _deleteBlock(int index) {
-    setState(() {
-      postDraft.blocks.removeAt(index);
-      _focusedIndex = null;
-    });
+  Future<void> _deleteBlock(int index) async {
+    final block = postDraft.blocks[index];
+
+    // 1. Проверяем тип блока и вызываем очистку ресурсов
+    if (block is BlockPhotos) {
+      await block.deleteAllPhotos(); // Твой новый метод для очистки списка фото
+    } else if (block is BlockVideo) {
+      await block.clearBlock(); // Метод для удаления видео и его превью
+    }
+
+    // 2. Только после удаления файлов убираем блок из UI
+    if (mounted) {
+      setState(() {
+        postDraft.blocks.removeAt(index);
+        _focusedIndex = null;
+      });
+    }
   }
 
   /// Специфичные методы инициализации блоков (Текст, Фото, Видео)
@@ -319,7 +331,7 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
                           onFocus: () => _focusBlock(index),
                           onMoveUp: () => _moveUpBlock(index),
                           onMoveDown: () => _moveDownBlock(index),
-                          onDelete: () => _deleteBlock(index),
+                          onDelete: () async => await _deleteBlock(index),
                           onChanged: () => setState(() {}),
                         );
                       },

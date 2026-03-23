@@ -17,7 +17,10 @@ class PhotosBlockWidget extends StatelessWidget {
   Future<void> _pickImages(BuildContext context) async {
     try {
       if (block.isFull) {
-        AppInfoDialog.show(context, "Лимит фотографий для блока уже достигнут :(");
+        AppInfoDialog.show(
+          context,
+          "Лимит фотографий для блока уже достигнут :(",
+        );
         return;
       }
 
@@ -70,17 +73,18 @@ class PhotosBlockWidget extends StatelessWidget {
           child: Row(
             children: [
               // Кнопка добавления фото
-              if (!block.isFull) GestureDetector(
-                onTap: () => _pickImages(context),
-                child: _buildDecoratedBox(
-                  backgroundColor: const Color(0xFFF5F5F5),
-                  child: const Icon(
-                    Icons.add_a_photo_outlined,
-                    color: Color(0xFF797979),
-                    size: 24,
+              if (!block.isFull)
+                GestureDetector(
+                  onTap: () => _pickImages(context),
+                  child: _buildDecoratedBox(
+                    backgroundColor: const Color(0xFFF5F5F5),
+                    child: const Icon(
+                      Icons.add_a_photo_outlined,
+                      color: Color(0xFF797979),
+                      size: 24,
+                    ),
                   ),
                 ),
-              ),
               if (block.paths.isNotEmpty) const SizedBox(width: 8),
 
               // Список фото
@@ -100,9 +104,9 @@ class PhotosBlockWidget extends StatelessWidget {
                         top: -6,
                         right: -6,
                         child: GestureDetector(
-                          onTap: () {
-                            block.paths.removeAt(photoIndex);
-                            onChanged(); // Обновляем UI после удаления
+                          onTap: () async {
+                            await block.deletePhoto(photoIndex);
+                            onChanged();
                           },
                           child: Container(
                             padding: const EdgeInsets.all(2),
@@ -110,7 +114,11 @@ class PhotosBlockWidget extends StatelessWidget {
                               color: Color(0xFFD3D3D3),
                               shape: BoxShape.circle,
                             ),
-                            child: const Icon(Icons.close, size: 18, color: Color(0xFF2A2A2A)),
+                            child: const Icon(
+                              Icons.close,
+                              size: 18,
+                              color: Color(0xFF2A2A2A),
+                            ),
                           ),
                         ),
                       ),

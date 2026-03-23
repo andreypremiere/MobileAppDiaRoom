@@ -14,6 +14,8 @@ class PostDraft {
   // Сюда потом можно будет класть ссылку на мастерскую например
   Map<String, dynamic> metadata;
 
+  static const int maxCountHashtags = 6;
+
   PostDraft({
     this.name = '',
     this.previewPath,

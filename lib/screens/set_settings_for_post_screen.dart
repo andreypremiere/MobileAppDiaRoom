@@ -46,6 +46,33 @@ class _SetSettingsForPostState extends State<SetSettingsForPostScreen> {
     super.dispose();
   }
 
+  void _handleTagInput(String value) {
+    // Если строка заканчивается на пробел или запятую
+    if (value.endsWith(' ') || value.endsWith(',')) {
+      // Убираем лишние символы и пробелы
+      String tag = value.replaceAll(',', '').trim();
+
+      if (tag.isNotEmpty) {
+        setState(() {
+          if (widget.postDraft.hashtags.length < PostDraft.maxCountHashtags) {
+          // Добавляем в список, если такого тега еще нет
+          if (!widget.postDraft.hashtags.contains(tag)) {
+            widget.postDraft.hashtags.add(tag);
+          }} else {
+            AppInfoDialog.show(context, "Можно добавить только 6 хештегов :(");
+          }
+          _tagsController.clear(); // Очищаем поле для нового ввода
+        });
+      }
+    }
+  }
+
+  void _removeTag(String tag) {
+    setState(() {
+      widget.postDraft.hashtags.remove(tag);
+    });
+  }
+
   void _startPublication() {
     if (widget.postDraft.name.isEmpty) {
       // Вызываем статический метод, а не просто создаем виджет
@@ -101,6 +128,44 @@ class _SetSettingsForPostState extends State<SetSettingsForPostScreen> {
     }
   }
 
+  Widget _buildTagsDisplay() {
+    if (widget.postDraft.hashtags.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8.0),
+      child: Wrap(
+        spacing: 8.0, // Расстояние между тегами по горизонтали
+        runSpacing: 4.0, // Расстояние между строками
+        children: widget.postDraft.hashtags.map((tag) => _buildTagChip(tag)).toList(),
+      ),
+    );
+  }
+
+  Widget _buildTagChip(String tag) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: const Color(0xFFE8E8E8),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFD1D1D1)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            "#$tag",
+            style: const TextStyle(fontFamily: 'SNPro', fontSize: 14),
+          ),
+          const SizedBox(width: 4),
+          GestureDetector(
+            onTap: () => _removeTag(tag),
+            child: const Icon(Icons.close, size: 16, color: Color(0xFF797979)),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -131,9 +196,26 @@ class _SetSettingsForPostState extends State<SetSettingsForPostScreen> {
             const SizedBox(height: 24),
             _buildSectionTitle("Хештеги"),
             const SizedBox(height: 8),
-            _buildCustomField(
+            _buildTagsDisplay(),
+
+            TextField(
               controller: _tagsController,
-              // hint: '#art #design #dia_room',
+              onChanged: _handleTagInput, // Привязываем обработчик
+              style: const TextStyle(fontFamily: 'SNPro', fontSize: 16),
+              decoration: InputDecoration(
+                hintText: 'Введите тег и нажмите пробел...',
+                filled: true,
+                fillColor: Colors.white,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Color(0xFFD1D1D1)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Color(0xFFB4B4B4), width: 1.5),
+                ),
+              ),
             ),
 
             const SizedBox(height: 24),

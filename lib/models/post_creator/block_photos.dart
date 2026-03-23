@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import '../enums/post_types.dart';
 import 'block_post.dart';
 
@@ -26,5 +28,25 @@ class BlockPhotos extends BlockPost {
     }
     paths.add(path);
     return true;
+  }
+
+  Future<void> deletePhoto(int index) async {
+    if (await File(paths[index]).exists()) await File(paths[index]).delete();
+    paths.removeAt(index);
+  }
+
+  Future<void> deleteAllPhotos() async {
+    for (String path in paths) {
+      try {
+        final file = File(path);
+        if (await file.exists()) {
+          await file.delete();
+        }
+      } catch (e) {
+        // Логируем ошибку, если файл занят другим процессом
+        print("Ошибка при удалении файла $path: $e");
+      }
+    }
+
   }
 }
