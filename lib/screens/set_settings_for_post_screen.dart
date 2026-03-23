@@ -1,13 +1,17 @@
 import 'dart:io';
 import 'package:dia_room/models/post_creator/post_creating.dart';
+import 'package:dia_room/services/public_post_creating/creating_post_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
 
 import '../models/enums/post_categories.dart';
 import '../models/post_creator/block_post.dart';
+import '../models/user.dart';
+import '../utils/auth_service.dart';
 
 class SetSettingsForPostScreen extends StatefulWidget {
   final PostCreateRequest post; // Принимаем блоки с прошлого экрана
@@ -23,8 +27,12 @@ class _SetSettingsForPostState extends State<SetSettingsForPostScreen> {
   final TextEditingController _tagsController = TextEditingController();
   final ImagePicker _picker = ImagePicker();
 
-  // String? _previewImagePath;
-  // PostCategory? _selectedCategory;
+  void _startPublication() {
+    User user = context.read<AuthProvider>().user!;
+    CreatingPostService service = CreatingPostService(post: widget.post, user: user);
+    service.startCreating();
+  }
+
 
   Future<void> _pickAndCropImage() async {
     final XFile? pickedFile = await _picker.pickImage(
@@ -317,7 +325,7 @@ class _SetSettingsForPostState extends State<SetSettingsForPostScreen> {
           widget.post.name = _namePostController.text;
           widget.post.hashtags.addAll(_tagsController.text.split(' '));
           print(widget.post);
-          // TODO: Логика публикации
+          _startPublication();
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFF525252),

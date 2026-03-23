@@ -81,4 +81,21 @@ class User {
 
   // fromJson десериализует строку JSON обратно в объект User
   static User? fromJson(String source) => User.fromMap(json.decode(source));
+
+  @override
+  String toString() {
+    // Вычисляем, сколько времени осталось до истечения (для удобства отладки)
+    final expiryDate = DateTime.fromMillisecondsSinceEpoch(exp * 1000);
+    final timeLeft = expiryDate.difference(DateTime.now());
+    final isExpired = timeLeft.isNegative;
+
+    return '''
+User {
+  userId: $userId,
+  roomId: $roomId,
+  token: ${token.substring(0, 10)}...${token.substring(token.length - 10)}, 
+  status: ${isExpired ? 'EXPIRED' : 'ACTIVE'},
+  expiresIn: ${timeLeft.inHours}h ${timeLeft.inMinutes % 60}m
+}''';
+  }
 }
