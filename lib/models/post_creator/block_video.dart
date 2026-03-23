@@ -73,4 +73,9 @@ class BlockVideo extends BlockPost {
     fileSize = null;
     duration = null;
   }
+
+  @override
+  bool isEmpty() {
+    return path?.isEmpty ?? true;
+  }
 }

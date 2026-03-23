@@ -1,4 +1,5 @@
 enum PostCategory {
+  defaultVal('not-selected', 'Не выбрана'),
   visualArts('visual-arts', 'Арт и Иллюстрация'),
   traditionalArt('traditional-art', 'Живопись и Рисование'),
   photography('photography', 'Фотография'),

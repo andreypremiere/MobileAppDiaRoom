@@ -20,4 +20,9 @@ class BlockText extends BlockPost {
     controller.dispose();
     focusNode.dispose();
   }
+
+  @override
+  bool isEmpty() {
+    return controller.text.isEmpty;
+  }
 }

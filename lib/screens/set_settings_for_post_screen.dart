@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'package:dia_room/models/post_creator/post_creating.dart';
+import 'package:dia_room/models/post_creator/post_draft.dart';
 import 'package:dia_room/services/public_post_creating/creating_post_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
@@ -8,15 +8,16 @@ import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
+import '../components/info_dialog_component.dart';
 import '../models/enums/post_categories.dart';
 import '../models/post_creator/block_post.dart';
 import '../models/user.dart';
 import '../utils/auth_service.dart';
 
 class SetSettingsForPostScreen extends StatefulWidget {
-  final PostCreateRequest post; // Принимаем блоки с прошлого экрана
+  final PostDraft postDraft;
 
-  const SetSettingsForPostScreen({super.key, required this.post});
+  const SetSettingsForPostScreen({super.key, required this.postDraft});
 
   @override
   State<SetSettingsForPostScreen> createState() => _SetSettingsForPostState();
@@ -27,12 +28,46 @@ class _SetSettingsForPostState extends State<SetSettingsForPostScreen> {
   final TextEditingController _tagsController = TextEditingController();
   final ImagePicker _picker = ImagePicker();
 
-  void _startPublication() {
-    User user = context.read<AuthProvider>().user!;
-    CreatingPostService service = CreatingPostService(post: widget.post, user: user);
-    service.startCreating();
+  @override
+  void initState() {
+    super.initState();
+    _namePostController.text = widget.postDraft.name;
+
+
+    _namePostController.addListener(() {
+      widget.postDraft.name = _namePostController.text;
+    });
   }
 
+  @override
+  void dispose() {
+    _namePostController.dispose();
+    _tagsController.dispose();
+    super.dispose();
+  }
+
+  void _startPublication() {
+    if (widget.postDraft.name.isEmpty) {
+      // Вызываем статический метод, а не просто создаем виджет
+      AppInfoDialog.show(context, "Название поста не должно быть пустым :(");
+      return;
+    }
+
+    if (widget.postDraft.previewPath == null || widget.postDraft.previewPath!.isEmpty) {
+      AppInfoDialog.show(context, "Необходимо выбрать превью :(");
+      return;
+    }
+
+    if (widget.postDraft.category == PostCategory.defaultVal) {
+      AppInfoDialog.show(context, "Необходимо выбрать категорию публикации :(");
+      return;
+    }
+
+    print("Публикация разрешена!");
+    // User user = context.read<AuthProvider>().user!;
+    // CreatingPostService service = CreatingPostService(post: widget.postDraft, user: user);
+    // service.startCreating();
+  }
 
   Future<void> _pickAndCropImage() async {
     final XFile? pickedFile = await _picker.pickImage(
@@ -61,7 +96,7 @@ class _SetSettingsForPostState extends State<SetSettingsForPostScreen> {
       );
 
       if (croppedFile != null) {
-        setState(() => widget.post.previewPath = croppedFile.path);
+        setState(() => widget.postDraft.previewPath = croppedFile.path);
       }
     }
   }
@@ -177,7 +212,7 @@ class _SetSettingsForPostState extends State<SetSettingsForPostScreen> {
   }
 
   Widget _buildImagePicker() {
-    if (widget.post.previewPath == null) {
+    if (widget.postDraft.previewPath == null) {
       return InkWell(
         onTap: _pickAndCropImage,
         child: Container(
@@ -212,7 +247,7 @@ class _SetSettingsForPostState extends State<SetSettingsForPostScreen> {
           aspectRatio: 16 / 9,
           child: ClipRRect(
             borderRadius: BorderRadius.circular(12),
-            child: Image.file(File(widget.post.previewPath!), fit: BoxFit.cover),
+            child: Image.file(File(widget.postDraft.previewPath!), fit: BoxFit.cover),
           ),
         ),
         Positioned(
@@ -224,7 +259,7 @@ class _SetSettingsForPostState extends State<SetSettingsForPostScreen> {
               const SizedBox(width: 8),
               _buildCircleBtn(
                 Icons.delete_outline,
-                () => setState(() => widget.post.previewPath = null),
+                () => setState(() => widget.postDraft.previewPath = null),
                 isRed: true,
               ),
             ],
@@ -261,7 +296,7 @@ class _SetSettingsForPostState extends State<SetSettingsForPostScreen> {
       color: Color(0xFFD0D0D0),
       offset: const Offset(0, 50),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      onSelected: (val) => setState(() => widget.post.category = val),
+      onSelected: (val) => setState(() => widget.postDraft.category = val),
       itemBuilder: (context) => PostCategory.values
           .map(
             (cat) => PopupMenuItem(
@@ -284,11 +319,11 @@ class _SetSettingsForPostState extends State<SetSettingsForPostScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              widget.post.category?.label ?? "Выберите категорию",
+              widget.postDraft.category.label,
               style: TextStyle(
                 fontFamily: 'SNPro',
                 fontSize: 16,
-                color: widget.post.category == null ? Colors.grey : Colors.black,
+                color: Colors.black,
               ),
             ),
             const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
@@ -310,7 +345,7 @@ class _SetSettingsForPostState extends State<SetSettingsForPostScreen> {
         ),
       ),
       child: Text(
-        "Блоков контента: ${widget.post.blocks.length}",
+        "Блоков контента: ${widget.postDraft.blocks.length}",
         style: const TextStyle(fontFamily: 'SNPro', color: Colors.grey),
       ),
     );
@@ -322,9 +357,6 @@ class _SetSettingsForPostState extends State<SetSettingsForPostScreen> {
       height: 56,
       child: ElevatedButton(
         onPressed: () {
-          widget.post.name = _namePostController.text;
-          widget.post.hashtags.addAll(_tagsController.text.split(' '));
-          print(widget.post);
           _startPublication();
         },
         style: ElevatedButton.styleFrom(

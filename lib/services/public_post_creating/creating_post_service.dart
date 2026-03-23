@@ -7,7 +7,7 @@ import 'dart:io';
 import 'package:dia_room/models/post_creator/block_photos.dart';
 import 'package:dia_room/models/post_creator/block_post.dart';
 import 'package:dia_room/models/post_creator/block_video.dart';
-import 'package:dia_room/models/post_creator/post_creating.dart';
+import 'package:dia_room/models/post_creator/post_draft.dart';
 import 'package:dia_room/models/post_creator/preview_request.dart';
 import 'package:dia_room/models/post_creator/upload_file_info.dart';
 import 'package:dia_room/models/user.dart';
@@ -18,7 +18,7 @@ import '../../api/post_microservice/post_api.dart';
 import '../../models/post_creator/upload_task.dart';
 
 class CreatingPostService {
-  final PostCreateRequest post;
+  final PostDraft post;
   final User user;
 
   CreatingPostService({required this.post, required this.user});
@@ -167,7 +167,7 @@ class CreatingPostService {
       title: post.name, token: user.token,
     );
 
-    post.postId = postId;
+    // post.postId = postId;
 
     print('Пост создан: $postId');
 

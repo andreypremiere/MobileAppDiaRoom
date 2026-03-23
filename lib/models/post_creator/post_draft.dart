@@ -5,34 +5,38 @@ import 'block_photos.dart';
 import 'block_text.dart';
 import 'block_video.dart';
 
-class PostCreateRequest {
+class PostDraft {
   List<BlockPost> blocks;
   String name;
   String? previewPath;
-  PostCategory? category;
+  PostCategory category;
   List<String> hashtags;
-  String? postId;
+  // Сюда потом можно будет класть ссылку на мастерскую например
+  Map<String, dynamic> metadata;
 
-  PostCreateRequest({
-    required this.blocks,
+  PostDraft({
     this.name = '',
     this.previewPath,
-    this.category,
+    this.category = PostCategory.defaultVal,
     List<String>? hashtags,
-  }) : hashtags = hashtags ?? [];
+    List<BlockPost>? blocks,
+    Map<String, dynamic>? metadata
+  }) : hashtags = hashtags ?? [], blocks = blocks ?? [], metadata = metadata ?? {};
 
   @override
   String toString() {
     return '''
-PostCreateRequest {
-  name: $name,
-  previewPath: $previewPath,
-  category: ${category?.label},
-  hashtags: $hashtags,
-  blocksCount: ${blocks.length}
+      PostDraft {
+      name: $name,
+      previewPath: $previewPath,
+      category: ${category.id},
+      hashtags: $hashtags,
+      blocksCount: ${blocks.length},
+      metadata: $metadata
 }''';
   }
 
+  // ИСПРАВИТЬ
   Map<String, dynamic> toPublishedPayload() {
     return {
       "blocks": blocks.map((block) {

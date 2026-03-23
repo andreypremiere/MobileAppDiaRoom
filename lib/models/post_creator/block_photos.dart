@@ -9,4 +9,12 @@ class BlockPhotos extends BlockPost {
   BlockPhotos({List<String>? paths, this.methodView = MethodViewPhoto.tiles})
       : paths = paths ?? [],
         super(type: BlockPostType.photos);
+
+  @override
+  bool isEmpty() {
+    if (paths.isEmpty) {
+      return true;
+    }
+    return false;
+  }
 }

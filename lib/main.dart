@@ -1,4 +1,4 @@
-import 'package:dia_room/models/post_creator/post_creating.dart';
+import 'package:dia_room/models/post_creator/post_draft.dart';
 import 'package:dia_room/screens/login_screen.dart';
 import 'package:dia_room/screens/main_page_screen.dart';
 import 'package:dia_room/screens/new_public_post_screen.dart';
@@ -91,10 +91,10 @@ class App extends StatelessWidget {
           GoRoute(path: '/post_preview',
             builder: (context, state) {
               // Извлекаем наш список блоков, который мы передадим при навигации
-              final post = state.extra as PostCreateRequest;
+              final post = state.extra as PostDraft;
 
               // Возвращаем экран и передаем ему данные
-              return PostPreviewScreen(post: post);
+              return PostPreviewScreen(postDraft: post);
             },),
 
           // Экраны регистрации и входа
@@ -112,8 +112,8 @@ class App extends StatelessWidget {
           GoRoute(
             path: '/set_settings',
             builder: (context, state) {
-              final post = state.extra as PostCreateRequest;
-              return SetSettingsForPostScreen(post: post);
+              final post = state.extra as PostDraft;
+              return SetSettingsForPostScreen(postDraft: post);
             },
           ),
 
