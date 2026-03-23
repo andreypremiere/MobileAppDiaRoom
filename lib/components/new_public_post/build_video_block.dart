@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:dia_room/components/info_dialog_component.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../models/post_creator/block_video.dart';
@@ -31,31 +32,39 @@ class _VideoBlockWidgetState extends State<VideoBlockWidget> {
   //     ..initialize().then((_) => setState(() {}));
   // }
 
-  Future<void> _pickVideo() async {
+  Future<void> _pickVideo(BuildContext context) async {
     final ImagePicker picker = ImagePicker();
+    setState(() => _isProcessing = true);
     final XFile? video = await picker.pickVideo(source: ImageSource.gallery);
 
-    if (video != null) {
-      final file = File(video.path);
-      final bytes = await file.length();
-
-      // Проверка на 200 МБ
-      if (bytes > 200 * 1024 * 1024) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Файл слишком большой (макс. 200 МБ)")),
-        );
-        return;
-      }
-      setState(() => _isProcessing = true);
-
-      await widget.block.loadMetadata(video.path);
-      await widget.block.generatePreview();
-      // _initController();
+    if (video == null) {
       setState(() => _isProcessing = false);
-
-      widget.onChanged();
+      // Просто выходим из метода, ничего не делая
+      return;
     }
-  }
+
+    final file = File(video.path);
+    final bytes = await file.length();
+
+    // Проверка на 200 МБ
+    if (bytes > 200 * 1024 * 1024) {
+      await widget.block.clearBlock();
+      AppInfoDialog.show(context, "Размер видео слишком большой :O. Максимальный размер 200 мб.");
+      setState(() => _isProcessing = false);
+      return;
+    }
+
+    final resultLoad = await widget.block.loadMetadata(video.path, bytes);
+    final resultPreview = await widget.block.generatePreview();
+
+    if (!resultPreview || !resultLoad) {
+      AppInfoDialog.show(context, "Непредвиденная ошибка во время добавления видео :(");
+      await widget.block.clearBlock();
+    }
+    setState(() => _isProcessing = false);
+
+    widget.onChanged();
+    }
 
   // @override
   // void dispose() {
@@ -109,7 +118,7 @@ class _VideoBlockWidgetState extends State<VideoBlockWidget> {
       child: Row(
         children: [
           GestureDetector(
-            onTap: _pickVideo,
+            onTap: () => {_pickVideo(context)},
             child: Container(
               width: 60, height: 60,
               decoration: BoxDecoration(
@@ -197,8 +206,8 @@ class _VideoBlockWidgetState extends State<VideoBlockWidget> {
         constraints: const BoxConstraints(),
         // 2. Схлопываем лишние внутренние отступы темы
         visualDensity: VisualDensity.compact,        padding: const EdgeInsets.all(8),    // Настраиваем внутренний отступ
-        onPressed: () {
-          widget.block.clearBlock(); // Убедись, что имя поля совпадает (thumbnailPath)
+        onPressed: () async {
+          await widget.block.clearBlock(); // Убедись, что имя поля совпадает (thumbnailPath)
           widget.onChanged();
         },
         icon: const Icon(

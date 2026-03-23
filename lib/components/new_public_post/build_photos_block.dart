@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:dia_room/components/info_dialog_component.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../models/post_creator/block_photos.dart';
@@ -13,13 +14,26 @@ class PhotosBlockWidget extends StatelessWidget {
     required this.onChanged,
   });
 
-  Future<void> _pickImages() async {
+  Future<void> _pickImages(BuildContext context) async {
     try {
+      if (block.isFull) {
+        AppInfoDialog.show(context, "Лимит фотографий для блока уже достигнут :(");
+        return;
+      }
+
       final ImagePicker picker = ImagePicker();
-      final List<XFile> pickedFiles = await picker.pickMultiImage();
+      final List<XFile> pickedFiles = await picker.pickMultiImage(limit: 10);
 
       if (pickedFiles.isNotEmpty) {
-        block.paths.addAll(pickedFiles.map((file) => file.path));
+        if (pickedFiles.length > BlockPhotos.limitPhotos - block.paths.length) {
+          AppInfoDialog.show(context, "Можно выбрать не больше 10 фото :(");
+          return;
+        }
+
+        for (final file in pickedFiles) {
+          block.addPath(file.path);
+        }
+
         onChanged(); // Сообщаем родителю, что список путей изменился
       }
     } catch (e) {
@@ -56,8 +70,8 @@ class PhotosBlockWidget extends StatelessWidget {
           child: Row(
             children: [
               // Кнопка добавления фото
-              GestureDetector(
-                onTap: _pickImages,
+              if (!block.isFull) GestureDetector(
+                onTap: () => _pickImages(context),
                 child: _buildDecoratedBox(
                   backgroundColor: const Color(0xFFF5F5F5),
                   child: const Icon(

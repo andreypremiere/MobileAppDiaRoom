@@ -69,8 +69,33 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
     if (type == BlockPostType.text) {
       _addTextBlock();
     } else if (type == BlockPostType.photos) {
+      int countPhotoBlock = 0;
+      for (var block in postDraft.blocks) {
+        if (block.type == BlockPostType.photos) {
+          countPhotoBlock += 1;
+        }
+      }
+
+      if (countPhotoBlock >= 4) {
+        AppInfoDialog.show(context, "Пока что можно добавить только 4 блока фотографий :(");
+        return;
+      }
+
       _addPhotosBlock();
+
     } else if (type == BlockPostType.videos) {
+      int countVideoBlock = 0;
+      for (var block in postDraft.blocks) {
+        if (block.type == BlockPostType.photos) {
+          countVideoBlock += 1;
+        }
+      }
+
+      if (countVideoBlock >= 4) {
+        AppInfoDialog.show(context, "Пока что можно добавить только 4 блока видео :(");
+        return;
+      }
+
       _addVideoBlock();
     }
   }

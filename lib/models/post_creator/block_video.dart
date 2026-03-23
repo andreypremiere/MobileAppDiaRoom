@@ -17,45 +17,45 @@ class BlockVideo extends BlockPost {
 
   BlockVideo() : super(type: BlockPostType.videos);
 
-  // Метод для загрузки метаданных и вывода в консоль
-  Future<void> loadMetadata(String videoPath) async {
-    path = videoPath;
-    final file = File(videoPath);
-    final bytes = await file.length();
+  /// Подгружает имя файла, размер файла, длительность файла
+  Future<bool> loadMetadata(String videoPath, int length) async {
+    try {
+      path = videoPath;
+      final file = File(videoPath);
+      // final bytes = await file.length();
 
-    // Переводим в МБ
-    double sizeInMb = bytes / (1024 * 1024);
-    fileSize = "${sizeInMb.toStringAsFixed(2)} MB";
-    fileName = videoPath.split('/').last;
+      // Переводим в МБ
+      double sizeInMb = length / (1024 * 1024);
+      fileSize = "${sizeInMb.toStringAsFixed(2)} MB";
+      fileName = videoPath
+          .split('/')
+          .last;
 
-    // Получаем длительность через временный контроллер
-    final controller = VideoPlayerController.file(file);
-    await controller.initialize();
-    duration = controller.value.duration;
-
-    print("--- Video Metadata ---");
-    print("File: $fileName");
-    print("Size: $fileSize");
-    print("Duration: ${duration?.inSeconds} sec");
-    print("----------------------");
-
-    await controller.dispose();
+      // Получаем длительность через временный контроллер
+      final controller = VideoPlayerController.file(file);
+      await controller.initialize();
+      duration = controller.value.duration;
+      await controller.dispose();
+    } catch (e) {
+      return false;
+    }
+    return true;
   }
 
-  Future<void> generatePreview() async {
-    if (path == null) return;
+  Future<bool> generatePreview() async {
+    if (path == null) return false;
 
-    // Генерируем превью во временную папку телефона
     final uint8list = await VideoThumbnail.thumbnailFile(
       video: path!,
       thumbnailPath: (await getTemporaryDirectory()).path,
       imageFormat: ImageFormat.JPEG,
-      maxHeight: 300, // Ограничиваем размер для экономии памяти
-      quality: 75,    // Баланс между качеством и весом файла
+      maxHeight: 600,
+      quality: 90,
     );
 
     previewPath = uint8list.path;
-    print("Превью создано: $previewPath");
+    // print("Превью создано: $previewPath");
+    return true;
   }
 
   String getformattedDuration(Duration? duration) {
@@ -66,7 +66,15 @@ class BlockVideo extends BlockPost {
     return "$minutes:$seconds";
   }
 
-  void clearBlock() {
+  Future<void> clearBlock() async {
+    if (path != null) {
+      if (await File(path!).exists()) await File(path!).delete();
+    }
+
+    if (previewPath != null) {
+      if (await File(previewPath!).exists()) await File(previewPath!).delete();
+    }
+
     path = null;
     fileName = null;
     previewPath = null;
