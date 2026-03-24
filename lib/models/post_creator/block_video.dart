@@ -12,10 +12,19 @@ class BlockVideo extends BlockPost {
   String? path;
   String? fileName;
   String? previewPath;
-  String? fileSize;
+  int? fileSize;
   Duration? duration;
 
   BlockVideo() : super(type: BlockPostType.videos);
+
+  String getStringFileSize() {
+    if (fileSize != null) {
+      return "${(fileSize! / (1024 * 1024)).toStringAsFixed(2)} MB";
+    }
+    else {
+      return "";
+    }
+  }
 
   /// Подгружает имя файла, размер файла, длительность файла
   Future<bool> loadMetadata(String videoPath, int length) async {
@@ -24,9 +33,7 @@ class BlockVideo extends BlockPost {
       final file = File(videoPath);
       // final bytes = await file.length();
 
-      // Переводим в МБ
-      double sizeInMb = length / (1024 * 1024);
-      fileSize = "${sizeInMb.toStringAsFixed(2)} MB";
+      fileSize = length;
       fileName = videoPath
           .split('/')
           .last;

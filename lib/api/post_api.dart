@@ -5,10 +5,10 @@ import 'package:dia_room/configuration/urls.dart';
 import 'package:dia_room/models/post_creator/preview_request.dart';
 import 'package:http/http.dart' as http;
 
-import '../../models/post_creator/block_photos.dart';
-import '../../models/post_creator/block_video.dart';
-import '../../models/post_creator/upload_file_info.dart';
-import '../../models/post_creator/upload_task.dart';
+import '../models/post_creator/block_photos.dart';
+import '../models/post_creator/block_video.dart';
+import '../models/post_creator/upload_file_info.dart';
+import '../models/post_creator/upload_task.dart';
 
 Future<Map<String, dynamic>> requestPresignedUrls(List<Map<String, dynamic>> files, String token, String postId, PreviewRequest? previewReq) async {
   final requestBody = {
@@ -69,30 +69,35 @@ Future<void> uploadSingleMediaFile(UploadTask task) async {
   }
 }
 
-Future<String> createPostRequest({
-  required String roomId,
-  required String categoryId,
-  required String title,
+Future<Map<dynamic, dynamic>?> createPostRequest({
+  required Map<String, dynamic> postCreating,
+  required Map<String, dynamic> modelPreview,
   required String token,
 }) async {
-  final response = await http.post(
-    Uri.parse('$baseUrl/post/createPost'),
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer $token',
-    },
-    body: jsonEncode({
-      "categorySlug": categoryId,
-      "title": title,
-    }),
-  );
+  try {
+    final response = await http.post(
+      Uri.parse('$baseUrl/post/createPost'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      // Отправляем оба объекта в одном JSON
+      body: jsonEncode({
+        "post": postCreating,
+        "preview": modelPreview,
+      }),
+    );
 
-  if (response.statusCode == 200 || response.statusCode == 201) {
-    final data = jsonDecode(response.body);
-    return data['postId']; // UUID в строке
-  } else {
-    print(response.statusCode);
-    throw Exception('Failed to create draft: ${response.body}');
+    // Проверяем на 200 (OK) или 201 (Created)
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return jsonDecode(response.body) as Map<dynamic, dynamic>;
+    } else {
+      print('Ошибка сервера (${response.statusCode}): ${response.body}');
+      return null;
+    }
+  } catch (e) {
+    print('Ошибка при выполнении запроса createPost: $e');
+    return null;
   }
 }
 

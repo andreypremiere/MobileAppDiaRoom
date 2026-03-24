@@ -9,19 +9,28 @@ import 'package:dia_room/models/post_creator/block_post.dart';
 import 'package:dia_room/models/post_creator/block_video.dart';
 import 'package:dia_room/models/post_creator/post_draft.dart';
 import 'package:dia_room/models/post_creator/preview_request.dart';
+import 'package:dia_room/models/post_creator/publication_post.dart';
 import 'package:dia_room/models/post_creator/upload_file_info.dart';
 import 'package:dia_room/models/user.dart';
-import 'package:http/http.dart' as http;
 import 'package:uuid/uuid.dart';
+// import 'package:http/http.dart' as http;
+// import 'package:uuid/uuid.dart';
 
-import '../../api/post_microservice/post_api.dart';
+import '../../api/post_api.dart';
 import '../../models/post_creator/upload_task.dart';
 
 class CreatingPostService {
   final PostDraft post;
   final User user;
+  PublicationPost publicationPost;
 
-  CreatingPostService({required this.post, required this.user});
+  CreatingPostService({
+    required this.post,
+    required this.user,
+  }) : publicationPost = PublicationPost.fromDraft(
+    draft: post,
+    roomId: user.roomId,
+  );
 
   List<UploadFileInfo> assemblyMediaFiles() {
     final List<UploadFileInfo> files = [];
@@ -158,72 +167,123 @@ class CreatingPostService {
     }
   }
 
-
+  /// Метод, выполняющий полный цикл создания поста
   Future<void> startCreating() async {
-    // 1. Создаём пост и получаем postId
-    final postId = await createPostRequest(
-      roomId: user.roomId,
-      categoryId: post.category?.id ?? 'visual-arts',
-      title: post.name, token: user.token,
-    );
 
-    // post.postId = postId;
+    /// Создаем модель превью
+    Map<String, dynamic> modelPreview;
+    try {
+      const _uuid = Uuid();
 
-    print('Пост создан: $postId');
+      if (post.previewPath == null) {
+        print("В publicationPost отсутствует previewUrl. Создание остановлено");
+        return;
+      }
 
-    // 1. Сборка всех медиафайлов
-    List<UploadFileInfo> files = assemblyMediaFiles();
-    // for (final file in files) {
-    //   print(file);
+      final fileName = post.previewPath!.split('/').last;
+
+      modelPreview = {
+        "uploadId": _uuid.v4(),
+        "filename": fileName,
+        "contentType": 'image/jpeg',
+        "size": await File(post.previewPath!).length()
+      };
+
+      } catch (e) {
+      print("Ошибка при создании модели для превью публикации");
+      return;
+    }
+
+    /// Выполняем запрос на создание поста и получаем сразу ссылки
+    /// на превью (публичную и загрузку
+    try {
+      final postCreating = {
+        "title": publicationPost.title,
+        "postStatus": publicationPost.postStatus.name,
+        "aiStatus": publicationPost.aiCheckStatus.name,
+        "categorySlug": publicationPost.categorySlug.id,
+        "hashtags": publicationPost.hashtags
+      };
+
+      print("modelPreview перед отправкой: $modelPreview");
+      print("postCreating перед отправкой: $postCreating");
+
+      final resultCreating = await createPostRequest(postCreating: postCreating,
+          modelPreview: modelPreview,
+          token: user.token);
+
+      print('Результат создания поста: $resultCreating');
+    } catch (e) {
+      print("Что-то пошло не так при создании поста $e");
+    }
+
+    print('Конец создания');
+
+
+    // // Создаём пост и получаем postId
+    // final postId = await createPostRequest(
+    //   roomId: user.roomId,
+    //   categoryId: post.category?.id ?? 'visual-arts',
+    //   title: post.name, token: user.token,
+    // );
+    //
+    // // post.postId = postId;
+    //
+    // print('Пост создан: $postId');
+    //
+    // // 1. Сборка всех медиафайлов
+    // List<UploadFileInfo> files = assemblyMediaFiles();
+    // // for (final file in files) {
+    // //   print(file);
+    // // }
+    //
+    // final preparedData = preparePresignedRequest(files);
+    //
+    // PreviewRequest? previewData;
+    // if (post.previewPath != null) {
+    //   previewData = PreviewRequest(pathPreview: post.previewPath!);
+    // } else {
+    //   previewData = null;
     // }
-
-    final preparedData = preparePresignedRequest(files);
-
-    PreviewRequest? previewData;
-    if (post.previewPath != null) {
-      previewData = PreviewRequest(pathPreview: post.previewPath!);
-    } else {
-      previewData = null;
-    }
-
-    print('Данные подготовлены. Началась отправка');
-
-    final responseBody = await requestPresignedUrls(preparedData, user.token, postId, previewData);
-
-    print("Пришедшие данные с сервера $responseBody");
-
-    if (post.previewPath != null) {
-      post.previewPath = responseBody['previewResponse']['publicUrl'];
-    }
-    // print('Ответ от сервера ${responseBody['files'].length} первый объект ${responseBody['files'][0]}');
+    //
+    // print('Данные подготовлены. Началась отправка');
+    //
+    // final responseBody = await requestPresignedUrls(preparedData, user.token, postId, previewData);
+    //
+    // print("Пришедшие данные с сервера $responseBody");
+    //
+    // if (post.previewPath != null) {
+    //   post.previewPath = responseBody['previewResponse']['publicUrl'];
+    // }
+    // // print('Ответ от сервера ${responseBody['files'].length} первый объект ${responseBody['files'][0]}');
+    // //
+    // //
+    // // print(responseBody['previewResponse']);
+    //
+    // final uploadTasks = matchPresignedUrls(files, responseBody);
+    //
+    // // Написать метод для загрузки обложки поста, она отдельно загружается
+    //
+    // // Раскомментировать
+    // await uploadAllFiles(uploadTasks);
+    //
+    // print('Все файлы загружены. Готовим финальный запрос на создание поста...');
+    //
+    // final postPayload = post.toPublishedPayload();
+    //
+    // print('canvasPayload перед отправкой: $postPayload');
+    //
+    // await publishPostRequest(
+    //   postId: postId,
+    //   payload: postPayload['blocks'],
+    //   previewUrl: postPayload['previewUrl'],
+    //   hashtags: postPayload['hashtags'],
+    //   token: user.token
+    // );
+    //
+    // print('🎉 Пост успешно опубликован!');
     //
     //
-    // print(responseBody['previewResponse']);
-
-    final uploadTasks = matchPresignedUrls(files, responseBody);
-
-    // Написать метод для загрузки обложки поста, она отдельно загружается
-
-    // Раскомментировать
-    await uploadAllFiles(uploadTasks);
-
-    print('Все файлы загружены. Готовим финальный запрос на создание поста...');
-
-    final postPayload = post.toPublishedPayload();
-
-    print('canvasPayload перед отправкой: $postPayload');
-
-    await publishPostRequest(
-      postId: postId,
-      payload: postPayload['blocks'],
-      previewUrl: postPayload['previewUrl'],
-      hashtags: postPayload['hashtags'],
-      token: user.token
-    );
-
-    print('🎉 Пост успешно опубликован!');
-
-
-    //Нужно создать на сервере методы
+    // //Нужно создать на сервере методы
   }
 }

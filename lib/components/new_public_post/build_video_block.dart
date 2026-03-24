@@ -178,7 +178,7 @@ class _VideoBlockWidgetState extends State<VideoBlockWidget> {
             const Icon(Icons.storage_rounded, size: 16, color: Color(0xFF797979)),
             const SizedBox(width: 4),
             Text(
-              widget.block.fileSize ?? '0 MB',
+              widget.block.getStringFileSize(),
               style: const TextStyle(fontSize: 14, color: Color(0xFF333333)),
             ),
           ],

@@ -47,9 +47,7 @@ class _SetSettingsForPostState extends State<SetSettingsForPostScreen> {
   }
 
   void _handleTagInput(String value) {
-    // Если строка заканчивается на пробел или запятую
     if (value.endsWith(' ') || value.endsWith(',')) {
-      // Убираем лишние символы и пробелы
       String tag = value.replaceAll(',', '').trim();
 
       if (tag.isNotEmpty) {
@@ -91,9 +89,10 @@ class _SetSettingsForPostState extends State<SetSettingsForPostScreen> {
     }
 
     print("Публикация разрешена!");
-    // User user = context.read<AuthProvider>().user!;
-    // CreatingPostService service = CreatingPostService(post: widget.postDraft, user: user);
-    // service.startCreating();
+    User user = context.read<AuthProvider>().user!;
+    CreatingPostService service = CreatingPostService(post: widget.postDraft, user: user);
+    service.startCreating();
+    // context.push('/');
   }
 
   Future<void> _pickAndCropImage() async {

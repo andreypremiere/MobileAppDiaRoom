@@ -34,7 +34,7 @@ class PhotosBlockWidget extends StatelessWidget {
         }
 
         for (final file in pickedFiles) {
-          block.addPath(file.path);
+          await block.addPath(file.path);
         }
 
         onChanged(); // Сообщаем родителю, что список путей изменился
