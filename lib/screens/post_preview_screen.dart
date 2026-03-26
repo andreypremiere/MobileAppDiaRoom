@@ -94,8 +94,8 @@ class PostPreviewScreen extends StatelessWidget {
     return Text(
       block.controller.text,
       style: TextStyle(
-        fontSize: block.metadata['size']?.toDouble() ?? 16,
-        fontWeight: getFontWeight(block.metadata['weight'] ?? 0),
+        fontSize: block.metadata.size.toDouble(),
+        fontWeight: getFontWeight(block.metadata.weight),
         color: const Color(0xFF333333),
         fontFamily: 'SNPro',
       ),

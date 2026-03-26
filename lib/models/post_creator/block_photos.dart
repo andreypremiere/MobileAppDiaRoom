@@ -68,3 +68,43 @@ class BlockPhotos extends BlockPost {
     photoSizes.clear();
   }
 }
+
+class PhotoInfo {
+  String filePath;
+  String uploadId;
+  String? publicUrl;
+  String? presignedUrl;
+  int size;
+
+  PhotoInfo({required this.filePath, required this.uploadId,
+  required this.size});
+
+  Map<String, dynamic> toJson() {
+    return {
+      'uploadId': uploadId,
+      'publicUrl': publicUrl,
+      // filePath и presignedUrl обычно НЕ отправляются в финальный payload для БД,
+      // так как они временные, но если они нужны для кэша — можно оставить.
+      'size': size,
+    };
+  }
+}
+
+class BlockPhotoUpload extends BlockUpload {
+  MethodViewPhoto methodView;
+  List<PhotoInfo> listPhoto;
+
+  BlockPhotoUpload({required this.methodView}) : listPhoto = <PhotoInfo>[],
+  super(type: BlockPostType.photos);
+
+
+  @override
+  Map<String, dynamic> toJson() {
+    return {
+      'type': type.name, // Используем name из Enum (photos)
+      'methodView': methodView.name, // Предполагаем, что это Enum
+      'listPhoto': listPhoto.map((photo) => photo.toJson()).toList(),
+    };
+  }
+}
+

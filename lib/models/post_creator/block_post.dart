@@ -7,3 +7,11 @@ abstract class BlockPost {
 
   bool isEmpty();
 }
+
+abstract class BlockUpload {
+  final BlockPostType type;
+
+  BlockUpload({required this.type});
+
+  Map<String, dynamic> toJson();
+}

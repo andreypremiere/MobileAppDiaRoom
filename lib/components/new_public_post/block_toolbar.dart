@@ -48,14 +48,11 @@ class PostToolbar extends StatelessWidget {
           onSelected: (value) {
             textBlock.textType = value;
             if (value == TextType.header) {
-              textBlock.metadata['size'] = 22;
-              textBlock.metadata['weight'] = 800;
+              textBlock.setTitleType();
             } else if (value == TextType.subtitle) {
-              textBlock.metadata['size'] = 18;
-              textBlock.metadata['weight'] = 600;
+              textBlock.setSubtitleType();
             } else {
-              textBlock.metadata['size'] = 16;
-              textBlock.metadata['weight'] = 400;
+              textBlock.setUsualText();
             }
             onChanged();
           },

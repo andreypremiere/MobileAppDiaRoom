@@ -17,3 +17,4 @@ const String getPresignedUrls = '$baseUrl/post/getPresignedUrls';
 // Urls для объектного хранилища
 const String objectStoragePath = 'https://storage.yandexcloud.net/avatars-diaroom-1';
 const String defaultAvatarPath = 'avatars/default/default.jpg';
+const String objectStorageMediaPostPath = 'https://storage.yandexcloud.net/media-for-publication';

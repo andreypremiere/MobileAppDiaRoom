@@ -94,3 +94,44 @@ class BlockVideo extends BlockPost {
     return path?.isEmpty ?? true;
   }
 }
+
+class BlockVideoUpload extends BlockUpload {
+  String filePath;
+  String previewPath;
+  int fileSize;
+  Duration duration;
+
+  String uploadIdVideo;
+  String uploadIdPreview;
+
+  String? publicUrlVideo;
+  String? publicUrlPreview;
+
+  String? presignedUrlVideo;
+  String? presignedUrlPreview;
+
+  BlockVideoUpload({
+    required this.filePath,
+    required this.previewPath,
+    required this.fileSize,
+    required this.duration,
+    required this.uploadIdVideo,
+    required this.uploadIdPreview
+}) : super(type: BlockPostType.videos);
+
+  @override
+  Map<String, dynamic> toJson() {
+    return {
+      'type': type.name, // videos
+      'fileSize': fileSize,
+      'durationMs': duration.inMilliseconds, // Длительность лучше хранить в мс
+      'uploadIdVideo': uploadIdVideo,
+      'uploadIdPreview': uploadIdPreview,
+      'publicUrlVideo': publicUrlVideo,
+      'publicUrlPreview': publicUrlPreview,
+      // Пути к файлам (filePath) обычно на сервер не шлют, только URL из облака
+    };
+  }
+
+
+}
