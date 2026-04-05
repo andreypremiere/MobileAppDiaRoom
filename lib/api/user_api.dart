@@ -1,46 +1,45 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:dia_room/configuration/urls.dart';
 import 'package:dia_room/models/user.dart';
 import 'package:dia_room/utils/utils.dart';
 import 'package:http/http.dart' as http;
 
-// requestRegistration отправляет данные для регистрации нового пользователя и комнаты
-Future<String?> requestRegistration(
-  String phone,
-  String roomId,
-  String roomName,
-) async {
-  // Парсинг строки URL из конфигурации
-  final url = Uri.parse(newUserUrl);
+import '../models/auth_response.dart';
 
+// requestRegistration отправляет данные для регистрации нового пользователя и комнаты
+Future<AuthResponse> requestRegistration(
+    String email,
+    String password,
+    ) async {
   try {
-    // Выполнение POST запроса с JSON телом
+    final url = Uri.parse(newUserUrl);
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
-        "numberPhone": phone,
-        "roomId": roomId,
-        "roomName": roomName,
+        "email": email,
+        "password": password,
       }),
-    );
+    ).timeout(const Duration(seconds: 10)); // Добавляем таймаут
 
-    // Проверка успешного статуса ответа от микросервиса
-    if (response.statusCode == 200) {
-      final Map<String, dynamic> body = jsonDecode(response.body);
-      final String? userId = body['id'];
-      return userId;
+    final body = jsonDecode(response.body);
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return AuthResponse(success: true, data: body);
     } else {
-      // Логирование ошибки при неверном статус-коде
-      final Map<String, dynamic> body = jsonDecode(response.body);
-      print("Ошибка сервера: ${response.statusCode}. Ошибка: ${body['error']}");
-      return null;
+      // Пытаемся достать текст ошибки из ответа бэкенда
+      final String errorMessage = body['error'] ?? "Неизвестная ошибка сервера";
+      return AuthResponse(success: false, message: errorMessage);
     }
+  } on SocketException {
+    return AuthResponse(success: false, message: "Нет соединения с интернетом");
+  } on TimeoutException {
+    return AuthResponse(success: false, message: "Сервер не отвечает, попробуйте позже");
   } catch (e) {
-    // Обработка исключений при отсутствии интернета или недоступности хоста
-    print("Ошибка при выполении запроса. Ошибка сети. $e");
-    return null;
+    return AuthResponse(success: false, message: "Произошла ошибка: $e");
   }
 }
 
