@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:dia_room/configuration/urls.dart';
 import 'package:dia_room/models/user.dart';
+import 'package:dia_room/utils/utils.dart';
 import 'package:http/http.dart' as http;
 
 // requestRegistration отправляет данные для регистрации нового пользователя и комнаты
@@ -73,9 +74,8 @@ Future<User?> requestVerifyCode(String userId, String code) async {
 
 // requestLogin инициирует вход по номеру телефона или ID комнаты
 Future<String?> requestLogin(String value) async {
-  final url = Uri.parse(findUser);
-
   try {
+    final url = Uri.parse(findUser);
     // Отправка универсального идентификатора для поиска пользователя
     final response = await http.post(
       url,
@@ -93,7 +93,7 @@ Future<String?> requestLogin(String value) async {
       return null;
     }
   } catch (e) {
-    print('Ошибка во время выполнения запроса: $e');
+    printError('Ошибка во время выполнения запроса: $e. Location: user_api.dart - requestLogin.');
     return null;
   }
 }

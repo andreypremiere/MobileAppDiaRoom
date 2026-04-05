@@ -13,3 +13,8 @@ FontWeight getFontWeight(int value) {
     default: return FontWeight.w400;
   }
 }
+
+void printError(String text) {
+  // Добавляем красный цвет и жирность
+  print('\x1B[31;1m$text\x1B[0m');
+}

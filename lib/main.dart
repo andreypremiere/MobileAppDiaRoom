@@ -19,10 +19,11 @@ import 'models/post_creator/block_post.dart';
 void main() async {
   // Гарантируем инициализацию связей с нативной платформой перед асинхронными вызовами
   WidgetsFlutterBinding.ensureInitialized();
-  //
-  // // Создаем экземпляр провайдера и предварительно загружаем данные пользователя из хранилища
+  // Создаем экземпляр провайдера и предварительно загружаем данные пользователя из хранилища
   final authProvider = AuthProvider();
   await authProvider.loadUser();
+
+  print('Текущий пользователь: ${authProvider.user}');
 
   runApp(
     // Оборачиваем все приложение в провайдер для доступа к состоянию авторизации

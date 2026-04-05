@@ -1,4 +1,5 @@
 import 'package:dia_room/api/user_api.dart';
+import 'package:dia_room/components/info_dialog_component.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -25,6 +26,11 @@ class _LoginState extends State<Login> {
 
   // _handleLogin вызывает API входа и перенаправляет на верификацию
   void _handleLogin() async {
+    if (_valueController.text.isEmpty) {
+      AppInfoDialog.show(context, "Нам нечего отправлять :(. Заполните поле.");
+      return;
+    }
+
     // Вызов функции запроса из папки api
     String? userId = await requestLogin(_valueController.text);
 
@@ -34,6 +40,9 @@ class _LoginState extends State<Login> {
         // Переход на экран ввода кода с передачей userId через extra
         context.go('/verifyCode', extra: userId.toString());
       }
+    } else {
+      AppInfoDialog.show(context, "Было что-то неверно введено :(. Результат отрицательный.");
+      _valueController.text = "";
     }
   }
 
@@ -113,7 +122,7 @@ class _LoginState extends State<Login> {
                     TextField(
                       controller: _valueController,
                       decoration: InputDecoration(
-                        hintText: "user_id или номер телефона",
+                        hintText: "Номер телефона или @id комнаты",
                         filled: true,
                         fillColor: const Color(0xFFF3F3F3),
                         border: OutlineInputBorder(
@@ -135,6 +144,9 @@ class _LoginState extends State<Login> {
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF990000),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12), // Скругление углов
+                        ),
                       ),
                       child: const Text(
                         "Войти",
