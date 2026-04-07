@@ -4,97 +4,111 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'dart:convert';
 
 import '../models/user.dart';
+import 'jwt_manager.dart';
 
 /// Сервис для работы с защищенным хранилищем устройства.
-///
-/// saveUser - Позволяет сохранить пользователя в хранилище в формате JSON.
-///
-/// getUser - Извлекает User из хранилища.
-///
-/// logout - Очищает хранилище (удаляет все данные о User (по ключу)).
 class AuthService {
   static const _storage = FlutterSecureStorage();
-  static const _userKey = 'user_data_secure';
 
-  /// Сохранение объекта User в защищенное хранилище
-  static Future<void> saveUser(User user) async {
-    try {
-      // Сериализуем объект в JSON-строку для записи
-      String jsonString = json.encode(user.toMap());
-      await _storage.write(key: _userKey, value: jsonString);
-    } catch (e) {
-      printError("""Возникла ошибка при сохранении User в хранилище.
-Location: auth_service.dart - class AuthService - saveUser.
-User перед сохранением $user.
-Ошибка: $e.""");
-    }
+  static const _keyAccessToken = 'access_token';
+  static const _keyRefreshToken = 'refresh_token';
+  static const _keyIsConfigured = 'is_configured';
+
+  /// Сохранение токенов и статуса
+  static Future<void> saveAuthData({
+    required String access,
+    required String refresh,
+    required bool configured
+  }) async {
+    await saveTokens(access: access, refresh: refresh);
+    await Future.wait([
+      _storage.write(key: _keyIsConfigured, value: configured.toString()),
+    ]);
   }
 
-  /// Получение объекта User из защищенного хранилища
-  static Future<User?> getUser() async {
-    String? jsonString;
-    try {
-      jsonString = await _storage.read(key: _userKey);
-
-      if (jsonString == null) return null;
-
-      // Декодируем строку и восстанавливаем объект через fromMap
-      Map<String, dynamic> userMap = json.decode(jsonString);
-      return User.fromMap(userMap);
-    } catch (e) {
-      printError("""Возникла ошибка при получении User из хранилища.
-Location: auth_service.dart - class AuthService - getUser.
-jsonString перед сохранением $jsonString.
-Ошибка: $e.""");
-    }
-    return null;
+  /// Сохранение токенов
+  static Future<void> saveTokens({
+    required String access,
+    required String refresh,
+}) async {
+    await Future.wait([
+      _storage.write(key: _keyAccessToken, value: access),
+      _storage.write(key: _keyRefreshToken, value: refresh),
+    ]);
   }
 
-  /// Очистка хранилища при выходе из аккаунта
-  static Future<void> logout() async {
-    try {
-      await _storage.delete(key: _userKey);
-    }
-    catch (e) {
-      printError("""Возникла ошибка при очистке хранилища при выходе.
-Location: auth_service.dart - class AuthService - logout.
-Ошибка: $e.""");
-    }
+  /// Получение данных для восстановления сессии
+  static Future<Map<String, String?>> getAuthData() async {
+    return await _storage.readAll();
   }
+
+  /// Удаление данных при выходе
+  static Future<void> clearAll() async => await _storage.deleteAll();
+
 }
 
 /// Провайдер состояния авторизации для управления UI в реальном времени.
-/// Хранит User и предоставляет доступ к нему из любого места в приложении.
 class AuthProvider extends ChangeNotifier {
-  User? _user;
+  String? _accessToken;
+  String? _userId;
+  String? _roomId;
+  bool _isConfigured = false;
+  bool _isLoading = true;
 
-  /// Геттер для безопасного доступа к текущему пользователю
-  User? get user => _user;
+  // Геттеры
+  String? get userId => _userId;
+  String? get roomId => _roomId;
+  String? get accessToken => _accessToken;
+  bool get isAuthenticated => _accessToken != null;
+  bool get isConfigured => _isConfigured;
+  bool get isLoading => _isLoading;
 
-  /// Геттер для получения статуса авторизации пользователя
-  bool get isAuthenticated => _user != null;
+  /// Загрузка при старте приложения
+  Future<void> loadSession() async {
+    _isLoading = true;
+    notifyListeners();
 
-  /// Метод для загрузки данных при старте приложения
-  Future<void> loadUser() async {
-    _user = await AuthService.getUser();
-    if (_user == null) {
-      logout();
+    final data = await AuthService.getAuthData();
+    final access = data['access_token'];
+
+    if (access != null && JwtManager.isTokenValid(access)) {
+      _parseAndSetToken(access);
+      _isConfigured = data['is_configured'] == 'true';
+    } else {
+      // Если токен просрочен, здесь можно вызвать автоматический Refresh
+      // или просто сбросить сессию
+      _accessToken = null;
+    }
+
+    _isLoading = false;
+    notifyListeners();
+  }
+
+  /// Вспомогательный метод для извлечения ID из JWT
+  void _parseAndSetToken(String token) {
+    JwtMetadata? decodedToken = JwtManager.getMetadata(token);
+    if (decodedToken == null) {
       return;
     }
+    _accessToken = token;
+    _userId = decodedToken.userId;
+    _roomId = decodedToken.roomId;
+  }
+
+  /// Вход / Подтверждение кода
+  void login(String access, String refresh, bool configured) {
+    _parseAndSetToken(access);
+    _isConfigured = configured;
+    AuthService.saveAuthData(access: access, refresh: refresh, configured: configured);
     notifyListeners();
   }
 
-  /// Установка пользователя в состояние и запись в SecureStorage
-  void login(User newUser) {
-    _user = newUser;
-    AuthService.saveUser(newUser);
-    notifyListeners();
-  }
-
-  /// Сброс текущего сеанса и очистка дисковой памяти
-  void logout() {
-    _user = null;
-    AuthService.logout();
+  Future<void> logout() async {
+    _accessToken = null;
+    _userId = null;
+    _roomId = null;
+    _isConfigured = false;
+    await AuthService.clearAll();
     notifyListeners();
   }
 }

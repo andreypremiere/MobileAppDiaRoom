@@ -5,7 +5,7 @@ import 'package:dia_room/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:go_router/go_router.dart';
-import 'package:dia_room/api/user_api.dart';
+import 'package:dia_room/api/account_api.dart';
 import 'package:http/http.dart' as http;
 
 // Registration представляет экран создания нового аккаунта и комнаты
@@ -70,14 +70,17 @@ class _RegistrationState extends State<Registration> {
     if (response.success) {
       String userId = response.data!['userId'];
       print("Полученный userId от сервера: $userId");
-      // if (mounted) {
-      //   // Переход на экран ввода OTP-кода с передачей ID пользователя
-      //   context.go('/verifyCode', extra: userId);
-      // } else {
-      //   print("mounted is not true");
-      // }
-    }
-    else {
+      if (mounted) {
+        context.go(
+          Uri(
+            path: '/verifyCode/$userId',
+            queryParameters: {'email': email},
+          ).toString(),
+        );
+      } else {
+        print("mounted is not true");
+      }
+    } else {
       AppInfoDialog.show(context, "${response.message} :(");
     }
   }
@@ -134,8 +137,8 @@ class _RegistrationState extends State<Registration> {
             // Центральная карточка с формой ввода
             Center(
               child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 20),
-                padding: const EdgeInsets.all(20),
+                margin: const EdgeInsets.symmetric(horizontal: 10),
+                padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(16),
@@ -184,7 +187,7 @@ class _RegistrationState extends State<Registration> {
                     // Поле Повтор пароля (скрываемое)
                     _buildTextField(
                       controller: _passwordAgainController,
-                      hint: "Введите пароль повторно",
+                      hint: "Пароль повторно",
                       isPassword: true,
                       obscureText: _obscurePassword,
                       onSuffixIconPressed: () {
@@ -196,26 +199,23 @@ class _RegistrationState extends State<Registration> {
                     const SizedBox(height: 20),
 
                     // Кнопка отправки данных формы
-                    SizedBox(
-                      width: double.infinity,
-                      height: 50,
-                      child: ElevatedButton(
-                        onPressed: _handleRegistration,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF990000),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          elevation: 0,
+                    ElevatedButton(
+                      onPressed: _handleRegistration,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF990000),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(
+                            12,
+                          ), // Скругление углов
                         ),
-                        child: const Text(
-                          "Регистрация",
-                          style: TextStyle(
-                            fontFamily: "SNPro",
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                          ),
+                      ),
+                      child: const Text(
+                        "Регистрация",
+                        style: TextStyle(
+                          fontFamily: "SNPro",
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
                         ),
                       ),
                     ),
@@ -241,13 +241,15 @@ class _RegistrationState extends State<Registration> {
       controller: controller,
       keyboardType: isPassword ? TextInputType.visiblePassword : keyboardType,
       obscureText: isPassword ? obscureText : false,
-      cursorColor: Colors.black,
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: const TextStyle(fontSize: 14, color: Colors.grey),
         filled: true,
         fillColor: const Color(0xFFF3F3F3),
-
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide.none,
+        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
         // Добавляем иконку только если поле помечено как isPassword
         suffixIcon: isPassword
             ? IconButton(
@@ -259,16 +261,8 @@ class _RegistrationState extends State<Registration> {
                 onPressed: onSuffixIconPressed,
               )
             : null,
-
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide.none,
-        ),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 14,
-        ),
       ),
+      cursorColor: const Color(0xFF000000),
     );
   }
 }

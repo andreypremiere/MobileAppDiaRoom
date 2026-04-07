@@ -1,16 +1,39 @@
 import 'package:jwt_decoder/jwt_decoder.dart';
 
-// Функция для безопасного извлечения данных из JWT токена
-Map<String, dynamic>? decodeJwtToken(String jwtToken) {
-  Map<String, dynamic>? result;
-  try {
-    // Декодируем Base64-часть токена в Map
-    result = JwtDecoder.decode(jwtToken);
-    print('Токен успешно декодирован: $result');
-  } catch (e) {
-    // В случае неверного формата токена или ошибки библиотеки возвращаем null
-    print('Ошибка декодирования токена: $e');
-    return null;
+class JwtMetadata {
+  final String userId;
+  final String roomId;
+
+  JwtMetadata({required this.userId, required this.roomId});
+}
+
+class JwtManager {
+  /// Проверка: просрочен ли токен или валиден
+  static bool isTokenValid(String? token) {
+    if (token == null || token.isEmpty) return false;
+    try {
+      return !JwtDecoder.isExpired(token);
+    } catch (e) {
+      return false;
+    }
   }
-  return result;
+
+  /// Извлечение данных из Payload
+  static JwtMetadata? getMetadata(String token) {
+    try {
+      Map<String, dynamic> payload = JwtDecoder.decode(token);
+
+      final userId = payload['user_id'];
+      final roomId = payload['room_id'];
+
+      if (userId == null || roomId == null) return null;
+
+      return JwtMetadata(
+        userId: userId.toString(),
+        roomId: roomId.toString(),
+      );
+    } catch (e) {
+      return null;
+    }
+  }
 }

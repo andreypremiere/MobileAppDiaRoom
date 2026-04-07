@@ -89,8 +89,9 @@ class _SetSettingsForPostState extends State<SetSettingsForPostScreen> {
     }
 
     print("Публикация разрешена!");
-    User user = context.read<AuthProvider>().user!;
-    CreatingPostService service = CreatingPostService(post: widget.postDraft, user: user);
+    final token = context.read<AuthProvider>().accessToken;
+    User? user = User.fromJwt(token!);
+    CreatingPostService service = CreatingPostService(post: widget.postDraft, user: user!);
     service.startCreating();
     // context.push('/');
   }

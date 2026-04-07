@@ -17,13 +17,12 @@ import 'package:provider/provider.dart';
 import 'models/post_creator/block_post.dart';
 
 void main() async {
-  // Гарантируем инициализацию связей с нативной платформой перед асинхронными вызовами
   WidgetsFlutterBinding.ensureInitialized();
-  // Создаем экземпляр провайдера и предварительно загружаем данные пользователя из хранилища
   final authProvider = AuthProvider();
-  await authProvider.loadUser();
+  await authProvider.loadSession();
 
-  print('Текущий пользователь: ${authProvider.user}');
+  print('Пользователь аутентифицирован?\nuserId: ${authProvider.userId}\nroomId: ${authProvider.roomId}\n'
+      'isAuthenticated: ${authProvider.isAuthenticated}\nisConfigured: ${authProvider.isConfigured} ');
 
   runApp(
     // Оборачиваем все приложение в провайдер для доступа к состоянию авторизации
@@ -31,7 +30,6 @@ void main() async {
       value: authProvider,
       child: App(authProvider: authProvider),
     ),
-    // App()
 
   );
 }
@@ -40,53 +38,52 @@ class App extends StatelessWidget {
   final AuthProvider authProvider;
 
   const App({super.key, required this.authProvider});
-  // const App();
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-      // Настройка навигации через GoRouter
       routerConfig: GoRouter(
-        // Перенаправляем пользователя автоматически при изменении состояния в AuthProvider
         refreshListenable: authProvider,
         initialLocation: '/',
         redirect: (context, state) {
           final bool loggedIn = authProvider.isAuthenticated;
-          // Список путей, доступных без авторизации
+          final location = state.uri.path;
           final publicRoutes = ['/login', '/registration', '/verifyCode'];
-          final bool isPublicPage = publicRoutes.contains(
-            state.matchedLocation,
-          );
 
-          // Если пользователь не в системе и пытается зайти на закрытый экран — на логин
+          final bool isPublicPage = publicRoutes.any((route) => location.startsWith(route));
+
+          print('Текущий location: $location, Публичная: $isPublicPage, Авторизован: $loggedIn');
+
           if (!loggedIn && !isPublicPage) {
             return '/login';
           }
 
-          // Если пользователь уже авторизован, не пускаем его на страницы входа/регистрации
+          // Реализовать потом
+          // if (loggedIn && !authProvider.isConfigured) {
+          //   return '/configureRoom';
+          // }
+
           if (loggedIn && isPublicPage) {
             return '/';
           }
 
-          // В остальных случаях оставляем пользователя там, куда он шел
           return null;
         },
         routes: [
           // Главный экран ленты
           GoRoute(
             path: '/',
-            // builder: (context, state) => const NewPublicPostScreen(),
-            // builder: (context, state) => const PersonalPostsScreen(),
             builder: (context, state) => const MainPageScreen(),
-
           ),
 
-          // Экран верификации с передачей userId через аргумент extra
           GoRoute(
-            path: '/verifyCode',
+            name: 'verifyCode',
+            path: '/verifyCode/:userId', // :userId — это динамический параметр
             builder: (context, state) {
-              final id = state.extra as String;
-              return VerifyCode(userId: id);
+              // Извлекаем параметр из state.pathParameters
+              final userId = state.pathParameters['userId']!;
+              final email = state.uri.queryParameters['email'] ?? '';
+              return VerifyCode(userId: userId, email: email);
             },
           ),
           GoRoute(path: '/post_preview',
@@ -100,10 +97,11 @@ class App extends StatelessWidget {
 
           // Экраны регистрации и входа
           GoRoute(
+            name: 'registration',
             path: '/registration',
             builder: (context, state) => const Registration(),
           ),
-          GoRoute(path: '/login', builder: (context, state) => const Login()),
+          GoRoute(name: 'login', path: '/login', builder: (context, state) => const Login()),
 
           // Экран просмотра конкретного поста
           GoRoute(

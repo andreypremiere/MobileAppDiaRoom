@@ -51,7 +51,7 @@ class _StateMainPageScreen extends State<MainPageScreen> {
   @override
   Widget build(BuildContext context) {
     // Получение данных пользователя через Provider
-    final user = context.watch<AuthProvider>().user;
+    // final user = context.watch<AuthProvider>().userId;
 
     return GestureDetector(
       // Скрытие клавиатуры при тапе по любому месту экрана

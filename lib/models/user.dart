@@ -10,13 +10,13 @@ class User {
   final String token;
   final String userId;
   final String roomId;
-  final int exp;
+  // final int exp;
 
   User._({
     required this.token,
     required this.userId,
     required this.roomId,
-    required this.exp,
+    // required this.exp,
   });
 
   /// Создает экземпляр [User] напрямую из строки JWT токена.
@@ -25,16 +25,16 @@ class User {
   /// если токен некорректен или отсутствуют обязательные поля.
   static User? fromJwt(String token) {
     try {
-      final data = decodeJwtToken(token);
+      final data = JwtManager.getMetadata(token);
       if (data == null) {
         return null;
       }
 
       return User._(
         token: token,
-        userId: data['user_id'],
-        roomId: data['room_id'],
-        exp: data['exp'],
+        userId: data.userId,
+        roomId: data.roomId,
+        // exp: data['exp'],
       );
     } catch (e) {
       printError("""Возникла ошибка при создании пользователя из JWT.
@@ -48,7 +48,9 @@ Location: user.dart - class User - fromJwt.
   ///
   /// Используется для подготовки данных к сохранению в локальное хранилище.
   Map<String, dynamic> toMap() {
-    return {'token': token, 'userId': userId, 'roomId': roomId, 'exp': exp};
+    return {'token': token, 'userId': userId, 'roomId': roomId,
+      // 'exp': exp
+    };
   }
 
   /// Сериализует объект пользователя в JSON-строку.
@@ -93,7 +95,7 @@ Location: user.dart - class User - fromJwt.
         token: map['token'],
         userId: map['userId'],
         roomId: map['roomId'],
-        exp: map['exp'],
+        // exp: map['exp'],
       );
     } catch (e) {
       printError("""Возникла непредвиденная ошибка...
@@ -105,17 +107,15 @@ Location: user.dart - User - fromMap
 
   @override
   String toString() {
-    final expiryDate = DateTime.fromMillisecondsSinceEpoch(exp * 1000);
-    final timeLeft = expiryDate.difference(DateTime.now());
-    final isExpired = timeLeft.isNegative;
+    // final expiryDate = DateTime.fromMillisecondsSinceEpoch(exp * 1000);
+    // final timeLeft = expiryDate.difference(DateTime.now());
+    // final isExpired = timeLeft.isNegative;
 
     return '''
 User {
   userId: $userId,
   roomId: $roomId,
   token: ${token.substring(0, 10)}...${token.substring(token.length - 10)}, 
-  status: ${isExpired ? 'EXPIRED' : 'ACTIVE'},
-  expiresIn: ${timeLeft.inHours}h ${timeLeft.inMinutes % 60}m
 }''';
   }
 }

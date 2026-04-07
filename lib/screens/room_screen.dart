@@ -32,8 +32,8 @@ class _RoomState extends State<RoomScreen> {
     super.initState();
     // Инициализируем запрос при старте.
     // context.read можно использовать в initState, если не слушать изменения.
-    currentRoomId = context.read<AuthProvider>().user?.roomId;
-    final token = context.read<AuthProvider>().user?.token ?? "";
+    currentRoomId = context.read<AuthProvider>().roomId;
+    final token = context.read<AuthProvider>().accessToken ?? "";
     _roomFuture = api.getRoomByRoomId(widget.roomId, token);
   }
 
