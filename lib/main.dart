@@ -54,18 +54,18 @@ class App extends StatelessWidget {
 
           print('Текущий location: $location, Публичная: $isPublicPage, Авторизован: $loggedIn');
 
-          if (!loggedIn && !isPublicPage) {
-            return '/login';
-          }
-
-          // Реализовать потом
+          // if (!loggedIn && !isPublicPage) {
+          //   return '/login';
+          // }
+          //
+          // // На экран настройки комнаты
           // if (loggedIn && !authProvider.isConfigured) {
           //   return '/configureRoom';
           // }
-
-          if (loggedIn && isPublicPage) {
-            return '/';
-          }
+          //
+          // if (loggedIn && isPublicPage) {
+          //   return '/';
+          // }
 
           return null;
         },
@@ -73,7 +73,7 @@ class App extends StatelessWidget {
           // Главный экран ленты
           GoRoute(
             path: '/',
-            builder: (context, state) => const MainPageScreen(),
+            builder: (context, state) => const RoomScreen(roomId: 'djkl'),
           ),
 
           GoRoute(

@@ -37,6 +37,12 @@ class AuthService {
     ]);
   }
 
+  static Future<void> saveStatusConfigured({required bool status}) async {
+    await Future.wait([
+      _storage.write(key: _keyIsConfigured, value: status.toString())
+    ]);
+  }
+
   /// Получение данных для восстановления сессии
   static Future<Map<String, String?>> getAuthData() async {
     return await _storage.readAll();
@@ -100,6 +106,12 @@ class AuthProvider extends ChangeNotifier {
     _parseAndSetToken(access);
     _isConfigured = configured;
     AuthService.saveAuthData(access: access, refresh: refresh, configured: configured);
+    notifyListeners();
+  }
+
+  void saveStatusConfigure(bool status) {
+    _isConfigured = status;
+    AuthService.saveStatusConfigured(status: status);
     notifyListeners();
   }
 

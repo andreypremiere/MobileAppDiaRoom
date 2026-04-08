@@ -20,8 +20,9 @@ class Room {
   final String roomName;
   final String roomNameId;
   final List<Category> categories;
-  final String? avatarUrl; // Опциональное поле: ссылка на аватар
-  final String? bio; // Опциональное поле: описание комнаты
+  final String? avatarUrl;
+  final String? backgroundImage;
+  final String? bio;
   final Map<String, dynamic> settings;
   final int followersCount;
   final int followingCount;
@@ -33,6 +34,7 @@ class Room {
     required this.roomNameId,
     required this.categories,
     this.avatarUrl,
+    this.backgroundImage,
     this.bio,
     required this.settings,
     this.followersCount = 0,
@@ -48,13 +50,13 @@ class Room {
         userId: json['userId'] as String,
         roomName: json['roomName'] as String,
         roomNameId: json['roomNameId'] as String,
-        // Преобразование списка динамических объектов в типизированный список Category
         categories:
             (json['categories'] as List<dynamic>?)
                 ?.map((e) => Category.fromJson(e as Map<String, dynamic>))
                 .toList() ??
             [],
         avatarUrl: json['avatarUrl'] as String?,
+        backgroundImage: json['backgroundImage'] as String?,
         bio: json['bio'] as String?,
         // Инициализация пустой мапой, если настройки не пришли с сервера
         settings: json['settings'] as Map<String, dynamic>? ?? {},
