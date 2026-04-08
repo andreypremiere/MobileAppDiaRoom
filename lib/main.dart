@@ -6,6 +6,7 @@ import 'package:dia_room/screens/personal_posts_screen.dart';
 import 'package:dia_room/screens/post_preview_screen.dart';
 import 'package:dia_room/screens/registration_screen.dart';
 import 'package:dia_room/screens/room_screen.dart';
+import 'package:dia_room/screens/room_settings_screen.dart';
 import 'package:dia_room/screens/set_settings_for_post_screen.dart';
 import 'package:dia_room/screens/showing_post_screen.dart';
 import 'package:dia_room/screens/verify_code_screen.dart';
@@ -73,7 +74,7 @@ class App extends StatelessWidget {
           // Главный экран ленты
           GoRoute(
             path: '/',
-            builder: (context, state) => const RoomScreen(roomId: 'djkl'),
+            builder: (context, state) => const RoomSettingsScreen(),
           ),
 
           GoRoute(
