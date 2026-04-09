@@ -17,4 +17,11 @@ enum RoomCategory {
   final String slug;
 
   const RoomCategory(this.label, this.slug);
+
+  static RoomCategory? fromSlug(String slug) {
+    return RoomCategory.values.firstWhere(
+          (e) => e.slug == slug,
+      orElse: () => RoomCategory.lifestyleBlog,
+    );
+  }
 }

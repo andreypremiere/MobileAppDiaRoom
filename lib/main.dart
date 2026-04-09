@@ -11,6 +11,7 @@ import 'package:dia_room/screens/set_settings_for_post_screen.dart';
 import 'package:dia_room/screens/showing_post_screen.dart';
 import 'package:dia_room/screens/verify_code_screen.dart';
 import 'package:dia_room/utils/auth_service.dart';
+import 'package:dia_room/utils/dio_service.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -20,6 +21,7 @@ import 'models/post_creator/block_post.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final authProvider = AuthProvider();
+  ApiService.init(authProvider);
   await authProvider.loadSession();
 
   print('Пользователь аутентифицирован?\nuserId: ${authProvider.userId}\nroomId: ${authProvider.roomId}\n'
@@ -55,18 +57,17 @@ class App extends StatelessWidget {
 
           print('Текущий location: $location, Публичная: $isPublicPage, Авторизован: $loggedIn');
 
-          // if (!loggedIn && !isPublicPage) {
-          //   return '/login';
-          // }
-          //
-          // // На экран настройки комнаты
-          // if (loggedIn && !authProvider.isConfigured) {
-          //   return '/configureRoom';
-          // }
-          //
-          // if (loggedIn && isPublicPage) {
-          //   return '/';
-          // }
+          if (!loggedIn && !isPublicPage) {
+            return '/login';
+          }
+
+          if (loggedIn && !authProvider.isConfigured) {
+            return '/configureRoom';
+          }
+
+          if (loggedIn && isPublicPage) {
+            return '/';
+          }
 
           return null;
         },
@@ -74,7 +75,7 @@ class App extends StatelessWidget {
           // Главный экран ленты
           GoRoute(
             path: '/',
-            builder: (context, state) => const RoomSettingsScreen(),
+            builder: (context, state) => MainPageScreen(),
           ),
 
           GoRoute(
@@ -95,6 +96,10 @@ class App extends StatelessWidget {
               // Возвращаем экран и передаем ему данные
               return PostPreviewScreen(postDraft: post);
             },),
+          GoRoute(path: '/configureRoom',
+            builder: (context, state) {
+              return RoomSettingsScreen();
+            }),
 
           // Экраны регистрации и входа
           GoRoute(

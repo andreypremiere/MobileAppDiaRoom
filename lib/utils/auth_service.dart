@@ -4,6 +4,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'dart:convert';
 
 import '../models/user.dart';
+import 'dio_service.dart';
 import 'jwt_manager.dart';
 
 /// Сервис для работы с защищенным хранилищем устройства.
@@ -48,8 +49,15 @@ class AuthService {
     return await _storage.readAll();
   }
 
+  static Future<String?> getRefreshToken() async {
+    return await _storage.read(key: _keyRefreshToken);
+  }
+
   /// Удаление данных при выходе
-  static Future<void> clearAll() async => await _storage.deleteAll();
+  static Future<void> clearTokens() async {
+    await _storage.delete(key: _keyAccessToken);
+    await _storage.delete(key: _keyRefreshToken);
+  }
 
 }
 
@@ -76,14 +84,22 @@ class AuthProvider extends ChangeNotifier {
 
     final data = await AuthService.getAuthData();
     final access = data['access_token'];
+    final String? refresh = await AuthService.getRefreshToken();
+
+    _isConfigured = data['is_configured'] == 'true';
 
     if (access != null && JwtManager.isTokenValid(access)) {
       _parseAndSetToken(access);
-      _isConfigured = data['is_configured'] == 'true';
-    } else {
-      // Если токен просрочен, здесь можно вызвать автоматический Refresh
-      // или просто сбросить сессию
-      _accessToken = null;
+      print("_isConfigured = data['is_configured'] == 'true'; ${data['is_configured']}");
+    } else if (refresh != null) {
+      final success = await refreshSession();
+      if (!success) {
+        await logout(); // Если даже рефреш не помог — чистим всё
+      }
+    }
+    // 3. Если ничего нет — выходим
+    else {
+      await logout();
     }
 
     _isLoading = false;
@@ -119,8 +135,42 @@ class AuthProvider extends ChangeNotifier {
     _accessToken = null;
     _userId = null;
     _roomId = null;
-    _isConfigured = false;
-    await AuthService.clearAll();
+    await AuthService.clearTokens();
     notifyListeners();
+  }
+
+  Future<String?> getRefreshToken() async {
+    return await AuthService.getRefreshToken();
+  }
+
+  Future<void> saveTokens(String accessToken, String refreshToken) async {
+    _parseAndSetToken(accessToken);
+    await AuthService.saveTokens(access: accessToken, refresh: refreshToken);
+    notifyListeners();
+  }
+
+  /// Метод для обновления сессии через API
+  Future<bool> refreshSession() async {
+    try {
+      final String? refresh = await AuthService.getRefreshToken();
+      if (refresh == null) return false;
+
+      // Прямой вызов API (важно: здесь ApiService уже должен быть инициализирован)
+      final response = await ApiService.post(
+          '/account/refreshSession',
+          data: {'refreshToken': refresh}
+      );
+
+      if (response.statusCode == 200 && response.data != null) {
+        final access = response.data['accessToken'];
+        final newRefresh = response.data['refreshToken'];
+
+        await saveTokens(access, newRefresh);
+        return true;
+      }
+    } catch (e) {
+      print("Ошибка при автоматическом обновлении сессии: $e");
+    }
+    return false;
   }
 }

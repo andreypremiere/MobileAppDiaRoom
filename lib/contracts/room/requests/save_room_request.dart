@@ -4,7 +4,7 @@ import 'package:path/path.dart' as p;
 
 class SaveRoomRequest {
   final String roomUniqueId;
-  final String? roomName;
+  final String roomName;
   final List<RoomCategory>? listCategory;
   final String? bio;
   final String? avatarPath;
@@ -12,7 +12,7 @@ class SaveRoomRequest {
 
   SaveRoomRequest({
     required this.roomUniqueId,
-    this.roomName,
+    required this.roomName,
     this.listCategory,
     this.bio,
     this.avatarPath,
@@ -20,16 +20,16 @@ class SaveRoomRequest {
 });
 
   String? _getFileName(String? path) {
-    if (path == null || path.isEmpty) return null;
+    if (path == null || path.isEmpty) return '';
     return p.basename(path); // Извлекает например 'image_picker_432.jpg'
   }
 
   Map<String, dynamic> toMap() {
     return {
       "roomUniqueId": roomUniqueId,
-      "roomName": roomName!.isNotEmpty ? roomName : null,
-      "bio": bio!.isNotEmpty ? bio : null,
-      "categories": listCategory != null && listCategory!.isNotEmpty ? listCategory!.map((e) => e.slug).toList() : null,
+      "roomName": roomName,
+      "bio": bio,
+      "categories": listCategory != null && listCategory!.isNotEmpty ? listCategory!.map((e) => e.slug).toList() : [],
       "avatar_filename": _getFileName(avatarPath),
       "background_filename": _getFileName(backgroundPath),
     };
