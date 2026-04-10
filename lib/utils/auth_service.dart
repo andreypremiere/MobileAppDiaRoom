@@ -149,6 +149,12 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> saveTokensSilently(String accessToken, String refreshToken) async {
+    _parseAndSetToken(accessToken);
+    await AuthService.saveTokens(access: accessToken, refresh: refreshToken);
+  }
+
+
   /// Метод для обновления сессии через API
   Future<bool> refreshSession() async {
     try {

@@ -12,6 +12,7 @@ import 'package:dia_room/screens/showing_post_screen.dart';
 import 'package:dia_room/screens/verify_code_screen.dart';
 import 'package:dia_room/utils/auth_service.dart';
 import 'package:dia_room/utils/dio_service.dart';
+import 'package:dia_room/utils/draft_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -28,28 +29,29 @@ void main() async {
       'isAuthenticated: ${authProvider.isAuthenticated}\nisConfigured: ${authProvider.isConfigured} ');
 
   runApp(
-    // Оборачиваем все приложение в провайдер для доступа к состоянию авторизации
-    ChangeNotifierProvider.value(
-      value: authProvider,
-      child: App(authProvider: authProvider),
+    MultiProvider(
+      providers: [
+        // Передаем уже созданный экземпляр, чтобы сохранить состояние сессии
+        ChangeNotifierProvider.value(value: authProvider),
+        ChangeNotifierProvider(create: (_) => DraftProvider()),
+      ],
+      child: const App(),
     ),
-
   );
 }
 
 class App extends StatelessWidget {
-  final AuthProvider authProvider;
-
-  const App({super.key, required this.authProvider});
+  const App({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
     return MaterialApp.router(
       routerConfig: GoRouter(
-        refreshListenable: authProvider,
+        refreshListenable: auth,
         initialLocation: '/',
         redirect: (context, state) {
-          final bool loggedIn = authProvider.isAuthenticated;
+          final bool loggedIn = auth.isAuthenticated;
           final location = state.uri.path;
           final publicRoutes = ['/login', '/registration', '/verifyCode'];
 
@@ -61,7 +63,7 @@ class App extends StatelessWidget {
             return '/login';
           }
 
-          if (loggedIn && !authProvider.isConfigured) {
+          if (loggedIn && !auth.isConfigured) {
             return '/configureRoom';
           }
 
@@ -90,11 +92,10 @@ class App extends StatelessWidget {
           ),
           GoRoute(path: '/post_preview',
             builder: (context, state) {
-              // Извлекаем наш список блоков, который мы передадим при навигации
-              final post = state.extra as PostDraft;
-
-              // Возвращаем экран и передаем ему данные
-              return PostPreviewScreen(postDraft: post);
+              PostDraft? draft = context.read<DraftProvider>().currentDraft;
+              // Если вдруг зашли сюда напрямую без черновика — редирект на начало
+              if (draft == null) return NewPublicPostScreen();
+              return PostPreviewScreen(postDraft: draft);
             },),
           GoRoute(path: '/configureRoom',
             builder: (context, state) {
@@ -117,8 +118,9 @@ class App extends StatelessWidget {
           GoRoute(
             path: '/set_settings',
             builder: (context, state) {
-              final post = state.extra as PostDraft;
-              return SetSettingsForPostScreen(postDraft: post);
+              PostDraft? draft = context.read<DraftProvider>().currentDraft;
+              if (draft == null) return MainPageScreen();
+              return SetSettingsForPostScreen(postDraft: draft);
             },
           ),
 

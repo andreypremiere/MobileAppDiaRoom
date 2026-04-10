@@ -76,7 +76,7 @@ class ApiService {
           String accessToken = response.data['accessToken'];
           // Сохраняем новые токены (реализуй этот метод в AuthProvider)
 
-          await authProvider.saveTokens(accessToken, refreshToken);
+          await authProvider.saveTokensSilently(accessToken, refreshToken);
         } catch (e) {
           print("Ошибка при сохранении или извлечении токенов dio_service: $e");
         }
@@ -102,17 +102,19 @@ class ApiService {
     );
   }
 
-  static Future<Response> uploadImage(String presignedUrl, File file) async {
+  static Future<Response> putBinaryFile({
+    required String url,
+    required File file,
+    required String contentType,
+  }) async {
+    // Создаем отдельный экземпляр Dio, чтобы не срабатывали интерцепторы авторизации
+    // (S3 не примет наш Bearer токен в заголовке)
     final uploadDio = Dio();
 
     final bytes = await file.readAsBytes();
-    final String extension = file.path.split('.').last.toLowerCase();
-
-    String contentType = 'image/jpeg';
-    if (extension == 'png') contentType = 'image/png';
 
     return await uploadDio.put(
-      presignedUrl,
+      url,
       data: Stream.fromIterable([bytes]),
       options: Options(
         headers: {
@@ -120,6 +122,15 @@ class ApiService {
         },
         contentType: contentType,
       ),
+    );
+  }
+
+  // Можно оставить как обертку для совместимости или удалить
+  static Future<Response> uploadImage(String presignedUrl, File file) async {
+    return await putBinaryFile(
+      url: presignedUrl,
+      file: file,
+      contentType: 'image/jpeg',
     );
   }
 }

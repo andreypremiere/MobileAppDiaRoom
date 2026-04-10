@@ -13,7 +13,6 @@ import '../utils/utils.dart';
 /// Экран предварительного просмотра публикации.
 /// Отображает блоки контента в том виде, в котором их увидит конечный пользователь.
 class PostPreviewScreen extends StatelessWidget {
-  /// Текущий черновик поста, полученный через `extra`
   final PostDraft postDraft;
 
   const PostPreviewScreen({super.key, required this.postDraft});
@@ -45,7 +44,7 @@ class PostPreviewScreen extends StatelessWidget {
           actions: [
             ElevatedButton(
               onPressed: () {
-                context.push('/set_settings', extra: postDraft);
+                context.push('/set_settings');
               },
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 12),

@@ -93,7 +93,7 @@ class _SetSettingsForPostState extends State<SetSettingsForPostScreen> {
     User? user = User.fromJwt(token!);
     CreatingPostService service = CreatingPostService(post: widget.postDraft, user: user!);
     service.startCreating();
-    // context.push('/');
+    context.push('/');
   }
 
   Future<void> _pickAndCropImage() async {
