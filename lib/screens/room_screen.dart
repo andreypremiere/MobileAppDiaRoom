@@ -1,4 +1,7 @@
 import 'package:dia_room/components/bottom_menu_component.dart';
+import 'package:dia_room/components/info_dialog_component.dart';
+import 'package:dia_room/models/auth_response.dart';
+import 'package:dia_room/models/base_room.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
@@ -24,25 +27,29 @@ class RoomScreen extends StatefulWidget {
 }
 
 class _RoomState extends State<RoomScreen> {
-  late Future<Map<String, dynamic>?> _roomFuture;
-  late String? currentRoomId;
-  bool _isBioVisible = false; // Состояние, показано ли bio или нет
+  // Используем AuthResponse как тип данных для Future
+  late Future<AuthResponse> _roomFuture;
+  late bool isMyRoom;
+  late BaseRoom room;
+  String? myRoomId;
+  bool _isBioVisible = false;
 
   @override
   void initState() {
     super.initState();
-    // Инициализируем запрос при старте.
-    // context.read можно использовать в initState, если не слушать изменения.
-    // currentRoomId = context.read<AuthProvider>().roomId;
-    // final token = context.read<AuthProvider>().accessToken ?? "";
-    // _roomFuture = api.getRoomByRoomId(widget.roomId, token);
-    _roomFuture = Future.value({});
-    currentRoomId = 'dlfj';
+
+    final auth = context.read<AuthProvider>();
+    myRoomId = auth.roomId;
+    isMyRoom = (myRoomId == widget.roomId);
+
+    // Просто присваиваем вызов функции переменной.
+    // НЕ пишем await здесь!
+    _roomFuture = api.getRoomByRoomId(widget.roomId);
   }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<Map<String, dynamic>?>(
+    return FutureBuilder<AuthResponse>(
       future: _roomFuture,
       builder: (context, snapshot) {
         // СОСТОЯНИЕ: ЗАГРУЗКА
@@ -64,30 +71,24 @@ class _RoomState extends State<RoomScreen> {
           );
         }
 
-        // СОСТОЯНИЕ: ДАННЫЕ ЕСТЬ
-        // Превращаем Map в объект Room
-        // final Room? room = Room.fromJson(snapshot.data!);
 
-        final room = Room(
-          id: 'room-uuid-12345',
-          userId: 'user-uuid-67890',
-          roomName: 'Dev & Chill',
-          roomNameId: 'dev_chill_room',
-          // Тот самый уникальный ID комнаты
-          categories: [
-            Category(slug: 'visual-arts', name: "Изобразительное искусство"),
-          ],
-          avatarUrl: '',
-          // backgroundImage: 'assets/images/background_profile.png',
-          backgroundImage: '',
-          bio: 'Обсуждаем микросервисы на Go и фронтенд на Flutter.',
-          settings: {"theme": "dark"},
-          followersCount: 1250,
-          followingCount: 42,
-        );
+        final response = snapshot.data!;
 
-        if (room == null)
-          return Scaffold(body: Text('Ошибка преобразования в Room'));
+        // 3. Сервер вернул ошибку (success: false)
+        if (!response.success) {
+          return Scaffold(
+            appBar: AppBar(),
+            body: Center(child: Text(response.message ?? "Комната не найдена")),
+          );
+        }
+
+        // 4. Всё хорошо, пробуем собрать модель
+        try {
+          room = BaseRoom.fromMap(response.data!);
+        } catch (e) {
+          print("Ошибка парсинга: $e");
+          return const Scaffold(body: Center(child: Text("Ошибка обработки данных")));
+        }
 
         return GestureDetector(
           // Убираем фокус с элементов ввода при нажатии на фон
@@ -120,7 +121,7 @@ class _RoomState extends State<RoomScreen> {
               ),
               actions: [
                 // Здесь исправить на провайдера
-                if (widget.roomId == currentRoomId)
+                if (isMyRoom)
                   IconButton(
                     onPressed: () => {
                       //   Здесь делать редирект на страницу редактирования комнаты
@@ -150,13 +151,10 @@ class _RoomState extends State<RoomScreen> {
                         width: double.infinity,
                         // height: 220,
                         decoration: BoxDecoration(
-                          image: (room.backgroundImage != null && room.backgroundImage!.isNotEmpty)
+                          image: (room.backgroundUrl.isNotEmpty)
                               ? DecorationImage(
-                            image: NetworkImage(
-                              createFullPathAvatar(
-                                objectStoragePath,
-                                room.backgroundImage!,
-                              ),), // Или NetworkImage
+                            image: NetworkImage(room.backgroundUrl,
+                              ), // Или NetworkImage
                             fit: BoxFit.cover,
                           )
                               : null,
@@ -203,13 +201,9 @@ class _RoomState extends State<RoomScreen> {
                                         radius: 40,
                                         backgroundColor: Color(0xFF939393),
                                         backgroundImage:
-                                            (room.avatarUrl != null &&
-                                                room.avatarUrl!.isNotEmpty)
+                                            (room.avatarUrl.isNotEmpty)
                                             ? NetworkImage(
-                                                createFullPathAvatar(
-                                                  objectStoragePath,
-                                                  room.avatarUrl!,
-                                                ),
+                                                  room.avatarUrl,
                                               ) : null
                                       ),
                                       Container(
@@ -276,7 +270,7 @@ class _RoomState extends State<RoomScreen> {
                                               vertical: 4,
                                             ),
                                             child: Row(
-                                              children: room.categories.map((
+                                              children: room.listCategory.map((
                                                 category,
                                               ) {
                                                 return Container(
@@ -332,7 +326,7 @@ class _RoomState extends State<RoomScreen> {
                                             ),
                                           ),
 
-                                          if (room.categories.isNotEmpty)
+                                          if (room.listCategory.isNotEmpty)
                                             const SizedBox(height: 10),
 
                                           Padding(
@@ -341,8 +335,7 @@ class _RoomState extends State<RoomScreen> {
                                             ),
                                             child: GestureDetector(
                                               onTap: () async {
-                                                final idToCopy = room
-                                                    .roomNameId; // без символа @
+                                                final idToCopy = room.uniqueRoomId; // без символа @
 
                                                 await Clipboard.setData(
                                                   ClipboardData(text: idToCopy),
@@ -361,7 +354,7 @@ class _RoomState extends State<RoomScreen> {
                                                 // }
                                               },
                                               child: Text(
-                                                '@${room.roomNameId}',
+                                                '@${room.uniqueRoomId}',
                                                 style: const TextStyle(
                                                   color: Color(0xFF3D3D3D),
                                                   fontSize: 16,
@@ -460,7 +453,7 @@ class _RoomState extends State<RoomScreen> {
                                           child: Column(
                                             children: [
                                               Text(
-                                                '${room.followersCount}',
+                                                '524',
                                                 style: const TextStyle(
                                                   fontWeight: FontWeight.bold,
                                                   fontSize: 18,
@@ -504,7 +497,7 @@ class _RoomState extends State<RoomScreen> {
                                           child: Column(
                                             children: [
                                               Text(
-                                                '${room.followingCount}',
+                                                '42',
                                                 style: const TextStyle(
                                                   fontWeight: FontWeight.bold,
                                                   fontSize: 18,
