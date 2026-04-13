@@ -89,10 +89,10 @@ class _StatePersonalPostsScreen extends State<PersonalPostsScreen> {
             // Автоматические отступы между элементами списка
             spacing: 10,
             children: const [
-              PostComponent(),
-              PostComponent(),
-              PostComponent(),
-              PostComponent(),
+              // PostComponent(),
+              // PostComponent(),
+              // PostComponent(),
+              // PostComponent(),
             ],
           ),
         ),

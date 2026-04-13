@@ -22,4 +22,11 @@ enum PostCategory {
   final String id;
   final String label;
   const PostCategory(this.id, this.label);
+
+  static PostCategory fromId(String? id) {
+    return PostCategory.values.firstWhere(
+          (element) => element.id == id,
+      orElse: () => PostCategory.defaultVal,
+    );
+  }
 }

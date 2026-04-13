@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:dia_room/configuration/urls.dart';
 import 'package:dia_room/models/post_creator/preview_request.dart';
+import 'package:dia_room/models/post_view/feed_post.dart';
 import 'package:dio/dio.dart';
 import 'package:http/http.dart' as http;
 
@@ -107,4 +108,28 @@ Future<AuthResponse> savePostCanvas({
   } catch (e) {
     return AuthResponse(success: false, message: "Ошибка: $e");
   }
+}
+
+Future<AuthResponse> getAllPosts() async {
+  try {
+    // 1. Выполняем GET запрос
+    final response = await ApiService.get('/post/allPosts');
+
+    if (response.data is List) {
+      final List<dynamic> data = response.data;
+
+      List<FeedPost> listPosts = data.map((json) => FeedPost.fromMap(json)).toList();
+
+      return AuthResponse(success: true, data: {"listPosts": listPosts});
+    }
+
+    return AuthResponse(success: false, data: {"error": "Ошибка при преобразовании объектов"});
+
+  } on DioException catch (e) {
+    // Логируем ошибку или выбрасываем исключение для обработки в UI
+    final errorMessage = e.response?.data['error'] ?? "Ошибка получения ленты";
+    return AuthResponse(success: false, data: {"error": errorMessage});
+
+  } catch (e) {
+    return AuthResponse(success: false, data: {"error": "Непредвиденная ошибка $e"});}
 }

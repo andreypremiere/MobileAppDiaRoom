@@ -261,15 +261,15 @@ class CreatingPostService {
     /// ---Расскоментировать блок, когда нужно будет добавлять в хранилище
     publicationPost.previewPublicURL = resultCreating.data!['preview']['publicUrl'];
     print("🔗 [ИНФО] Публичный URL превью получен: ${publicationPost.previewPublicURL}");
-    // final resultUploadPreview = await uploadSingleMediaFile(
-    //   post.previewPath!,
-    //   resultCreating['preview']['presignedUrl'],
-    //   "image/jpeg",
-    // );
-    //
-    // if (!resultUploadPreview) {
-    //   print('Превью не было загружено, продолжаем создание поста');
-    // }
+    final resultUploadPreview = await uploadSingleMediaFile(
+      post.previewPath!,
+      resultCreating.data!['preview']['presignedUrl'],
+      "image/jpeg",
+    );
+
+    if (!resultUploadPreview) {
+      print('Превью не было загружено, продолжаем создание поста');
+    }
     /// ---Конец блока
 
     /// Формируем список для будущего payload поста
@@ -299,8 +299,8 @@ class CreatingPostService {
     print("📝 [ШАГ 5: Payload Update] Привязка полученных ссылок к блокам...");
     applyPresignedResponse(publicationPost.payload!, responseUrls.data!['files']);
 
-    // final result = await uploadAllMediaFromBlocks(publicationPost.payload!);
-    // print('Результат загрузки медиа в хранилище $result');
+    final result = await uploadAllMediaFromBlocks(publicationPost.payload!);
+    print('Результат загрузки медиа в хранилище $result');
 
     print("📡 [ШАГ 6: Canvas] Отправка финального холста (Canvas) на сервер...");
     final resultCreatingCanvas = savePostCanvas(
