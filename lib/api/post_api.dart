@@ -8,6 +8,7 @@ import 'package:dio/dio.dart';
 import 'package:http/http.dart' as http;
 
 import '../models/auth_response.dart';
+import '../models/content_post/content_post.dart';
 import '../models/post_creator/block_photos.dart';
 import '../models/post_creator/block_video.dart';
 import '../models/post_creator/upload_file_info.dart';
@@ -132,4 +133,41 @@ Future<AuthResponse> getAllPosts() async {
 
   } catch (e) {
     return AuthResponse(success: false, data: {"error": "Непредвиденная ошибка $e"});}
+}
+
+Future<AuthResponse> getPost(String postId) async {
+  try {
+    // 1. Выполняем GET запрос с передачей postId в URL
+    // Соответствует роуту mux: "GET /getPost/{postId}"
+    final response = await ApiService.get('/post/getPost/$postId');
+
+    // 2. Проверяем, что пришел объект (Map), а не список
+    if (response.data is Map<String, dynamic>) {
+      final Map<String, dynamic> data = response.data;
+
+      // Мапим данные в модель ShowingPost, которую мы создали ранее
+      final ShowingPost post = ShowingPost.fromMap(data);
+
+      return AuthResponse(
+        success: true,
+        data: {"post": post},
+      );
+    }
+
+    return AuthResponse(
+      success: false,
+      data: {"error": "Неверный формат данных от сервера"},
+    );
+
+  } on DioException catch (e) {
+    // Обработка ошибок Dio (404, 500 и т.д.)
+    final errorMessage = e.response?.data['error'] ?? "Ошибка при загрузке поста";
+    return AuthResponse(success: false, data: {"error": errorMessage});
+
+  } catch (e) {
+    return AuthResponse(
+      success: false,
+      data: {"error": "Непредвиденная ошибка: $e"},
+    );
+  }
 }

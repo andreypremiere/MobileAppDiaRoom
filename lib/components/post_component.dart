@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dia_room/models/post_view/feed_post.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 // PostComponent представляет собой карточку поста с изображением и информацией об авторе
 class PostComponent extends StatefulWidget {
@@ -41,6 +42,7 @@ class _StatePostComponent extends State<PostComponent> {
           onTap: () {
             // Вызов колбэка
             print("Клик по посту!");
+            context.push("/showPost/${widget.post.data.postId}");
           },
           child: SizedBox(
             width: double.infinity,
@@ -51,29 +53,55 @@ class _StatePostComponent extends State<PostComponent> {
                 // Сохранение пропорций изображения 16:9
                 AspectRatio(
                   aspectRatio: 16 / 9,
-                  child: CachedNetworkImage(
-                    imageUrl: widget.post.data.preview ?? '', // Безопасно обрабатываем null
-                    fit: BoxFit.cover,
+                  child: Stack(
+                    children: [
+                      // Картинка
+                      CachedNetworkImage(
+                        imageUrl: widget.post.data.preview ?? '',
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                        height: double.infinity,
 
-                    // Пока картинка качается с Yandex S3
-                    placeholder: (context, url) => Container(
-                      color: const Color(0xFFF5F5F5),
-                      child: const Center(child: CircularProgressIndicator()),
-                    ),
+                        placeholder: (context, url) => Container(
+                          color: const Color(0xFFF5F5F5),
+                          child: const Center(child: CircularProgressIndicator()),
+                        ),
 
-                    // Если URL пустой или произошла ошибка загрузки
-                    errorWidget: (context, url, error) => Ink( // Сохраняем Ink эффект
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFE0E0E0), // Однотонный фон ошибки
-                      ),
-                      child: const Center(
-                        child: Icon(
-                          Icons.broken_image_outlined, // Иконка ошибки
-                          size: 40,
-                          color: Color(0xFF888888),
+                        errorWidget: (context, url, error) => Ink(
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFE0E0E0),
+                          ),
+                          child: const Center(
+                            child: Icon(
+                              Icons.broken_image_outlined,
+                              size: 40,
+                              color: Color(0xFF888888),
+                            ),
+                          ),
                         ),
                       ),
-                    ),
+
+                      // 👇 ВОТ ТВОЙ ВИДЖЕТ В ЛЕВОМ НИЖНЕМ УГЛУ
+                      Positioned(
+                        left: 8,
+                        bottom: 8,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withAlpha(85),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            widget.post.data.category.label,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.black,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 // Нижняя часть карточки с аватаром и заголовком

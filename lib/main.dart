@@ -1,4 +1,6 @@
 import 'package:dia_room/models/post_creator/post_draft.dart';
+import 'package:dia_room/screens/full_image_screen.dart';
+import 'package:dia_room/screens/full_video_screen.dart';
 import 'package:dia_room/screens/login_screen.dart';
 import 'package:dia_room/screens/main_page_screen.dart';
 import 'package:dia_room/screens/new_public_post_screen.dart';
@@ -112,8 +114,11 @@ class App extends StatelessWidget {
 
           // Экран просмотра конкретного поста
           GoRoute(
-            path: "/showPost",
-            builder: (context, state) => const ShowingPostScreen(),
+            path: "/showPost/:postId",
+            builder: (context, state) {
+              final postId = state.pathParameters['postId']!;
+              return ShowingPostScreen(postId: postId);
+            },
           ),
           GoRoute(
             path: '/set_settings',
@@ -141,7 +146,26 @@ class App extends StatelessWidget {
 
           // Новый пост для витрины
           GoRoute(path: '/newPublicPost',
-          builder: (context, state) => const NewPublicPostScreen())
+          builder: (context, state) => const NewPublicPostScreen()),
+
+          GoRoute(
+            path: '/full_image_screen',
+            builder: (context, state) {
+              // Достаем параметры из extra
+              final Map<String, dynamic> params = state.extra as Map<String, dynamic>;
+              return FullImageScreen(
+                imageUrls: params['urls'] as List<String>,
+                initialIndex: params['index'] as int,
+              );
+            },
+          ),
+          GoRoute(
+            path: '/full_screen_video',
+            builder: (context, state) {
+              final String videoUrl = state.extra as String;
+              return FullScreenVideoScreen(videoUrl: videoUrl);
+            },
+          ),
         ],
       ),
       debugShowCheckedModeBanner: false,
