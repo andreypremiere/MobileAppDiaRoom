@@ -2,16 +2,16 @@ import 'package:dia_room/models/post_creator/block_video.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
-// import 'dart:io'; // Для работы с File
-// import 'package:image_picker/image_picker.dart';
-
+import 'package:provider/provider.dart';
+import '../components/info_dialog_component.dart';
 import '../components/new_public_post/block_toolbar.dart';
 import '../components/new_public_post/post_block_widget.dart';
 import '../models/enums/post_types.dart';
 import '../models/post_creator/block_photos.dart';
 import '../models/post_creator/block_post.dart';
 import '../models/post_creator/block_text.dart';
-import '../models/post_creator/post_creating.dart';
+import '../models/post_creator/post_draft.dart';
+import '../utils/draft_provider.dart';
 
 class NewPublicPostScreen extends StatefulWidget {
   const NewPublicPostScreen({super.key});
@@ -23,18 +23,21 @@ class NewPublicPostScreen extends StatefulWidget {
 }
 
 class NewPublicPostState extends State<NewPublicPostScreen> {
-  final List<BlockPost> _blocks = [];
-  // final ImagePicker _picker = ImagePicker();
+  /// Объект черновика, содержащий все блоки и метаданные публикации
+  final PostDraft postDraft = PostDraft();
+
+  /// Индекс блока, который в данный момент редактируется пользователем
   int? _focusedIndex;
 
+  /// Управление фокусом: активирует текстовое поле или снимает фокус с системы
   void _focusBlock(int index) {
-    if (_focusedIndex == index) return; // ← защита от лишних rebuild
+    if (_focusedIndex == index) return;
 
     setState(() {
       _focusedIndex = index;
     });
 
-    final block = _blocks[index];
+    final block = postDraft.blocks[index];
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (block is BlockText) {
         block.focusNode.requestFocus();
@@ -44,57 +47,113 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
     });
   }
 
+  /// Удаляет из списка блоки, которые не содержат контента.
+  void removeEmptyBlocks() {
+    postDraft.blocks.removeWhere((block) {
+      if (block is BlockText) {
+        return block.controller.text.trim().isEmpty;
+      }
+      if (block is BlockPhotos) {
+        return block.paths.isEmpty;
+      }
+      if (block is BlockVideo) {
+        return block.path == null;
+      }
+      return false;
+    });
+  }
+
+  /// Общий метод добавления нового контентного блока
   void _addBlock(BlockPostType type) {
     FocusManager.instance.primaryFocus?.unfocus();
     FocusScope.of(context).unfocus();
 
-      if (type == BlockPostType.text) {
-        _addTextBlock();
-      } else if (type == BlockPostType.photos) {
-        _addPhotosBlock();
-      } else if (type == BlockPostType.videos) {
-        _addVideoBlock();
+    if (type == BlockPostType.text) {
+      _addTextBlock();
+    } else if (type == BlockPostType.photos) {
+      int countPhotoBlock = 0;
+      for (var block in postDraft.blocks) {
+        if (block.type == BlockPostType.photos) {
+          countPhotoBlock += 1;
+        }
       }
+
+      if (countPhotoBlock >= 4) {
+        AppInfoDialog.show(context, "Пока что можно добавить только 4 блока фотографий :(");
+        return;
+      }
+
+      _addPhotosBlock();
+
+    } else if (type == BlockPostType.videos) {
+      int countVideoBlock = 0;
+      for (var block in postDraft.blocks) {
+        if (block.type == BlockPostType.photos) {
+          countVideoBlock += 1;
+        }
+      }
+
+      if (countVideoBlock >= 4) {
+        AppInfoDialog.show(context, "Пока что можно добавить только 4 блока видео :(");
+        return;
+      }
+
+      _addVideoBlock();
+    }
   }
 
+  /// Изменение порядка: перемещение блока вверх по списку
   void _moveUpBlock(int targetIndex) {
     setState(() {
       if (targetIndex == 0) return;
-      BlockPost targetValue = _blocks[targetIndex - 1];
-      _blocks[targetIndex - 1] = _blocks[targetIndex];
-      _blocks[targetIndex] = targetValue;
+      BlockPost targetValue = postDraft.blocks[targetIndex - 1];
+      postDraft.blocks[targetIndex - 1] = postDraft.blocks[targetIndex];
+      postDraft.blocks[targetIndex] = targetValue;
       _focusBlock(targetIndex - 1);
     });
   }
 
+  /// Изменение порядка: перемещение блока вниз по списку
   void _moveDownBlock(int targetIndex) {
     setState(() {
-      if (targetIndex >= _blocks.length - 1) return;
-      BlockPost targetValue = _blocks[targetIndex + 1];
-      _blocks[targetIndex + 1] = _blocks[targetIndex];
-      _blocks[targetIndex] = targetValue;
+      if (targetIndex >= postDraft.blocks.length - 1) return;
+      BlockPost targetValue = postDraft.blocks[targetIndex + 1];
+      postDraft.blocks[targetIndex + 1] = postDraft.blocks[targetIndex];
+      postDraft.blocks[targetIndex] = targetValue;
       _focusBlock(targetIndex + 1);
     });
   }
 
-  void _deleteBlock(int index) {
+  /// Удаление блока из черновика
+  Future<void> _deleteBlock(int index) async {
+    final block = postDraft.blocks[index];
 
-    setState(() {
-      _blocks.removeAt(index);
-      _focusedIndex = null;
-    });
+    // 1. Проверяем тип блока и вызываем очистку ресурсов
+    if (block is BlockPhotos) {
+      await block.deleteAllPhotos(); // Твой новый метод для очистки списка фото
+    } else if (block is BlockVideo) {
+      await block.clearBlock(); // Метод для удаления видео и его превью
+    }
+
+    // 2. Только после удаления файлов убираем блок из UI
+    if (mounted) {
+      setState(() {
+        postDraft.blocks.removeAt(index);
+        _focusedIndex = null;
+      });
+    }
   }
 
+  /// Специфичные методы инициализации блоков (Текст, Фото, Видео)
   void _addTextBlock() {
     final newController = TextEditingController();
     final newBlock = BlockText(controller: newController);
 
     setState(() {
-      _blocks.add(newBlock);
-      _focusedIndex = _blocks.length - 1;
+      postDraft.blocks.add(newBlock);
+      _focusedIndex = postDraft.blocks.length - 1;
     });
 
-    // Только один addPostFrameCallback и без лишнего setState
     WidgetsBinding.instance.addPostFrameCallback((_) {
       newBlock.focusNode.requestFocus();
     });
@@ -102,15 +161,10 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
 
   void _addPhotosBlock() {
     final newBlock = BlockPhotos();
-
     setState(() {
-      _blocks.add(newBlock);
-      _focusedIndex = _blocks.length - 1;
+      postDraft.blocks.add(newBlock);
+      _focusedIndex = postDraft.blocks.length - 1;
     });
-
-    // FocusScope.of(context).unfocus();
-
-    // Для фото сразу убираем клавиатуру БЕЗ лишнего setState
     WidgetsBinding.instance.addPostFrameCallback((_) {
       FocusScope.of(context).unfocus();
     });
@@ -118,13 +172,10 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
 
   void _addVideoBlock() {
     final newBlock = BlockVideo();
-
     setState(() {
-      _blocks.add(newBlock);
-      _focusedIndex = _blocks.length - 1;
+      postDraft.blocks.add(newBlock);
+      _focusedIndex = postDraft.blocks.length - 1;
     });
-
-    // Для фото сразу убираем клавиатуру БЕЗ лишнего setState
     WidgetsBinding.instance.addPostFrameCallback((_) {
       FocusScope.of(context).unfocus();
     });
@@ -133,16 +184,13 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
+      /// Глобальное снятие фокуса и выделения блока при нажатии на пустую область
       onTap: () {
-        print('Объект в фокусе до: ${FocusManager.instance.primaryFocus}');
         FocusScope.of(context).unfocus();
         FocusManager.instance.primaryFocus?.unfocus();
         setState(() {
           _focusedIndex = null;
         });
-        print("Фокус снят, индекс сброшен");
-        print("Build triggered with index: $_focusedIndex");
-        print('Объект в фокусе после: ${FocusManager.instance.primaryFocus}');
       },
       behavior: HitTestBehavior.opaque,
       child: Scaffold(
@@ -151,9 +199,7 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
           child: AppBar(
             backgroundColor: Color(0xFFB4B4B4),
             leading: IconButton(
-              onPressed: () {
-                context.pop();
-              },
+              onPressed: () => context.pop(),
               icon: SvgPicture.asset(
                 'assets/icons/button_back.svg',
                 width: 32,
@@ -161,7 +207,7 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
               ),
             ),
             title: Text(
-              'Создание поста',
+              'Создание публикации',
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.w600,
@@ -169,23 +215,34 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
               ),
             ),
             actions: [
+              /// Кнопка перехода к предварительному просмотру и финальным настройкам
               ElevatedButton(
                 onPressed: () {
-                  print('Отправлен дальше');
-                  final request = PostCreateRequest(blocks: _blocks);
-                  context.push('/post_preview', extra: request);
-                  // context.push('/post_preview', extra: _blocks);
+                  if (postDraft.blocks.isEmpty) {
+                    AppInfoDialog.show(
+                      context,
+                      "Ваш холст пустой! Добавьте содержимое",
+                    );
+                    return;
+                  }
+                  if (_isValidCanvas()) {
+                    removeEmptyBlocks();
+                    context.read<DraftProvider>().startNewDraft(postDraft);
+                    context.push('/post_preview');
+                  } else {
+                    AppInfoDialog.show(
+                      context,
+                      "Все ваши блоки пустые :( ! Заполните их! ",
+                    );
+                    return;
+                  }
                 },
                 style: ElevatedButton.styleFrom(
                   padding: EdgeInsets.symmetric(vertical: 4, horizontal: 12),
                   backgroundColor: Color(0xFFC9C9C9),
                   elevation: 0,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(
-                      12,
-                    ), // Чем больше число, тем круглее
-                    // Можно также добавить рамку самой кнопке:
-                    // side: BorderSide(color: Colors.black, width: 1),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                 ),
                 child: Text(
@@ -201,7 +258,8 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
             ],
           ),
         ),
-        body: _blocks.isEmpty
+        body: postDraft.blocks.isEmpty
+            /// Плейсхолдер для пустого экрана: кнопка добавления первого блока
             ? Container(
                 color: Color(0xFFEAEAEA),
                 width: double.infinity,
@@ -213,47 +271,26 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
                       style: TextStyle(fontFamily: 'SNPro', fontSize: 24),
                     ),
                     PopupMenuButton<BlockPostType>(
-                      // onOpened: () {
-                      //   // Жестко снимаем фокус до открытия меню
-                      //   FocusManager.instance.primaryFocus?.unfocus();
-                      // },
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      // Цвет фона меню
                       color: Colors.white,
-                      padding: EdgeInsets.zero,
-                      // Тень (делаем мягкую)
                       elevation: 5,
-                      // Сдвигаем меню на 50 пикселей вниз, чтобы не перекрывать кнопку "+"
                       offset: const Offset(10, 10),
-                      // Твоя кнопка теперь просто открывает меню
                       child: ElevatedButton(
                         onPressed: null,
-                        // Ставим null, так как за нажатие теперь отвечает PopupMenuButton
                         style: ElevatedButton.styleFrom(
                           disabledBackgroundColor: const Color(0xFF525252),
-                          // Твой цвет
                           disabledForegroundColor: Colors.white,
                           shape: const CircleBorder(),
-                          // Делаем кнопку круглой
                           padding: const EdgeInsets.all(8),
                         ),
                         child: const Icon(Icons.add, size: 40),
                       ),
-
-                      // Что делать при выборе пункта
-                      onSelected: (BlockPostType value) {
-                        print("Выбрано: $value");
-                        // Здесь вызываешь свои функции: _addText(), _addPhoto() и т.д.
-                        _addBlock(value);
-                      },
-
-                      // Сами пункты меню
-                      itemBuilder: (context) =>
-                          BlockPostType.values.map((type) {
-                            return PopupMenuItem<BlockPostType>(
-
+                      onSelected: (value) => _addBlock(value),
+                      itemBuilder: (context) => BlockPostType.values
+                          .map(
+                            (type) => PopupMenuItem<BlockPostType>(
                               height: 40,
                               value: type,
                               child: Row(
@@ -264,7 +301,6 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
                                     size: 22,
                                   ),
                                   const SizedBox(width: 6),
-                                  // Отступ между иконкой и текстом
                                   Text(
                                     type.label,
                                     style: const TextStyle(
@@ -275,33 +311,37 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
                                   ),
                                 ],
                               ),
-                            );
-                          }).toList(),
+                            ),
+                          )
+                          .toList(),
                     ),
                   ],
                 ),
               )
+            /// Основной холст конструктора: список добавленных блоков
             : Stack(
                 children: [
                   Positioned.fill(
                     child: ListView.builder(
                       padding: EdgeInsets.symmetric(vertical: 4, horizontal: 4),
-                      itemCount: _blocks.length,
+                      itemCount: postDraft.blocks.length,
                       itemBuilder: (context, index) {
+                        /// Обертка блока, отвечающая за его отрисовку и контекстное меню действий
                         return PostBlockWrapper(
-                          key: ValueKey(_blocks[index]),
-                          block: _blocks[index],
+                          key: ValueKey(postDraft.blocks[index]),
+                          block: postDraft.blocks[index],
                           isFocused: index == _focusedIndex,
                           onFocus: () => _focusBlock(index),
                           onMoveUp: () => _moveUpBlock(index),
                           onMoveDown: () => _moveDownBlock(index),
-                          onDelete: () => _deleteBlock(index),
-                          onChanged: () =>
-                              setState(() {}), // Просто перерисовываем экран
+                          onDelete: () async => await _deleteBlock(index),
+                          onChanged: () => setState(() {}),
                         );
                       },
                     ),
                   ),
+
+                  /// Плавающая кнопка добавления контента (всегда доступна снизу справа)
                   Positioned(
                     bottom: 10,
                     right: 10,
@@ -309,39 +349,23 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      // Цвет фона меню
                       color: Colors.white,
-                      padding: EdgeInsets.zero,
-                      // Тень (делаем мягкую)
                       elevation: 5,
-                      // Сдвигаем меню на 50 пикселей вниз, чтобы не перекрывать кнопку "+"
                       offset: const Offset(10, 10),
-                      // Твоя кнопка теперь просто открывает меню
                       child: ElevatedButton(
                         onPressed: null,
-                        // Ставим null, так как за нажатие теперь отвечает PopupMenuButton
                         style: ElevatedButton.styleFrom(
                           disabledBackgroundColor: const Color(0xFF525252),
-                          // Твой цвет
                           disabledForegroundColor: Colors.white,
                           shape: const CircleBorder(),
-                          // Делаем кнопку круглой
                           padding: const EdgeInsets.all(8),
                         ),
                         child: const Icon(Icons.add, size: 40),
                       ),
-
-                      // Что делать при выборе пункта
-                      onSelected: (BlockPostType value) {
-                        print("Выбрано: $value");
-                        // Здесь вызываешь свои функции: _addText(), _addPhoto() и т.д.
-                        _addBlock(value);
-                      },
-
-                      // Сами пункты меню
-                      itemBuilder: (context) =>
-                          BlockPostType.values.map((type) {
-                            return PopupMenuItem<BlockPostType>(
+                      onSelected: (value) => _addBlock(value),
+                      itemBuilder: (context) => BlockPostType.values
+                          .map(
+                            (type) => PopupMenuItem<BlockPostType>(
                               height: 40,
                               value: type,
                               child: Row(
@@ -352,7 +376,6 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
                                     size: 22,
                                   ),
                                   const SizedBox(width: 6),
-                                  // Отступ между иконкой и текстом
                                   Text(
                                     type.label,
                                     style: const TextStyle(
@@ -363,33 +386,45 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
                                   ),
                                 ],
                               ),
-                            );
-                          }).toList(),
+                            ),
+                          )
+                          .toList(),
                     ),
                   ),
+
+                  /// Панель инструментов
                   if (_focusedIndex != null)
-                    Positioned(
-                      bottom: 10,
-                      left: 10,
-                      child: Container(
-                        height: 56,
-                        width: 240,
-                        decoration: BoxDecoration(
-                          color: Colors.blueGrey,
-                          borderRadius: BorderRadius.circular(28),
-                        ),
-                        child: PostToolbar(
-                          block: _blocks[_focusedIndex!],
-                          onChanged: () {
-                            // Когда в тулбаре что-то нажмут, сработает этот setState
-                            setState(() {});
-                          },
+                    /// Появляется только для определенного типа
+                    if (_focusedIndex != null &&
+                        (postDraft.blocks[_focusedIndex!] is BlockText ||
+                            postDraft.blocks[_focusedIndex!] is BlockPhotos))
+                      Positioned(
+                        bottom: 10,
+                        left: 10,
+                        child: Container(
+                          height: 56,
+                          width: 240,
+                          decoration: BoxDecoration(
+                            color: Colors.blueGrey,
+                            borderRadius: BorderRadius.circular(28),
+                          ),
+                          child: PostToolbar(
+                            block: postDraft.blocks[_focusedIndex!],
+                            onChanged: () => setState(() {}),
+                          ),
                         ),
                       ),
-                    ),
                 ],
               ),
       ),
     );
+  }
+
+  /// Проверка холста на наличие хотя бы одного заполненного блока
+  bool _isValidCanvas() {
+    for (final block in postDraft.blocks) {
+      if (!block.isEmpty()) return true;
+    }
+    return false;
   }
 }

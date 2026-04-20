@@ -26,8 +26,8 @@ class TextBlockWidget extends StatelessWidget {
         maxLines: null,
         style: TextStyle(
           fontFamily: 'SNPro',
-          fontSize: block.metadata['size']?.toDouble() ?? 16,
-          fontWeight: getFontWeight(block.metadata['weight'] ?? 0),
+          fontSize: block.metadata.size.toDouble() ?? 16,
+          fontWeight: getFontWeight(block.metadata.weight),
           color: Colors.black87,
         ),
         decoration: InputDecoration(

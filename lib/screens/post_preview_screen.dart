@@ -4,28 +4,21 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 
 import '../models/enums/post_types.dart';
-import '../models/post_creator/block_post.dart';
 import '../models/post_creator/block_text.dart';
 import '../models/post_creator/block_photos.dart';
 import '../models/post_creator/block_video.dart';
-import '../models/post_creator/post_creating.dart';
+import '../models/post_creator/post_draft.dart';
 import '../utils/utils.dart';
 
+/// Экран предварительного просмотра публикации.
+/// Отображает блоки контента в том виде, в котором их увидит конечный пользователь.
 class PostPreviewScreen extends StatelessWidget {
-  final PostCreateRequest post;
+  final PostDraft postDraft;
 
-  const PostPreviewScreen({super.key, required this.post});
+  const PostPreviewScreen({super.key, required this.postDraft});
 
   @override
   Widget build(BuildContext context) {
-    // Фильтруем пустые текстовые блоки и блоки без медиа, чтобы не было пустых дыр
-    final validBlocks = post.blocks.where((block) {
-      if (block is BlockText) return block.controller.text.trim().isNotEmpty;
-      if (block is BlockPhotos) return block.paths.isNotEmpty;
-      if (block is BlockVideo) return block.path != null && block.previewPath != null;
-      return false;
-    }).toList();
-
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: PreferredSize(
@@ -51,22 +44,17 @@ class PostPreviewScreen extends StatelessWidget {
           actions: [
             ElevatedButton(
               onPressed: () {
-                print('Отправлен дальше');
-                context.push('/set_settings', extra: post);
+                context.push('/set_settings');
               },
               style: ElevatedButton.styleFrom(
-                padding: EdgeInsets.symmetric(vertical: 4, horizontal: 12),
-                backgroundColor: Color(0xFFC9C9C9),
+                padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 12),
+                backgroundColor: const Color(0xFFC9C9C9),
                 elevation: 0,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(
-                    12,
-                  ), // Чем больше число, тем круглее
-                  // Можно также добавить рамку самой кнопке:
-                  // side: BorderSide(color: Colors.black, width: 1),
+                  borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child: Text(
+              child: const Text(
                 'Далее',
                 style: TextStyle(
                   fontFamily: 'SNPro',
@@ -75,16 +63,16 @@ class PostPreviewScreen extends StatelessWidget {
                 ),
               ),
             ),
-            SizedBox(width: 6),
+            const SizedBox(width: 6),
           ],
         ),
       ),
       body: ListView.separated(
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-        itemCount: validBlocks.length,
-        separatorBuilder: (context, index) => const SizedBox(height: 12), // Отступ между блоками
+        itemCount: postDraft.blocks.length,
+        separatorBuilder: (context, index) => const SizedBox(height: 12),
         itemBuilder: (context, index) {
-          final block = validBlocks[index];
+          final block = postDraft.blocks[index];
 
           if (block is BlockText) {
             return _buildTextBlock(block);
@@ -100,24 +88,23 @@ class PostPreviewScreen extends StatelessWidget {
     );
   }
 
-  // --- Рендер Текста ---
+  /// Рендерит текстовый блок с учетом стилей (размер, вес) из метаданных
   Widget _buildTextBlock(BlockText block) {
-    // Здесь в будущем можно добавить стили (жирный, курсив, заголовки) в зависимости от block.textType
     return Text(
       block.controller.text,
       style: TextStyle(
-        fontSize: block.metadata['size']?.toDouble() ?? 16,
-        fontWeight: getFontWeight(block.metadata['weight'] ?? 0),
-        color: Color(0xFF333333),
+        fontSize: block.metadata.size.toDouble(),
+        fontWeight: getFontWeight(block.metadata.weight),
+        color: const Color(0xFF333333),
         fontFamily: 'SNPro',
       ),
     );
   }
 
-  // --- Рендер Фото (Квадрат: Плитка или Слайдер) ---
+  /// Рендерит блок фотографий, выбирая между слайдером или сеткой (плиткой)
   Widget _buildPhotosBlock(BlockPhotos block) {
     return AspectRatio(
-      aspectRatio: 1, // Жесткий квадрат
+      aspectRatio: 1,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(12),
         child: block.methodView == MethodViewPhoto.slider
@@ -127,7 +114,7 @@ class PostPreviewScreen extends StatelessWidget {
     );
   }
 
-  // Слайдер (PageView)
+  /// Создает горизонтальный слайдер для просмотра фотографий
   Widget _buildPhotoSlider(List<String> paths) {
     return PageView.builder(
       itemCount: paths.length,
@@ -140,7 +127,7 @@ class PostPreviewScreen extends StatelessWidget {
     );
   }
 
-  // Плитка (Умная сетка)
+  /// Создает адаптивную сетку для фотографий в зависимости от их количества (от 1 до 4+)
   Widget _buildPhotoTiles(List<String> paths) {
     int count = paths.length;
 
@@ -176,7 +163,6 @@ class PostPreviewScreen extends StatelessWidget {
       );
     }
 
-    // 4 и более (рендерим первые 4 в виде 2x2)
     return Column(
       children: [
         Expanded(
@@ -199,9 +185,9 @@ class PostPreviewScreen extends StatelessWidget {
                   fit: StackFit.expand,
                   children: [
                     img(paths[3]),
-                    if (count > 4) // Если фото больше 4, показываем +N поверх последнего
+                    if (count > 4)
                       Container(
-                        color: Colors.black.withOpacity(0.5),
+                        color: Colors.black.withAlpha(50),
                         alignment: Alignment.center,
                         child: Text(
                           '+${count - 4}',
@@ -218,25 +204,20 @@ class PostPreviewScreen extends StatelessWidget {
     );
   }
 
-  // --- Рендер Видео (Квадрат с превью) ---
+  /// Рендерит видео-блок в виде интерактивного превью с длительностью и иконкой воспроизведения
   Widget _buildVideoBlock(BlockVideo block) {
     return AspectRatio(
-      aspectRatio: 1, // Делаем квадратным
+      aspectRatio: 1,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(12),
         child: Stack(
           fit: StackFit.expand,
           children: [
-            // 1. Само превью (картинка)
             Image.file(
               File(block.previewPath!),
               fit: BoxFit.cover,
             ),
-
-            // 2. Затемнение для читаемости элементов
-            Container(color: Colors.black.withOpacity(0.1)),
-
-            // 3. Значок Play по центру
+            Container(color: Colors.black.withAlpha(100)),
             const Center(
               child: Icon(
                 Icons.play_circle_fill,
@@ -244,15 +225,13 @@ class PostPreviewScreen extends StatelessWidget {
                 size: 64,
               ),
             ),
-
-            // 4. Длительность в правом нижнем углу
             Positioned(
               bottom: 12,
               right: 12,
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.7),
+                  color: Colors.black.withAlpha(70),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(

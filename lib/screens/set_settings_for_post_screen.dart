@@ -1,18 +1,23 @@
 import 'dart:io';
-import 'package:dia_room/models/post_creator/post_creating.dart';
+import 'package:dia_room/models/post_creator/post_draft.dart';
+import 'package:dia_room/services/public_post_creating/creating_post_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
 
+import '../components/info_dialog_component.dart';
 import '../models/enums/post_categories.dart';
 import '../models/post_creator/block_post.dart';
+import '../models/user.dart';
+import '../utils/auth_service.dart';
 
 class SetSettingsForPostScreen extends StatefulWidget {
-  final PostCreateRequest post; // Принимаем блоки с прошлого экрана
+  final PostDraft postDraft;
 
-  const SetSettingsForPostScreen({super.key, required this.post});
+  const SetSettingsForPostScreen({super.key, required this.postDraft});
 
   @override
   State<SetSettingsForPostScreen> createState() => _SetSettingsForPostState();
@@ -23,8 +28,73 @@ class _SetSettingsForPostState extends State<SetSettingsForPostScreen> {
   final TextEditingController _tagsController = TextEditingController();
   final ImagePicker _picker = ImagePicker();
 
-  // String? _previewImagePath;
-  // PostCategory? _selectedCategory;
+  @override
+  void initState() {
+    super.initState();
+    _namePostController.text = widget.postDraft.name;
+
+
+    _namePostController.addListener(() {
+      widget.postDraft.name = _namePostController.text;
+    });
+  }
+
+  @override
+  void dispose() {
+    _namePostController.dispose();
+    _tagsController.dispose();
+    super.dispose();
+  }
+
+  void _handleTagInput(String value) {
+    if (value.endsWith(' ') || value.endsWith(',')) {
+      String tag = value.replaceAll(',', '').trim();
+
+      if (tag.isNotEmpty) {
+        setState(() {
+          if (widget.postDraft.hashtags.length < PostDraft.maxCountHashtags) {
+          // Добавляем в список, если такого тега еще нет
+          if (!widget.postDraft.hashtags.contains(tag)) {
+            widget.postDraft.hashtags.add(tag);
+          }} else {
+            AppInfoDialog.show(context, "Можно добавить только 6 хештегов :(");
+          }
+          _tagsController.clear(); // Очищаем поле для нового ввода
+        });
+      }
+    }
+  }
+
+  void _removeTag(String tag) {
+    setState(() {
+      widget.postDraft.hashtags.remove(tag);
+    });
+  }
+
+  void _startPublication() {
+    if (widget.postDraft.name.isEmpty) {
+      // Вызываем статический метод, а не просто создаем виджет
+      AppInfoDialog.show(context, "Название поста не должно быть пустым :(");
+      return;
+    }
+
+    if (widget.postDraft.previewPath == null || widget.postDraft.previewPath!.isEmpty) {
+      AppInfoDialog.show(context, "Необходимо выбрать превью :(");
+      return;
+    }
+
+    if (widget.postDraft.category == PostCategory.defaultVal) {
+      AppInfoDialog.show(context, "Необходимо выбрать категорию публикации :(");
+      return;
+    }
+
+    print("Публикация разрешена!");
+    final token = context.read<AuthProvider>().accessToken;
+    User? user = User.fromJwt(token!);
+    CreatingPostService service = CreatingPostService(post: widget.postDraft, user: user!);
+    service.startCreating();
+    context.push('/');
+  }
 
   Future<void> _pickAndCropImage() async {
     final XFile? pickedFile = await _picker.pickImage(
@@ -53,9 +123,47 @@ class _SetSettingsForPostState extends State<SetSettingsForPostScreen> {
       );
 
       if (croppedFile != null) {
-        setState(() => widget.post.previewPath = croppedFile.path);
+        setState(() => widget.postDraft.previewPath = croppedFile.path);
       }
     }
+  }
+
+  Widget _buildTagsDisplay() {
+    if (widget.postDraft.hashtags.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8.0),
+      child: Wrap(
+        spacing: 8.0, // Расстояние между тегами по горизонтали
+        runSpacing: 4.0, // Расстояние между строками
+        children: widget.postDraft.hashtags.map((tag) => _buildTagChip(tag)).toList(),
+      ),
+    );
+  }
+
+  Widget _buildTagChip(String tag) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: const Color(0xFFE8E8E8),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFD1D1D1)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            "#$tag",
+            style: const TextStyle(fontFamily: 'SNPro', fontSize: 14),
+          ),
+          const SizedBox(width: 4),
+          GestureDetector(
+            onTap: () => _removeTag(tag),
+            child: const Icon(Icons.close, size: 16, color: Color(0xFF797979)),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -88,9 +196,26 @@ class _SetSettingsForPostState extends State<SetSettingsForPostScreen> {
             const SizedBox(height: 24),
             _buildSectionTitle("Хештеги"),
             const SizedBox(height: 8),
-            _buildCustomField(
+            _buildTagsDisplay(),
+
+            TextField(
               controller: _tagsController,
-              // hint: '#art #design #dia_room',
+              onChanged: _handleTagInput, // Привязываем обработчик
+              style: const TextStyle(fontFamily: 'SNPro', fontSize: 16),
+              decoration: InputDecoration(
+                hintText: 'Введите тег и нажмите пробел...',
+                filled: true,
+                fillColor: Colors.white,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Color(0xFFD1D1D1)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Color(0xFFB4B4B4), width: 1.5),
+                ),
+              ),
             ),
 
             const SizedBox(height: 24),
@@ -169,7 +294,7 @@ class _SetSettingsForPostState extends State<SetSettingsForPostScreen> {
   }
 
   Widget _buildImagePicker() {
-    if (widget.post.previewPath == null) {
+    if (widget.postDraft.previewPath == null) {
       return InkWell(
         onTap: _pickAndCropImage,
         child: Container(
@@ -204,7 +329,7 @@ class _SetSettingsForPostState extends State<SetSettingsForPostScreen> {
           aspectRatio: 16 / 9,
           child: ClipRRect(
             borderRadius: BorderRadius.circular(12),
-            child: Image.file(File(widget.post.previewPath!), fit: BoxFit.cover),
+            child: Image.file(File(widget.postDraft.previewPath!), fit: BoxFit.cover),
           ),
         ),
         Positioned(
@@ -216,7 +341,7 @@ class _SetSettingsForPostState extends State<SetSettingsForPostScreen> {
               const SizedBox(width: 8),
               _buildCircleBtn(
                 Icons.delete_outline,
-                () => setState(() => widget.post.previewPath = null),
+                () => setState(() => widget.postDraft.previewPath = null),
                 isRed: true,
               ),
             ],
@@ -253,7 +378,7 @@ class _SetSettingsForPostState extends State<SetSettingsForPostScreen> {
       color: Color(0xFFD0D0D0),
       offset: const Offset(0, 50),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      onSelected: (val) => setState(() => widget.post.category = val),
+      onSelected: (val) => setState(() => widget.postDraft.category = val),
       itemBuilder: (context) => PostCategory.values
           .map(
             (cat) => PopupMenuItem(
@@ -276,11 +401,11 @@ class _SetSettingsForPostState extends State<SetSettingsForPostScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              widget.post.category?.label ?? "Выберите категорию",
+              widget.postDraft.category.label,
               style: TextStyle(
                 fontFamily: 'SNPro',
                 fontSize: 16,
-                color: widget.post.category == null ? Colors.grey : Colors.black,
+                color: Colors.black,
               ),
             ),
             const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
@@ -302,7 +427,7 @@ class _SetSettingsForPostState extends State<SetSettingsForPostScreen> {
         ),
       ),
       child: Text(
-        "Блоков контента: ${widget.post.blocks.length}",
+        "Блоков контента: ${widget.postDraft.blocks.length}",
         style: const TextStyle(fontFamily: 'SNPro', color: Colors.grey),
       ),
     );
@@ -314,10 +439,7 @@ class _SetSettingsForPostState extends State<SetSettingsForPostScreen> {
       height: 56,
       child: ElevatedButton(
         onPressed: () {
-          widget.post.name = _namePostController.text;
-          widget.post.hashtags.addAll(_tagsController.text.split(' '));
-          print(widget.post);
-          // TODO: Логика публикации
+          _startPublication();
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFF525252),

@@ -3,11 +3,12 @@ import '../../models/enums/post_types.dart';
 import '../../models/post_creator/block_photos.dart';
 import '../../models/post_creator/block_post.dart';
 import '../../models/post_creator/block_text.dart';
-import '../../models/canvas.dart'; // Предполагаю, тут базовый класс BlockPost
 
+/// Виджет панели инструментов для редактирования конкретного блока контента.
+/// Позволяет изменять тип текста или способ отображения фотографий.
 class PostToolbar extends StatelessWidget {
   final BlockPost block;
-  final VoidCallback onChanged; // Этот колбэк заменит setState
+  final VoidCallback onChanged;
 
   const PostToolbar({
     super.key,
@@ -17,7 +18,6 @@ class PostToolbar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Обертка со скроллом теперь внутри самого виджета
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Padding(
@@ -27,6 +27,7 @@ class PostToolbar extends StatelessWidget {
     );
   }
 
+  /// Определяет, какой набор инструментов показать в зависимости от типа [block]
   Widget _buildContent() {
     if (block is BlockText) {
       return _buildTextToolbar(block as BlockText);
@@ -37,7 +38,7 @@ class PostToolbar extends StatelessWidget {
     return const SizedBox();
   }
 
-  // --- ТУЛБАР ДЛЯ ТЕКСТА ---
+  /// Собирает инструменты для работы с текстовым блоком (заголовки, подзаголовки)
   Widget _buildTextToolbar(BlockText textBlock) {
     return Row(
       children: [
@@ -46,21 +47,16 @@ class PostToolbar extends StatelessWidget {
           items: TextType.values,
           onSelected: (value) {
             textBlock.textType = value;
-            // Логика стилей
             if (value == TextType.header) {
-              textBlock.metadata['size'] = 22;
-              textBlock.metadata['weight'] = 800;
+              textBlock.setTitleType();
             } else if (value == TextType.subtitle) {
-              textBlock.metadata['size'] = 18;
-              textBlock.metadata['weight'] = 600;
+              textBlock.setSubtitleType();
             } else {
-              textBlock.metadata['size'] = 16;
-              textBlock.metadata['weight'] = 400;
+              textBlock.setUsualText();
             }
-            onChanged(); // Уведомляем главный экран
+            onChanged();
           },
           itemLabel: (type) => type.label,
-          // Проверка на заголовок для иконки
           iconBuilder: (type) => type == TextType.header ? Icons.title : Icons.notes,
           isSelected: (type) => textBlock.textType == type,
         ),
@@ -68,7 +64,7 @@ class PostToolbar extends StatelessWidget {
     );
   }
 
-  // --- ТУЛБАР ДЛЯ ФОТО ---
+  /// Собирает инструменты для работы с блоком фотографий (сетка или карусель)
   Widget _buildPhotoToolbar(BlockPhotos photoBlock) {
     return Row(
       children: [
@@ -77,7 +73,7 @@ class PostToolbar extends StatelessWidget {
           items: MethodViewPhoto.values,
           onSelected: (value) {
             photoBlock.methodView = value;
-            onChanged(); // Уведомляем главный экран
+            onChanged();
           },
           itemLabel: (type) => type.label,
           iconBuilder: (type) => type == MethodViewPhoto.tiles ? Icons.grid_view : Icons.view_carousel,
@@ -87,7 +83,7 @@ class PostToolbar extends StatelessWidget {
     );
   }
 
-  // --- УНИВЕРСАЛЬНЫЙ ШАБЛОН КНОПКИ (чтобы не дублировать дизайн) ---
+  /// Универсальный компонент для выбора параметров через выпадающее меню
   Widget _buildPopupSelector<T>({
     required String currentLabel,
     required List<T> items,
@@ -98,7 +94,6 @@ class PostToolbar extends StatelessWidget {
   }) {
     return PopupMenuButton<T>(
       onOpened: () {
-        // Жестко снимаем фокус до открытия меню
         FocusManager.instance.primaryFocus?.unfocus();
       },
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),

@@ -1,4 +1,6 @@
-import 'package:dia_room/models/post_creator/post_creating.dart';
+import 'package:dia_room/models/post_creator/post_draft.dart';
+import 'package:dia_room/screens/full_image_screen.dart';
+import 'package:dia_room/screens/full_video_screen.dart';
 import 'package:dia_room/screens/login_screen.dart';
 import 'package:dia_room/screens/main_page_screen.dart';
 import 'package:dia_room/screens/new_public_post_screen.dart';
@@ -6,10 +8,13 @@ import 'package:dia_room/screens/personal_posts_screen.dart';
 import 'package:dia_room/screens/post_preview_screen.dart';
 import 'package:dia_room/screens/registration_screen.dart';
 import 'package:dia_room/screens/room_screen.dart';
+import 'package:dia_room/screens/room_settings_screen.dart';
 import 'package:dia_room/screens/set_settings_for_post_screen.dart';
 import 'package:dia_room/screens/showing_post_screen.dart';
 import 'package:dia_room/screens/verify_code_screen.dart';
 import 'package:dia_room/utils/auth_service.dart';
+import 'package:dia_room/utils/dio_service.dart';
+import 'package:dia_room/utils/draft_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -17,111 +22,118 @@ import 'package:provider/provider.dart';
 import 'models/post_creator/block_post.dart';
 
 void main() async {
-  // Гарантируем инициализацию связей с нативной платформой перед асинхронными вызовами
   WidgetsFlutterBinding.ensureInitialized();
-
-  // Создаем экземпляр провайдера и предварительно загружаем данные пользователя из хранилища
   final authProvider = AuthProvider();
-  await authProvider.loadUser();
+  ApiService.init(authProvider);
+  await authProvider.loadSession();
+
+  print('Пользователь аутентифицирован?\nuserId: ${authProvider.userId}\nroomId: ${authProvider.roomId}\n'
+      'isAuthenticated: ${authProvider.isAuthenticated}\nisConfigured: ${authProvider.isConfigured} ');
 
   runApp(
-    // Оборачиваем все приложение в провайдер для доступа к состоянию авторизации
-    ChangeNotifierProvider.value(
-      value: authProvider,
-      child: App(authProvider: authProvider),
+    MultiProvider(
+      providers: [
+        // Передаем уже созданный экземпляр, чтобы сохранить состояние сессии
+        ChangeNotifierProvider.value(value: authProvider),
+        ChangeNotifierProvider(create: (_) => DraftProvider()),
+      ],
+      child: const App(),
     ),
-    // App()
   );
 }
 
 class App extends StatelessWidget {
-  final AuthProvider authProvider;
-
-  const App({super.key, required this.authProvider});
-  // const App();
-
+  const App({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
     return MaterialApp.router(
-      // Настройка навигации через GoRouter
       routerConfig: GoRouter(
-        // Перенаправляем пользователя автоматически при изменении состояния в AuthProvider
-        refreshListenable: authProvider,
+        refreshListenable: auth,
         initialLocation: '/',
         redirect: (context, state) {
-          final bool loggedIn = authProvider.isAuthenticated;
-          // Список путей, доступных без авторизации
+          final bool loggedIn = auth.isAuthenticated;
+          final location = state.uri.path;
           final publicRoutes = ['/login', '/registration', '/verifyCode'];
-          final bool isPublicPage = publicRoutes.contains(
-            state.matchedLocation,
-          );
 
-          // Если пользователь не в системе и пытается зайти на закрытый экран — на логин
+          final bool isPublicPage = publicRoutes.any((route) => location.startsWith(route));
+
+          print('Текущий location: $location, Публичная: $isPublicPage, Авторизован: $loggedIn');
+
           if (!loggedIn && !isPublicPage) {
             return '/login';
           }
 
-          // Если пользователь уже авторизован, не пускаем его на страницы входа/регистрации
+          if (loggedIn && !auth.isConfigured) {
+            return '/configureRoom';
+          }
+
           if (loggedIn && isPublicPage) {
             return '/';
           }
 
-          // В остальных случаях оставляем пользователя там, куда он шел
           return null;
         },
         routes: [
           // Главный экран ленты
           GoRoute(
             path: '/',
-            // builder: (context, state) => const NewPublicPostScreen(),
-            // builder: (context, state) => const PersonalPostsScreen(),
-            builder: (context, state) => const MainPageScreen(),
-
+            builder: (context, state) => MainPageScreen(),
           ),
 
-          // Экран верификации с передачей userId через аргумент extra
           GoRoute(
-            path: '/verifyCode',
+            name: 'verifyCode',
+            path: '/verifyCode/:userId', // :userId — это динамический параметр
             builder: (context, state) {
-              final id = state.extra as String;
-              return VerifyCode(userId: id);
+              // Извлекаем параметр из state.pathParameters
+              final userId = state.pathParameters['userId']!;
+              final email = state.uri.queryParameters['email'] ?? '';
+              return VerifyCode(userId: userId, email: email);
             },
           ),
           GoRoute(path: '/post_preview',
             builder: (context, state) {
-              // Извлекаем наш список блоков, который мы передадим при навигации
-              final post = state.extra as PostCreateRequest;
-
-              // Возвращаем экран и передаем ему данные
-              return PostPreviewScreen(post: post);
+              PostDraft? draft = context.read<DraftProvider>().currentDraft;
+              // Если вдруг зашли сюда напрямую без черновика — редирект на начало
+              if (draft == null) return NewPublicPostScreen();
+              return PostPreviewScreen(postDraft: draft);
             },),
+          GoRoute(path: '/configureRoom',
+            builder: (context, state) {
+              return RoomSettingsScreen();
+            }),
 
           // Экраны регистрации и входа
           GoRoute(
+            name: 'registration',
             path: '/registration',
             builder: (context, state) => const Registration(),
           ),
-          GoRoute(path: '/login', builder: (context, state) => const Login()),
+          GoRoute(name: 'login', path: '/login', builder: (context, state) => const Login()),
 
           // Экран просмотра конкретного поста
           GoRoute(
-            path: "/showPost",
-            builder: (context, state) => const ShowingPostScreen(),
+            path: "/showPost/:postId",
+            builder: (context, state) {
+              final postId = state.pathParameters['postId']!;
+              return ShowingPostScreen(postId: postId);
+            },
           ),
           GoRoute(
             path: '/set_settings',
             builder: (context, state) {
-              final post = state.extra as PostCreateRequest;
-              return SetSettingsForPostScreen(post: post);
+              PostDraft? draft = context.read<DraftProvider>().currentDraft;
+              if (draft == null) return MainPageScreen();
+              return SetSettingsForPostScreen(postDraft: draft);
             },
           ),
 
           // Профиль комнаты
           GoRoute(
-            path: '/room',
+            path: '/room/:roomId',
             builder: (context, state) {
-              final roomId = state.extra as String;
+              final roomId = state.pathParameters['roomId']!;
               return RoomScreen(roomId: roomId);
             },
           ),
@@ -134,7 +146,26 @@ class App extends StatelessWidget {
 
           // Новый пост для витрины
           GoRoute(path: '/newPublicPost',
-          builder: (context, state) => const NewPublicPostScreen())
+          builder: (context, state) => const NewPublicPostScreen()),
+
+          GoRoute(
+            path: '/full_image_screen',
+            builder: (context, state) {
+              // Достаем параметры из extra
+              final Map<String, dynamic> params = state.extra as Map<String, dynamic>;
+              return FullImageScreen(
+                imageUrls: params['urls'] as List<String>,
+                initialIndex: params['index'] as int,
+              );
+            },
+          ),
+          GoRoute(
+            path: '/full_screen_video',
+            builder: (context, state) {
+              final String videoUrl = state.extra as String;
+              return FullScreenVideoScreen(videoUrl: videoUrl);
+            },
+          ),
         ],
       ),
       debugShowCheckedModeBanner: false,

@@ -12,50 +12,57 @@ class BlockVideo extends BlockPost {
   String? path;
   String? fileName;
   String? previewPath;
-  String? fileSize;
+  int? fileSize;
   Duration? duration;
 
   BlockVideo() : super(type: BlockPostType.videos);
 
-  // Метод для загрузки метаданных и вывода в консоль
-  Future<void> loadMetadata(String videoPath) async {
-    path = videoPath;
-    final file = File(videoPath);
-    final bytes = await file.length();
-
-    // Переводим в МБ
-    double sizeInMb = bytes / (1024 * 1024);
-    fileSize = "${sizeInMb.toStringAsFixed(2)} MB";
-    fileName = videoPath.split('/').last;
-
-    // Получаем длительность через временный контроллер
-    final controller = VideoPlayerController.file(file);
-    await controller.initialize();
-    duration = controller.value.duration;
-
-    print("--- Video Metadata ---");
-    print("File: $fileName");
-    print("Size: $fileSize");
-    print("Duration: ${duration?.inSeconds} sec");
-    print("----------------------");
-
-    await controller.dispose();
+  String getStringFileSize() {
+    if (fileSize != null) {
+      return "${(fileSize! / (1024 * 1024)).toStringAsFixed(2)} MB";
+    }
+    else {
+      return "";
+    }
   }
 
-  Future<void> generatePreview() async {
-    if (path == null) return;
+  /// Подгружает имя файла, размер файла, длительность файла
+  Future<bool> loadMetadata(String videoPath, int length) async {
+    try {
+      path = videoPath;
+      final file = File(videoPath);
+      // final bytes = await file.length();
 
-    // Генерируем превью во временную папку телефона
+      fileSize = length;
+      fileName = videoPath
+          .split('/')
+          .last;
+
+      // Получаем длительность через временный контроллер
+      final controller = VideoPlayerController.file(file);
+      await controller.initialize();
+      duration = controller.value.duration;
+      await controller.dispose();
+    } catch (e) {
+      return false;
+    }
+    return true;
+  }
+
+  Future<bool> generatePreview() async {
+    if (path == null) return false;
+
     final uint8list = await VideoThumbnail.thumbnailFile(
       video: path!,
       thumbnailPath: (await getTemporaryDirectory()).path,
       imageFormat: ImageFormat.JPEG,
-      maxHeight: 300, // Ограничиваем размер для экономии памяти
-      quality: 75,    // Баланс между качеством и весом файла
+      maxHeight: 600,
+      quality: 90,
     );
 
     previewPath = uint8list.path;
-    print("Превью создано: $previewPath");
+    // print("Превью создано: $previewPath");
+    return true;
   }
 
   String getformattedDuration(Duration? duration) {
@@ -66,11 +73,65 @@ class BlockVideo extends BlockPost {
     return "$minutes:$seconds";
   }
 
-  void clearBlock() {
+  Future<void> clearBlock() async {
+    if (path != null) {
+      if (await File(path!).exists()) await File(path!).delete();
+    }
+
+    if (previewPath != null) {
+      if (await File(previewPath!).exists()) await File(previewPath!).delete();
+    }
+
     path = null;
     fileName = null;
     previewPath = null;
     fileSize = null;
     duration = null;
   }
+
+  @override
+  bool isEmpty() {
+    return path?.isEmpty ?? true;
+  }
+}
+
+class BlockVideoUpload extends BlockUpload {
+  String filePath;
+  String previewPath;
+  int fileSize;
+  Duration duration;
+
+  String uploadIdVideo;
+  String uploadIdPreview;
+
+  String? publicUrlVideo;
+  String? publicUrlPreview;
+
+  String? presignedUrlVideo;
+  String? presignedUrlPreview;
+
+  BlockVideoUpload({
+    required this.filePath,
+    required this.previewPath,
+    required this.fileSize,
+    required this.duration,
+    required this.uploadIdVideo,
+    required this.uploadIdPreview
+}) : super(type: BlockPostType.videos);
+
+  @override
+  Map<String, dynamic> toJson() {
+    return {
+      'type': type.name, // videos
+      'fileSize': fileSize,
+      'durationMs': duration.inMilliseconds, // Длительность лучше хранить в мс
+      'uploadIdVideo': uploadIdVideo,
+      'uploadIdPreview': uploadIdPreview,
+      'publicUrlVideo': publicUrlVideo,
+      'publicUrlPreview': publicUrlPreview,
+      // Пути к файлам (filePath) обычно на сервер не шлют, только URL из облака
+    };
+  }
+
+
 }

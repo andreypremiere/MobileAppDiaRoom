@@ -1,11 +1,14 @@
+import 'package:dia_room/models/auth_response.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../api/post_api.dart';
 import '../components/bottom_menu_component.dart';
 import '../components/post_component.dart';
 import '../configuration/urls.dart';
+import '../models/post_view/feed_post.dart';
 import '../utils/auth_service.dart';
 import '../utils/utils.dart';
 
@@ -23,11 +26,14 @@ class _StateMainPageScreen extends State<MainPageScreen> {
   String? avatarUrl;
   final TextEditingController _controller = TextEditingController();
   final FocusNode _focusNode = FocusNode();
-  bool _isFocused = false; // Состояние фокуса для изменения UI поиска
+  bool _isFocused = false;
+  late Future<AuthResponse> _response;
 
   @override
   void initState() {
     super.initState();
+    _loadPosts();
+
     // Слушаем изменение фокуса, чтобы скрывать/показывать кнопку поиска
     _focusNode.addListener(() {
       setState(() {
@@ -48,11 +54,14 @@ class _StateMainPageScreen extends State<MainPageScreen> {
     super.dispose();
   }
 
+  void _loadPosts() {
+    setState(() {
+      _response = getAllPosts();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Получение данных пользователя через Provider
-    final user = context.watch<AuthProvider>().user;
-
     return GestureDetector(
       // Скрытие клавиатуры при тапе по любому месту экрана
       onTap: () => FocusScope.of(context).unfocus(),
@@ -159,22 +168,74 @@ class _StateMainPageScreen extends State<MainPageScreen> {
             ),
 
             // Список постов внутри Sliver-структуры
+            // Внутри SliverPadding меняем SliverList на FutureBuilder
             SliverPadding(
               padding: const EdgeInsets.symmetric(vertical: 2),
-              sliver: SliverList(
-                delegate: SliverChildListDelegate([
-                  // Цикл для генерации тестовых данных ленты
-                  for (int i = 0; i <= 10; i++) ...[
-                    PostComponent(
-                      onTap: () {
-                        context.push('/showPost');
+              sliver: FutureBuilder<AuthResponse>(
+                future: _response,
+                builder: (context, snapshot) {
+                  // 1. СОСТОЯНИЕ ЗАГРУЗКИ
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const SliverFillRemaining(
+                      child: Center(
+                        child: CircularProgressIndicator(
+                          color: Color(0xFF722323), // Твой фирменный цвет
+                        ),
+                      ),
+                    );
+                  }
+
+                  // 2. ОБРАБОТКА ОШИБКИ (Network error или сервер упал)
+                  if (snapshot.hasError) {
+                    return SliverFillRemaining(
+                      child: Center(child: Text("Ошибка сети: ${snapshot.error}")),
+                    );
+                  }
+
+                  // 3. ПОЛУЧЕНИЕ ДАННЫХ
+                  final authResponse = snapshot.data;
+
+                  // Проверка на успех в твоем AuthResponse
+                  if (authResponse == null || !authResponse.success) {
+                    return SliverFillRemaining(
+                      child: Center(
+                        child: Text(authResponse?.data?['error'] ?? "Ошибка загрузки"),
+                      ),
+                    );
+                  }
+
+                  final List<FeedPost> posts = authResponse.data?['listPosts'] ?? [];
+
+                  if (posts.isEmpty) {
+                    return const SliverFillRemaining(
+                      child: Center(child: Text("Лента пуста")),
+                    );
+                  }
+
+                  // 4. ОТОБРАЖЕНИЕ СПИСКА
+                  return SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                          (context, index) {
+                        if (index == posts.length) {
+                          return SizedBox(height: MediaQuery.of(context).padding.bottom);
+                        }
+
+                        final post = posts[index];
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: PostComponent(
+                            post: post,
+                            // onTap: () {
+                            //   // Здесь переделать просто передавать
+                            //   context.push('/showPost', extra: post);
+                            // },
+                          ),
+                        );
                       },
+                      childCount: posts.length + 1, // +1 для нижнего отступа
                     ),
-                    const SizedBox(height: 10),
-                  ],
-                  // Отступ снизу, чтобы контент не перекрывался меню
-                  SizedBox(height: MediaQuery.of(context).padding.bottom + 58),
-                ]),
+                  );
+                },
               ),
             ),
           ],

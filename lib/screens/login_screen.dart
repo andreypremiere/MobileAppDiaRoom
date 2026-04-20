@@ -1,4 +1,5 @@
-import 'package:dia_room/api/user_api.dart';
+import 'package:dia_room/api/account_api.dart';
+import 'package:dia_room/components/info_dialog_component.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -13,27 +14,46 @@ class Login extends StatefulWidget {
 }
 
 class _LoginState extends State<Login> {
-  // Контроллер для извлечения текста из поля ввода (id или телефон)
-  final TextEditingController _valueController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  bool _obscurePassword = true;
 
   @override
   void dispose() {
-    // Обязательное освобождение ресурсов контроллера при закрытии экрана
-    _valueController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
 
-  // _handleLogin вызывает API входа и перенаправляет на верификацию
   void _handleLogin() async {
-    // Вызов функции запроса из папки api
-    String? userId = await requestLogin(_valueController.text);
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
 
-    if (userId != null) {
-      // Проверка mounted гарантирует, что контекст еще существует после await
+    if (email.isEmpty) {
+      AppInfoDialog.show(context, "Email пустой :(. Заполните поле.");
+      return;
+    }
+    if (password.isEmpty) {
+      AppInfoDialog.show(context, "Пароль пустой :(. Заполните поле.");
+      return;
+    }
+
+    final response = await requestLogin(email, password);
+
+    if (response.success && response.data != null) {
+      final String userId = response.data!['userId'].toString();
+
       if (mounted) {
-        // Переход на экран ввода кода с передачей userId через extra
-        context.go('/verifyCode', extra: userId.toString());
+        context.go(
+          Uri(
+            path: '/verifyCode/$userId',
+            queryParameters: {'email': email},
+          ).toString(),
+        );
       }
+    } else {
+      // Если success == false, показываем сообщение об ошибке из бэкенда
+      AppInfoDialog.show(context, response.message ?? "Ошибка входа");
     }
   }
 
@@ -84,7 +104,7 @@ class _LoginState extends State<Login> {
             // Центрированная форма входа
             Center(
               child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 14),
+                margin: const EdgeInsets.symmetric(horizontal: 10),
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
                   color: Colors.white,
@@ -101,7 +121,7 @@ class _LoginState extends State<Login> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const Text(
-                      "Войти",
+                      "Вход",
                       style: TextStyle(
                         fontFamily: "SNPro",
                         fontSize: 22,
@@ -111,9 +131,9 @@ class _LoginState extends State<Login> {
                     const SizedBox(height: 10),
                     // Поле ввода идентификатора пользователя
                     TextField(
-                      controller: _valueController,
+                      controller: _emailController,
                       decoration: InputDecoration(
-                        hintText: "user_id или номер телефона",
+                        hintText: "Email",
                         filled: true,
                         fillColor: const Color(0xFFF3F3F3),
                         border: OutlineInputBorder(
@@ -128,6 +148,36 @@ class _LoginState extends State<Login> {
                       cursorColor: const Color(0xFF000000),
                     ),
                     const SizedBox(height: 10),
+                    TextField(
+                      controller: _passwordController,
+                      obscureText: _obscurePassword,
+                      decoration: InputDecoration(
+                        hintText: "Пароль",
+                        filled: true,
+                        fillColor: const Color(0xFFF3F3F3),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide.none,
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 8,
+                        ),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                            color: Colors.grey,
+                            size: 20,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _obscurePassword = !_obscurePassword;
+                            });}
+                        ),
+                      ),
+                      cursorColor: const Color(0xFF000000),
+                    ),
+                    const SizedBox(height: 10),
                     // Кнопка подтверждения входа
                     ElevatedButton(
                       onPressed: () {
@@ -135,6 +185,11 @@ class _LoginState extends State<Login> {
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF990000),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(
+                            12,
+                          ), // Скругление углов
+                        ),
                       ),
                       child: const Text(
                         "Войти",
