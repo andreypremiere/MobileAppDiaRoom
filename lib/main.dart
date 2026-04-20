@@ -15,14 +15,17 @@ import 'package:dia_room/screens/verify_code_screen.dart';
 import 'package:dia_room/utils/auth_service.dart';
 import 'package:dia_room/utils/dio_service.dart';
 import 'package:dia_room/utils/draft_provider.dart';
+import 'package:dia_room/utils/theme_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import 'models/post_creator/block_post.dart';
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+
   final authProvider = AuthProvider();
   ApiService.init(authProvider);
   await authProvider.loadSession();
@@ -36,6 +39,7 @@ void main() async {
         // Передаем уже созданный экземпляр, чтобы сохранить состояние сессии
         ChangeNotifierProvider.value(value: authProvider),
         ChangeNotifierProvider(create: (_) => DraftProvider()),
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
       ],
       child: const App(),
     ),
@@ -48,7 +52,28 @@ class App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
+    final themeProvider = context.watch<ThemeProvider>();
     return MaterialApp.router(
+      builder: (context, child) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+
+        return AnnotatedRegion<SystemUiOverlayStyle>(
+          value: SystemUiOverlayStyle(
+            statusBarColor: Colors.transparent,
+            statusBarIconBrightness:
+            isDark ? Brightness.light : Brightness.dark,
+            statusBarBrightness:
+            isDark ? Brightness.dark : Brightness.light,
+            systemNavigationBarColor: Colors.transparent,
+            systemNavigationBarIconBrightness:
+            isDark ? Brightness.light : Brightness.dark,
+            systemNavigationBarDividerColor: Colors.transparent,
+            systemNavigationBarContrastEnforced: false,
+            systemStatusBarContrastEnforced: false,
+          ),
+          child: child!,
+        );
+      },
       routerConfig: GoRouter(
         refreshListenable: auth,
         initialLocation: '/',
@@ -169,13 +194,7 @@ class App extends StatelessWidget {
         ],
       ),
       debugShowCheckedModeBanner: false,
-      // Глобальная настройка темы приложения
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF990000),
-          surface: const Color(0xFFE1DFDA),
-        ),
-      ),
+      theme: themeProvider.currentTheme,
     );
   }
 }

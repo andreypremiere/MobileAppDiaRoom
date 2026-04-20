@@ -1,14 +1,18 @@
 import 'dart:convert';
 
 import 'package:dia_room/components/info_dialog_component.dart';
+import 'package:dia_room/utils/app_theme.dart';
 import 'package:dia_room/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:dia_room/api/account_api.dart';
-import 'package:http/http.dart' as http;
 
-// Registration представляет экран создания нового аккаунта и комнаты
+import '../components/app_text_field.dart';
+import '../components/auth_button.dart';
+import '../components/auth_form_container.dart';
+import '../components/keyboard_dismissible.dart';
+
 class Registration extends StatefulWidget {
   const Registration({super.key});
 
@@ -87,18 +91,11 @@ class _RegistrationState extends State<Registration> {
 
   @override
   Widget build(BuildContext context) {
-    // GestureDetector позволяет закрыть клавиатуру при тапе по пустому месту
-    return GestureDetector(
-      onTap: () => FocusScope.of(context).unfocus(),
+    return KeyboardDismissible(
       child: Scaffold(
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        appBar: AppBar(
-          toolbarHeight: 0,
-          // Скрываем стандартный AppBar, оставляя только системную строку
-          elevation: 0,
-          backgroundColor: Colors.transparent,
-        ),
-        body: Stack(
+        extendBody: true,
+        extendBodyBehindAppBar: true,
+        body: SafeArea(child: Stack(
           children: [
             // Кнопка "Назад" в верхнем левом углу
             Positioned(
@@ -106,11 +103,9 @@ class _RegistrationState extends State<Registration> {
               left: 10,
               child: IconButton(
                 onPressed: () => context.pop(),
-                icon: SvgPicture.asset(
-                  'assets/icons/button_back.svg',
-                  width: 30,
-                  height: 30,
-                ),
+                icon: Icon(Icons.arrow_back_rounded,
+                size: context.ui.iconSizePanel),
+                color: context.ui.fontColorPrimary,
               ),
             ),
 
@@ -121,7 +116,7 @@ class _RegistrationState extends State<Registration> {
               right: 0,
               child: Center(
                 child: GestureDetector(
-                  onTap: () => print("Открыть политику"),
+                  onTap: () => AppInfoDialog.show(context, "Пока что политики нет, но мы обязательно ее добавим!"),
                   child: const Text(
                     "Политика конфиденциальности",
                     style: TextStyle(
@@ -136,133 +131,53 @@ class _RegistrationState extends State<Registration> {
 
             // Центральная карточка с формой ввода
             Center(
-              child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 10),
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 20,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
+              child: AuthFormContainer(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text(
+                    Text(
                       "Регистрация",
                       style: TextStyle(
-                        fontSize: 22,
-                        fontFamily: "SNPro",
+                        fontSize: context.ui.fontSizeTitle,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                     const SizedBox(height: 20),
 
-                    _buildTextField(
-                      controller: _emailController,
-                      hint: "Email",
-                      keyboardType: TextInputType.emailAddress,
-                    ),
+                    AppTextField(controller: _emailController, hint: "Email", keyboardType: TextInputType.emailAddress),
                     const SizedBox(height: 10),
 
-                    // Поле Пароль (скрываемое)
-                    _buildTextField(
+                    AppTextField(
                       controller: _passwordController,
                       hint: "Пароль",
                       isPassword: true,
                       obscureText: _obscurePassword,
-                      onSuffixIconPressed: () {
-                        setState(() {
-                          _obscurePassword = !_obscurePassword;
-                        });
-                      },
+                      onVisibilityToggle: () => setState(() => _obscurePassword = !_obscurePassword),
                     ),
                     const SizedBox(height: 10),
 
-                    // Поле Повтор пароля (скрываемое)
-                    _buildTextField(
+                    AppTextField(
                       controller: _passwordAgainController,
                       hint: "Пароль повторно",
                       isPassword: true,
                       obscureText: _obscurePassword,
-                      onSuffixIconPressed: () {
-                        setState(() {
-                          _obscurePassword = !_obscurePassword;
-                        });
-                      },
+                      onVisibilityToggle: () => setState(() => _obscurePassword = !_obscurePassword),
                     ),
                     const SizedBox(height: 20),
 
                     // Кнопка отправки данных формы
-                    ElevatedButton(
+                    AuthButton(
+                      text: "Регистрация",
+                      backgroundColor: Theme.of(context).primaryColor,
                       onPressed: _handleRegistration,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF990000),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(
-                            12,
-                          ), // Скругление углов
-                        ),
-                      ),
-                      child: const Text(
-                        "Регистрация",
-                        style: TextStyle(
-                          fontFamily: "SNPro",
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
-                      ),
                     ),
                   ],
                 ),
               ),
             ),
           ],
-        ),
+        ),),
       ),
-    );
-  }
-
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String hint,
-    TextInputType keyboardType = TextInputType.text,
-    bool isPassword = false, // По умолчанию это не пароль
-    bool obscureText = false, // Скрывать ли текст (передаем из стейта)
-    VoidCallback? onSuffixIconPressed, // Колбэк для иконки
-  }) {
-    return TextField(
-      controller: controller,
-      keyboardType: isPassword ? TextInputType.visiblePassword : keyboardType,
-      obscureText: isPassword ? obscureText : false,
-      decoration: InputDecoration(
-        hintText: hint,
-        filled: true,
-        fillColor: const Color(0xFFF3F3F3),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide.none,
-        ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-        // Добавляем иконку только если поле помечено как isPassword
-        suffixIcon: isPassword
-            ? IconButton(
-                icon: Icon(
-                  obscureText ? Icons.visibility_off : Icons.visibility,
-                  color: Colors.grey,
-                  size: 20,
-                ),
-                onPressed: onSuffixIconPressed,
-              )
-            : null,
-      ),
-      cursorColor: const Color(0xFF000000),
     );
   }
 }

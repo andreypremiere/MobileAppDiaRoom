@@ -1,7 +1,13 @@
 import 'package:dia_room/api/account_api.dart';
 import 'package:dia_room/components/info_dialog_component.dart';
+import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+
+import '../components/app_text_field.dart';
+import '../components/auth_button.dart';
+import '../components/auth_form_container.dart';
+import '../components/keyboard_dismissible.dart';
 
 // Login представляет экран входа пользователя в систему
 class Login extends StatefulWidget {
@@ -59,21 +65,11 @@ class _LoginState extends State<Login> {
 
   @override
   Widget build(BuildContext context) {
-    // GestureDetector используется для скрытия клавиатуры при нажатии на пустую область
-    return GestureDetector(
-      onTap: () {
-        FocusScopeNode currentFocus = FocusScope.of(context);
-        if (!currentFocus.hasPrimaryFocus) {
-          currentFocus.unfocus();
-        }
-      },
+    return KeyboardDismissible(
       child: Scaffold(
-        // Невидимый AppBar для корректного отображения системного статус-бара
-        appBar: PreferredSize(
-          preferredSize: const Size.fromHeight(0.0),
-          child: AppBar(),
-        ),
-        body: Stack(
+        extendBody: true,
+        extendBodyBehindAppBar: true,
+        body: SafeArea(child: Stack(
           children: [
             // Кнопка перехода к регистрации в верхнем углу
             Positioned(
@@ -84,129 +80,63 @@ class _LoginState extends State<Login> {
                   context.push('/registration');
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
+                  backgroundColor: context.ui.buttonColorSecondary,
                   elevation: 0,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
                 ),
-                child: const Text(
+                child: Text(
                   'Регистрация',
                   style: TextStyle(
                     fontFamily: 'SNPro',
                     fontWeight: FontWeight.w500,
                     fontSize: 16,
-                    color: Colors.black,
+                    color: context.ui.fontColorPrimary,
                   ),
                 ),
               ),
             ),
             // Центрированная форма входа
             Center(
-              child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 10),
+              child: AuthFormContainer(
                 padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(18),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withAlpha(10),
-                      blurRadius: 18,
-                      offset: const Offset(0, 0),
-                    ),
-                  ],
-                ),
+                borderRadius: 18,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text(
+                    Text(
                       "Вход",
                       style: TextStyle(
                         fontFamily: "SNPro",
-                        fontSize: 22,
+                        fontSize: context.ui.fontSizeTitle,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                     const SizedBox(height: 10),
                     // Поле ввода идентификатора пользователя
-                    TextField(
-                      controller: _emailController,
-                      decoration: InputDecoration(
-                        hintText: "Email",
-                        filled: true,
-                        fillColor: const Color(0xFFF3F3F3),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide.none,
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 8,
-                        ),
-                      ),
-                      cursorColor: const Color(0xFF000000),
-                    ),
+                    AppTextField(controller: _emailController, hint: "Email"),
                     const SizedBox(height: 10),
-                    TextField(
+                    AppTextField(
                       controller: _passwordController,
+                      hint: "Пароль",
+                      isPassword: true,
                       obscureText: _obscurePassword,
-                      decoration: InputDecoration(
-                        hintText: "Пароль",
-                        filled: true,
-                        fillColor: const Color(0xFFF3F3F3),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide.none,
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 8,
-                        ),
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                            color: Colors.grey,
-                            size: 20,
-                          ),
-                          onPressed: () {
-                            setState(() {
-                              _obscurePassword = !_obscurePassword;
-                            });}
-                        ),
-                      ),
-                      cursorColor: const Color(0xFF000000),
+                      onVisibilityToggle: () => setState(() => _obscurePassword = !_obscurePassword),
                     ),
                     const SizedBox(height: 10),
                     // Кнопка подтверждения входа
-                    ElevatedButton(
-                      onPressed: () {
-                        _handleLogin();
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF990000),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(
-                            12,
-                          ), // Скругление углов
-                        ),
-                      ),
-                      child: const Text(
-                        "Войти",
-                        style: TextStyle(
-                          fontFamily: "SNPro",
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
-                      ),
+                    AuthButton(
+                      text: "Войти",
+                      backgroundColor: Theme.of(context).primaryColor,
+                      onPressed: _handleLogin,
                     ),
                   ],
                 ),
               ),
             ),
           ],
-        ),
+        ),),
       ),
     );
   }
