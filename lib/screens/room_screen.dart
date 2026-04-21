@@ -2,6 +2,7 @@ import 'package:dia_room/components/bottom_menu_component.dart';
 import 'package:dia_room/components/info_dialog_component.dart';
 import 'package:dia_room/models/auth_response.dart';
 import 'package:dia_room/models/base_room.dart';
+import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
@@ -103,44 +104,42 @@ class _RoomState extends State<RoomScreen> {
             extendBodyBehindAppBar: true,
             appBar: AppBar(
               backgroundColor: Colors.transparent,
-              // полностью прозрачный
               elevation: 0,
               scrolledUnderElevation: 0,
-              // ← вот главное!
               shadowColor: Colors.transparent,
               surfaceTintColor: Colors.transparent,
               forceMaterialTransparency: true,
               // backgroundColor: const Color(0xFFFFA6A6).withAlpha(0),
               leading: IconButton(
                 onPressed: () => context.pop(),
-                icon: SvgPicture.asset(
-                  'assets/icons/button_back.svg',
-                  width: 30,
-                  height: 30,
-                ),
+                icon: Icon(Icons.arrow_back_rounded,
+                    size: context.ui.iconSizePanel),
+                color: context.ui.fontColorPrimary,
               ),
-              actions: [
-                // Здесь исправить на провайдера
-                if (isMyRoom)
-                  IconButton(
-                    onPressed: () => {
-                      //   Здесь делать редирект на страницу редактирования комнаты
-                    },
-                    icon: SvgPicture.asset(
-                      'assets/icons/edit.svg',
-                      width: 28,
-                      height: 28,
-                      colorFilter: const ColorFilter.mode(
-                        Color(0x80000000), // Цвет, в который хотим покрасить
-                        BlendMode
-                            .srcIn, // Режим наложения (srcIn — закрасить иконку целиком)
-                      ),
-                    ),
-                  ),
-                const SizedBox(width: 8),
-              ],
+              // actions: [
+              //   // Здесь исправить на провайдера
+              //   if (isMyRoom)
+              //     IconButton(
+              //       onPressed: () => {
+              //         //   Здесь делать редирект на страницу редактирования комнаты
+              //       },
+              //       icon: SvgPicture.asset(
+              //         'assets/icons/edit.svg',
+              //         width: 28,
+              //         height: 28,
+              //         colorFilter: const ColorFilter.mode(
+              //           Color(0x80000000), // Цвет, в который хотим покрасить
+              //           BlendMode
+              //               .srcIn, // Режим наложения (srcIn — закрасить иконку целиком)
+              //         ),
+              //       ),
+              //     ),
+              //   const SizedBox(width: 8),
+              // ],
             ),
-            body: Stack(
+            body: SafeArea(
+              top: false,
+              child: Stack(
               children: [
                 Column(
                   children: [
@@ -158,7 +157,7 @@ class _RoomState extends State<RoomScreen> {
                             fit: BoxFit.cover,
                           )
                               : null,
-                          color: Color(0xFFB7B7B7), // Тот самый однотонный цвет
+                          // color: Color(0xFFB7B7B7), // Тот самый однотонный цвет
                         ),
                         child: Padding(
                           padding: EdgeInsets.only(
@@ -206,19 +205,19 @@ class _RoomState extends State<RoomScreen> {
                                                   room.avatarUrl,
                                               ) : null
                                       ),
-                                      Container(
-                                        height: 60,
-                                        width: 120,
-                                        decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(
-                                            10,
-                                          ),
-                                          color: Colors.white.withAlpha(50),
-                                        ),
-                                        child: const Center(
-                                          child: Text("Спонсор"),
-                                        ),
-                                      ),
+                                      // Container(
+                                      //   height: 60,
+                                      //   width: 120,
+                                      //   decoration: BoxDecoration(
+                                      //     borderRadius: BorderRadius.circular(
+                                      //       10,
+                                      //     ),
+                                      //     color: Colors.white.withAlpha(50),
+                                      //   ),
+                                      //   child: const Center(
+                                      //     child: Text("Спонсор"),
+                                      //   ),
+                                      // ),
                                     ],
                                   ),
                                 ),
@@ -697,16 +696,10 @@ class _RoomState extends State<RoomScreen> {
                         ),
                       ),
                     ),
-                    // Контейнер для нижнего меню
-                    Container(
-                      color: Colors.transparent,
-                      height: 66,
-                      child: Center(child: BottomMenu()),
-                    ),
                   ],
                 ),
               ],
-            ),
+            ),),
           ),
         );
       }, // Конец builder

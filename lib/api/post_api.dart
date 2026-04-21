@@ -128,7 +128,7 @@ Future<AuthResponse> getAllPosts() async {
 
   } on DioException catch (e) {
     // Логируем ошибку или выбрасываем исключение для обработки в UI
-    final errorMessage = e.response?.data['error'] ?? "Ошибка получения ленты";
+    final errorMessage = e.response?.data['message'] ?? "Ошибка получения ленты";
     return AuthResponse(success: false, data: {"error": errorMessage});
 
   } catch (e) {

@@ -1,12 +1,11 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dia_room/models/post_view/feed_post.dart';
+import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-// PostComponent представляет собой карточку поста с изображением и информацией об авторе
 class PostComponent extends StatefulWidget {
   final FeedPost post;
-  // final VoidCallback? onTap;
 
   const PostComponent({super.key, required this.post});
 
@@ -23,18 +22,18 @@ class _StatePostComponent extends State<PostComponent> {
       // Внешний контейнер для создания мягкой тени вокруг карточки
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(10),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha(30),
-            blurRadius: 12,
-            spreadRadius: 0,
-            // Смещение тени вниз для эффекта глубины
-            offset: const Offset(0, 4),
-          ),
-        ],
+        // boxShadow: [
+        //   BoxShadow(
+        //     color: Colors.black.withAlpha(30),
+        //     blurRadius: 12,
+        //     spreadRadius: 0,
+        //     // Смещение тени вниз для эффекта глубины
+        //     offset: const Offset(0, 4),
+        //   ),
+        // ],
       ),
       child: Material(
-        color: Colors.white,
+        color: context.ui.containerColor,
         borderRadius: BorderRadius.circular(10),
         // Обрезка содержимого (картинки и InkWell) по радиусу углов
         clipBehavior: Clip.antiAlias,
@@ -63,7 +62,7 @@ class _StatePostComponent extends State<PostComponent> {
                         height: double.infinity,
 
                         placeholder: (context, url) => Container(
-                          color: const Color(0xFFF5F5F5),
+                          color: context.ui.containerColor,
                           child: const Center(child: CircularProgressIndicator()),
                         ),
 
@@ -81,14 +80,13 @@ class _StatePostComponent extends State<PostComponent> {
                         ),
                       ),
 
-                      // 👇 ВОТ ТВОЙ ВИДЖЕТ В ЛЕВОМ НИЖНЕМ УГЛУ
                       Positioned(
                         left: 8,
                         bottom: 8,
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                           decoration: BoxDecoration(
-                            color: Colors.white.withAlpha(85),
+                            color: context.ui.containerColor.withAlpha(85),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
@@ -96,7 +94,7 @@ class _StatePostComponent extends State<PostComponent> {
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
-                              color: Colors.black,
+                              color: context.ui.fontColorPrimary,
                             ),
                           ),
                         ),
@@ -126,27 +124,27 @@ class _StatePostComponent extends State<PostComponent> {
                               radius: 20, // Ширина аватара будет 40 (radius * 2)
                               backgroundImage: imageProvider,
                             ),
-                            placeholder: (context, url) => const CircleAvatar(
+                            placeholder: (context, url) => CircleAvatar(
                               radius: 20,
-                              backgroundColor: Color(0xFF722323),
+                              backgroundColor: Theme.of(context).primaryColor,
                               child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                             ),
-                            errorWidget: (context, url, error) => const CircleAvatar(
+                            errorWidget: (context, url, error) => CircleAvatar(
                               radius: 20,
-                              backgroundColor: Color(0xFF722323),
+                              backgroundColor: Theme.of(context).primaryColor,
                               child: Icon(Icons.person, color: Colors.white),
                             ),
                           ),
-                          const SizedBox(width: 12), // Тот самый зазор в 12 пикселей
+                          const SizedBox(width: 12),
                           Expanded(
                             child: Text(
                               widget.post.data.title,
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontWeight: FontWeight.w600,
                                 fontSize: 16,
-                                fontFamily: "SNPro",
+                                color: context.ui.fontColorPrimary
                               ),
                             ),
                           ),
@@ -176,46 +174,45 @@ class _StatePostComponent extends State<PostComponent> {
                     children: [
                       Text(
                         widget.post.author.roomName,
-                        style: const TextStyle(
-                          color: Colors.black54,
+                        style: TextStyle(
+                          color: context.ui.fontColorHint,
                           fontSize: 14,
                           fontWeight: FontWeight.w400,
-                          fontFamily: "SNPro",
                         ),
                       ),
                       Spacer(),
                       Text(
                         '${widget.post.stats.views}', // Количество просмотров
-                        style: const TextStyle(
-                          color: Colors.black54,
+                        style: TextStyle(
+                          color: context.ui.fontColorHint,
                           fontSize: 14,
                         ),
                       ),
 
                       // 1. Иконка просмотров
                       const SizedBox(width: 6),
-                      const Icon(
+                      Icon(
                         Icons.remove_red_eye_outlined,
                         // Outlined версия обычно выглядит легче
                         size: 20,
-                        color: Colors.black54,
+                        color: context.ui.fontColorHint,
                       ),
 
                       const SizedBox(width: 10,),
                       // Расталкивает просмотры влево, а лайки вправо
                       Text(
                         '${widget.post.stats.likes}',
-                        style: const TextStyle(
-                          color: Colors.black54,
+                        style: TextStyle(
+                          color: context.ui.fontColorHint,
                           fontSize: 14,
                         ),
                       ),
                       const SizedBox(width: 6),
-                      const Icon(
+                      Icon(
                         Icons.favorite_border_rounded,
                         // Outlined версия обычно выглядит легче
                         size: 20,
-                        color: Colors.black54,
+                        color: context.ui.fontColorHint,
                       ),
 
                       // 2. Скругленный виджет лайков

@@ -107,6 +107,7 @@ class AppTheme {
     borderRadiusSmall: 10,
     borderRadiusLittle: 6,
     iconSizePanel: 32,
+    iconSizeBottomPanel: 32,
     iconSizeCategory: 16,
     avatarSizeAppBar: 18,
   );
@@ -134,6 +135,7 @@ class AppTheme {
     borderRadiusSmall: 10,
     borderRadiusLittle: 6,
     iconSizePanel: 32,
+    iconSizeBottomPanel: 32,
     iconSizeCategory: 16,
     avatarSizeAppBar: 18,
   );
@@ -163,6 +165,7 @@ class UICustom extends ThemeExtension<UICustom> {
 
   final double iconSizePanel;
   final double iconSizeCategory;
+  final double iconSizeBottomPanel;
 
   final double avatarSizeAppBar;
 
@@ -192,6 +195,7 @@ class UICustom extends ThemeExtension<UICustom> {
     required this.borderRadiusSmall,
     required this.borderRadiusLittle,
     required this.iconSizePanel,
+    required this.iconSizeBottomPanel,
     required this.iconSizeCategory,
     required this.avatarSizeAppBar,
   });
@@ -215,6 +219,7 @@ class UICustom extends ThemeExtension<UICustom> {
     double? borderRadiusSmall,
     double? borderRadiusLittle,
     double? iconSizePanel,
+    double? iconSizeBottomPanel,
     double? iconSizeCategory,
     double? avatarSizeAppBar,
   }) {
@@ -236,6 +241,7 @@ class UICustom extends ThemeExtension<UICustom> {
       borderRadiusSmall: borderRadiusSmall ?? this.borderRadiusSmall,
       borderRadiusLittle: borderRadiusLittle ?? this.borderRadiusLittle,
       iconSizePanel: iconSizePanel ?? this.iconSizePanel,
+      iconSizeBottomPanel: iconSizeBottomPanel ?? this.iconSizeBottomPanel,
       iconSizeCategory: iconSizeCategory ?? this.iconSizeCategory,
       avatarSizeAppBar: avatarSizeAppBar ?? this.avatarSizeAppBar,
     );
@@ -262,6 +268,7 @@ class UICustom extends ThemeExtension<UICustom> {
       borderRadiusSmall: lerpDouble(borderRadiusSmall, other.borderRadiusSmall, t)!,
       borderRadiusLittle: lerpDouble(borderRadiusLittle, other.borderRadiusLittle, t)!,
       iconSizePanel: lerpDouble(iconSizePanel, other.iconSizePanel, t)!,
+      iconSizeBottomPanel: lerpDouble(iconSizeBottomPanel, other.iconSizeBottomPanel, t)!,
       iconSizeCategory: lerpDouble(iconSizeCategory, other.iconSizeCategory, t)!,
       avatarSizeAppBar: lerpDouble(avatarSizeAppBar, other.avatarSizeAppBar, t)!,
     );
