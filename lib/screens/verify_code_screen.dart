@@ -1,6 +1,7 @@
 import 'package:dia_room/api/account_api.dart';
 import 'package:dia_room/components/info_dialog_component.dart';
 import 'package:dia_room/models/user.dart';
+import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -8,6 +9,9 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'dart:async';
 
+import '../components/app_text_field.dart';
+import '../components/auth_button.dart';
+import '../components/auth_form_container.dart';
 import '../utils/auth_service.dart';
 
 // VerifyCode — экран подтверждения входа/регистрации через SMS-код
@@ -77,11 +81,6 @@ class _VerifyCodeState extends State<VerifyCode> {
     _startTimer(); // Перезапускаем таймер
   }
 
-  void _handleWrongEmail() {
-    // context.go('/registration');
-    print("Возврат на специальное окно");
-  }
-
   // _handleSendCode отправляет код на проверку и авторизует пользователя
   void _handleSendCode() async {
     final code = _codeController.text;
@@ -103,8 +102,7 @@ class _VerifyCodeState extends State<VerifyCode> {
         final bool configured = response.data!['isConfigured'] ?? false;
 
         context.read<AuthProvider>().login(access, refresh, configured);
-
-        print('Авторизация успешна. Токены сохранены.');
+        context.go('/');
       }
     } else {
       AppInfoDialog.show(context, response.message ?? "Неверный код");
@@ -121,84 +119,65 @@ class _VerifyCodeState extends State<VerifyCode> {
         }
       },
       child: Scaffold(
-        appBar: PreferredSize(
-          preferredSize: const Size.fromHeight(0.0),
-          child: AppBar(),
-        ),
-        body: Center(
+        extendBody: true,
+        extendBodyBehindAppBar: true,
+        body:  SafeArea(child: Stack(
+          children: [
+          // Кнопка "Назад" в верхнем левом углу
+          Positioned(
+          top: 10,
+          left: 10,
+          child: IconButton(
+            onPressed: () => context.pop(),
+            icon: Icon(Icons.arrow_back_rounded,
+                size: context.ui.iconSizePanel),
+            color: context.ui.fontColorPrimary,
+          ),
+        ), Center(
           child: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 // ОСНОВНОЙ БЕЛЫЙ КОНТЕЙНЕР
-                Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 10),
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withAlpha(10),
-                        blurRadius: 18,
-                        offset: const Offset(0, 0),
-                      ),
-                    ],
-                  ),
+                AuthFormContainer(
+                  padding: const EdgeInsets.all(14),
+                  borderRadius: 18,
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Text(
+                      Text(
                         "Код отправлен на",
                         textAlign: TextAlign.center,
                         style: TextStyle(
+                          color: context.ui.fontColorPrimary,
                           fontSize: 16,
-                          fontFamily: "SNPro",
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                       Text(
                         widget.email,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 16,
-                          fontFamily: "SNPro",
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFF990000),
+                          color: Theme.of(context).primaryColor,
                         ),
                       ),
                       const SizedBox(height: 15),
-                      TextField(
+                      AppTextField(
                         controller: _codeController,
+                        hint: "Введите код",
                         textAlign: TextAlign.center,
-                        decoration: InputDecoration(
-                          hintText: "Введите код",
-                          counterText: "",
-                          filled: true,
-                          fillColor: const Color(0xFFF3F3F3),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide.none,
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 12,
-                          ),
-                        ),
-                        cursorColor: const Color(0xFF000000),
                         keyboardType: TextInputType.number,
                         maxLength: 6,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly,
-                        ],
+                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                       ),
                       const SizedBox(height: 15),
                       if (!_canResend)
                         Text(
                           "Отправить код еще раз через ${_formatTime(_startSeconds)}",
-                          style: const TextStyle(
-                            fontFamily: "SNPro",
+                          style: TextStyle(
                             fontSize: 14,
-                            color: Colors.grey,
+                            color: context.ui.fontColorHint,
                           ),
                         )
                       else
@@ -212,59 +191,28 @@ class _VerifyCodeState extends State<VerifyCode> {
                             tapTargetSize: MaterialTapTargetSize
                                 .shrinkWrap, // Схлопываем область нажатия до размера текста
                           ),
-                          child: const Text(
+                          child: Text(
                             "Отправить код еще раз",
                             style: TextStyle(
-                              fontFamily: "SNPro",
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
-                              color: Color(0xFF111111),
+                              color: context.ui.fontColorPrimary,
                             ),
                           ),
                         ),
                       const SizedBox(height: 15),
-                      ElevatedButton(
+                      AuthButton(
+                        text: "Проверить",
+                        backgroundColor: Theme.of(context).primaryColor,
                         onPressed: _handleSendCode,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF990000),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(
-                              12,
-                            ), // Скругление углов
-                          ),
-                        ),
-                        child: const Text(
-                          "Отправить",
-                          style: TextStyle(
-                            fontFamily: "SNPro",
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                          ),
-                        ),
                       ),
                     ],
-                  ),
-                ),
-
-                // ТЕКСТ ПОД КОНТЕЙНЕРОМ
-                const SizedBox(height: 20),
-                GestureDetector(
-                  onTap: _handleWrongEmail,
-                  child: const Text(
-                    "Указал неверный адрес почты",
-                    style: TextStyle(
-                      fontFamily: "SNPro",
-                      fontSize: 15,
-                      decoration: TextDecoration.underline,
-                      color: Color(0xFF656565),
-                    ),
                   ),
                 ),
               ],
             ),
           ),
-        ),
+        ),],),),
       ),
     );
   }

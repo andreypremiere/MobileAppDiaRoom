@@ -1,10 +1,6 @@
-import 'dart:convert';
-
 import 'package:dia_room/components/info_dialog_component.dart';
 import 'package:dia_room/utils/app_theme.dart';
-import 'package:dia_room/utils/utils.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:dia_room/api/account_api.dart';
 
@@ -75,7 +71,7 @@ class _RegistrationState extends State<Registration> {
       String userId = response.data!['userId'];
       print("Полученный userId от сервера: $userId");
       if (mounted) {
-        context.go(
+        context.push(
           Uri(
             path: '/verifyCode/$userId',
             queryParameters: {'email': email},
@@ -117,10 +113,10 @@ class _RegistrationState extends State<Registration> {
               child: Center(
                 child: GestureDetector(
                   onTap: () => AppInfoDialog.show(context, "Пока что политики нет, но мы обязательно ее добавим!"),
-                  child: const Text(
+                  child: Text(
                     "Политика конфиденциальности",
                     style: TextStyle(
-                      color: Colors.grey,
+                      color: context.ui.fontColorHint,
                       fontSize: 12,
                       decoration: TextDecoration.underline,
                     ),

@@ -105,6 +105,11 @@ class App extends StatelessWidget {
           GoRoute(
             path: '/',
             builder: (context, state) => MainPageScreen(),
+            // builder: (context, state) {
+            //   // Извлекаем параметр из state.pathParameters
+            //   // return Login();
+            //   return VerifyCode(userId: 'userId', email: 'andreypremiere@mail.ru');
+            // },
           ),
 
           GoRoute(

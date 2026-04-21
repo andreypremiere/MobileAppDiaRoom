@@ -50,7 +50,7 @@ class _LoginState extends State<Login> {
       final String userId = response.data!['userId'].toString();
 
       if (mounted) {
-        context.go(
+        context.push(
           Uri(
             path: '/verifyCode/$userId',
             queryParameters: {'email': email},
@@ -89,7 +89,6 @@ class _LoginState extends State<Login> {
                 child: Text(
                   'Регистрация',
                   style: TextStyle(
-                    fontFamily: 'SNPro',
                     fontWeight: FontWeight.w500,
                     fontSize: 16,
                     color: context.ui.fontColorPrimary,
@@ -108,7 +107,6 @@ class _LoginState extends State<Login> {
                     Text(
                       "Вход",
                       style: TextStyle(
-                        fontFamily: "SNPro",
                         fontSize: context.ui.fontSizeTitle,
                         fontWeight: FontWeight.w600,
                       ),

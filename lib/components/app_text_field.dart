@@ -38,6 +38,7 @@ class AppTextField extends StatelessWidget {
       decoration: InputDecoration(
         hintText: hint,
         filled: true,
+        counterText: "",
         fillColor: context.ui.inputBackgroundColor,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
