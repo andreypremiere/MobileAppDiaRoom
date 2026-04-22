@@ -112,6 +112,8 @@ class AppTheme {
     iconSizeBottomPanel: 32,
     iconSizeCategory: 16,
     avatarSizeAppBar: 18,
+    appBarColor: const Color(0xFFB4B4B4),
+    viewingPostColor: const Color(0xFFFAFAFA),
   );
 
   static UICustom _darkExtension() => UICustom(
@@ -142,12 +144,14 @@ class AppTheme {
     iconSizeBottomPanel: 32,
     iconSizeCategory: 16,
     avatarSizeAppBar: 18,
+    appBarColor: const Color(0xFF595959),
+    viewingPostColor: const Color(0xFF1C1C1C),
   );
 }
 
-// --- UI CUSTOM EXTENSION ---
 @immutable
 class UICustom extends ThemeExtension<UICustom> {
+  // Цвета
   final Color primaryColor;
   final Color fontColorPrimary;
   final Color fontColorHint;
@@ -157,22 +161,26 @@ class UICustom extends ThemeExtension<UICustom> {
   final Color inputBackgroundColor;
   final Color inputIconColor;
   final Color sectionButtonColor;
+  final Color appBarColor;     // Добавлено
+  final Color viewingPostColor; // Добавлено
 
+  // Размеры и шрифты
   final double fontSizeHeader;
   final double fontSizeTitle;
   final double fontSizeButton;
   final double fontSizeButtonSecondary;
   final double fontSizeDefault;
 
+  // Радиусы
   final double borderRadiusBig;
   final double borderRadiusMedium;
   final double borderRadiusSmall;
   final double borderRadiusLittle;
 
+  // Иконки и аватары
   final double iconSizePanel;
   final double iconSizeCategory;
   final double iconSizeBottomPanel;
-
   final double avatarSizeAppBar;
 
   // Константы начертания
@@ -192,6 +200,9 @@ class UICustom extends ThemeExtension<UICustom> {
     required this.containerColor,
     required this.inputBackgroundColor,
     required this.inputIconColor,
+    required this.sectionButtonColor,
+    required this.appBarColor,      // Добавлено
+    required this.viewingPostColor,  // Добавлено
     required this.fontSizeHeader,
     required this.fontSizeTitle,
     required this.fontSizeButton,
@@ -199,7 +210,6 @@ class UICustom extends ThemeExtension<UICustom> {
     required this.fontSizeDefault,
     required this.borderRadiusBig,
     required this.borderRadiusMedium,
-    required this.sectionButtonColor,
     required this.borderRadiusSmall,
     required this.borderRadiusLittle,
     required this.iconSizePanel,
@@ -217,8 +227,10 @@ class UICustom extends ThemeExtension<UICustom> {
     Color? buttonColorSecondary,
     Color? containerColor,
     Color? inputBackgroundColor,
-    Color? sectionButtonColor,
     Color? inputIconColor,
+    Color? sectionButtonColor,
+    Color? appBarColor,      // Добавлено
+    Color? viewingPostColor,  // Добавлено
     double? fontSizeHeader,
     double? fontSizeTitle,
     double? fontSizeButton,
@@ -242,9 +254,11 @@ class UICustom extends ThemeExtension<UICustom> {
       containerColor: containerColor ?? this.containerColor,
       inputBackgroundColor: inputBackgroundColor ?? this.inputBackgroundColor,
       inputIconColor: inputIconColor ?? this.inputIconColor,
+      sectionButtonColor: sectionButtonColor ?? this.sectionButtonColor,
+      appBarColor: appBarColor ?? this.appBarColor,           // Добавлено
+      viewingPostColor: viewingPostColor ?? this.viewingPostColor, // Добавлено
       fontSizeHeader: fontSizeHeader ?? this.fontSizeHeader,
       fontSizeTitle: fontSizeTitle ?? this.fontSizeTitle,
-      sectionButtonColor: sectionButtonColor ?? this.sectionButtonColor,
       fontSizeButton: fontSizeButton ?? this.fontSizeButton,
       fontSizeButtonSecondary: fontSizeButtonSecondary ?? this.fontSizeButtonSecondary,
       fontSizeDefault: fontSizeDefault ?? this.fontSizeDefault,
@@ -272,6 +286,8 @@ class UICustom extends ThemeExtension<UICustom> {
       inputBackgroundColor: Color.lerp(inputBackgroundColor, other.inputBackgroundColor, t)!,
       sectionButtonColor: Color.lerp(sectionButtonColor, other.sectionButtonColor, t)!,
       inputIconColor: Color.lerp(inputIconColor, other.inputIconColor, t)!,
+      appBarColor: Color.lerp(appBarColor, other.appBarColor, t)!,           // Добавлено
+      viewingPostColor: Color.lerp(viewingPostColor, other.viewingPostColor, t)!, // Добавлено
       fontSizeHeader: lerpDouble(fontSizeHeader, other.fontSizeHeader, t)!,
       fontSizeTitle: lerpDouble(fontSizeTitle, other.fontSizeTitle, t)!,
       fontSizeButton: lerpDouble(fontSizeButton, other.fontSizeButton, t)!,
@@ -288,7 +304,6 @@ class UICustom extends ThemeExtension<UICustom> {
     );
   }
 
-  // Вспомогательный метод для интерполяции чисел
   static double? lerpDouble(double? a, double? b, double t) {
     return a == null ? b : (b == null ? a : a + (b - a) * t);
   }

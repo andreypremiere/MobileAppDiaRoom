@@ -7,6 +7,7 @@ const String baseUrl = 'http://192.168.0.102:8080';
 const String newUserUrl = '$baseUrl/auth/newUser';
 const String verifyUserUrl = '$baseUrl/auth/verifyUser';
 const String findUser = '$baseUrl/auth/login';
+const String s3BaseUrl = 'https://storage.yandexcloud.net/';
 
 // Urls для room-microservice
 const String getRoomByRoomId = '$baseUrl/rooms/getRoomByRoomId';

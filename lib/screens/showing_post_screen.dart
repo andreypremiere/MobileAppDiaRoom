@@ -1,4 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:dia_room/configuration/urls.dart';
+import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
@@ -21,8 +23,6 @@ class ShowingPostScreen extends StatefulWidget {
 class _ShowingPostScreenState extends State<ShowingPostScreen> {
   late Future<AuthResponse> _postFuture;
 
-  final String _mediaBaseUrl = 'https://storage.yandexcloud.net/';
-
   @override
   void initState() {
     super.initState();
@@ -33,7 +33,7 @@ class _ShowingPostScreenState extends State<ShowingPostScreen> {
   // Вспомогательная функция для получения полного URL
   String _getFullUrl(String path) {
     if (path.startsWith('http')) return path;
-    return '$_mediaBaseUrl$path';
+    return '$s3BaseUrl$path';
   }
 
   @override
@@ -43,9 +43,9 @@ class _ShowingPostScreenState extends State<ShowingPostScreen> {
       builder: (context, snapshot) {
         // 1. Состояние загрузки
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(
-            backgroundColor: Colors.white,
-            body: Center(child: CircularProgressIndicator(color: Color(0xFF722323))),
+          return Scaffold(
+            backgroundColor: context.ui.viewingPostColor,
+            body: Center(child: CircularProgressIndicator(color: context.ui.primaryColor)),
           );
         }
 
@@ -54,8 +54,8 @@ class _ShowingPostScreenState extends State<ShowingPostScreen> {
           final errorMsg = snapshot.data?.data?['error'] ?? snapshot.error.toString();
           print(errorMsg);
           return Scaffold(
-            backgroundColor: Colors.white,
-            appBar: AppBar(backgroundColor: const Color(0xFFB4B4B4)),
+            backgroundColor: context.ui.viewingPostColor,
+            appBar: AppBar(backgroundColor: context.ui.appBarColor),
             body: Center(child: Text('Ошибка: $errorMsg')),
           );
         }
@@ -64,18 +64,16 @@ class _ShowingPostScreenState extends State<ShowingPostScreen> {
         final ShowingPost post = snapshot.data!.data!['post'];
 
         return Scaffold(
-          backgroundColor: Colors.white,
+          backgroundColor: context.ui.viewingPostColor,
           appBar: PreferredSize(
             preferredSize: const Size.fromHeight(60),
             child: AppBar(
-              backgroundColor: const Color(0xFFB4B4B4),
+              backgroundColor: context.ui.appBarColor,
               leading: IconButton(
                 onPressed: () => context.pop(),
-                icon: SvgPicture.asset(
-                  'assets/icons/button_back.svg',
-                  width: 32,
-                  height: 32,
-                ),
+                icon: Icon(Icons.arrow_back_rounded,
+                    size: context.ui.iconSizePanel),
+                color: context.ui.fontColorPrimary,
               ),
               titleSpacing: 0, // Убираем лишний отступ слева
               // Кликабельный виджет автора в AppBar
@@ -95,13 +93,13 @@ class _ShowingPostScreenState extends State<ShowingPostScreen> {
                         radius: 18,
                         backgroundImage: imageProvider,
                       ),
-                      placeholder: (context, url) => const CircleAvatar(
+                      placeholder: (context, url) => CircleAvatar(
                         radius: 18,
-                        backgroundColor: Color(0xFF722323),
+                        backgroundColor: context.ui.primaryColor,
                       ),
-                      errorWidget: (context, url, error) => const CircleAvatar(
+                      errorWidget: (context, url, error) => CircleAvatar(
                         radius: 18,
-                        backgroundColor: Color(0xFF722323),
+                        backgroundColor: context.ui.primaryColor,
                         child: Icon(Icons.person, color: Colors.white, size: 20),
                       ),
                     ),
@@ -109,21 +107,20 @@ class _ShowingPostScreenState extends State<ShowingPostScreen> {
                     // Никнейм автора
                     Text(
                       post.author.roomName,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
-                        fontFamily: 'SNPro',
-                        color: Colors.black87,
+                        color: context.ui.fontColorPrimary,
                       ),
                     ),
                   ],
                 ),
               ),
               actions: [
-                // Иконка "Поделиться" или другие действия для поста
+                // Иконка функций, здесь будет, поделиться, пожаловаться, не интересует
                 IconButton(
                   onPressed: () {},
-                  icon: const Icon(Icons.more_horiz, color: Colors.black87),
+                  icon: Icon(Icons.more_horiz, color: context.ui.fontColorPrimary, size: context.ui.iconSizePanel),
                 ),
               ],
             ),
@@ -219,7 +216,6 @@ class _ShowingPostScreenState extends State<ShowingPostScreen> {
     );
   }
 
-  /// Адаптивная сетка плиток (сетевые фото)
   Widget _buildPhotoTiles(List<String> urls) {
     int count = urls.length;
 
@@ -286,11 +282,10 @@ class _ShowingPostScreenState extends State<ShowingPostScreen> {
                           alignment: Alignment.center,
                           child: Text(
                             '+${count - 4}',
-                            style: const TextStyle(
-                              color: Colors.white,
+                            style: TextStyle(
+                              color: context.ui.fontColorLight,
                               fontSize: 26,
                               fontWeight: FontWeight.bold,
-                              fontFamily: 'SNPro',
                             ),
                           ),
                         ),
