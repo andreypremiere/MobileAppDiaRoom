@@ -15,30 +15,30 @@ import '../models/post_creator/upload_file_info.dart';
 import '../models/post_creator/upload_task.dart';
 import '../utils/dio_service.dart';
 
-Future<AuthResponse> requestPresignedUrls({
-  required List<UploadFileInfo> mediaForUrls,
-  required String postId,
-}) async {
-  try {
-    final response = await ApiService.post(
-      '/post/getPresignedUrls',
-      data: {
-        "files": mediaForUrls.map((e) => e.toJson()).toList(),
-        "postId": postId
-      },
-    );
-
-    return AuthResponse(success: true, data: response.data);
-
-  } on DioException catch (e) {
-    return AuthResponse(
-        success: false,
-        message: e.response?.data['error'] ?? "Ошибка получения ссылок для загрузки"
-    );
-  } catch (e) {
-    return AuthResponse(success: false, message: "Системная ошибка: $e");
-  }
-}
+// Future<AuthResponse> requestPresignedUrls({
+//   required List<UploadFileInfo> mediaForUrls,
+//   required String postId,
+// }) async {
+//   try {
+//     final response = await ApiService.post(
+//       '/post/getPresignedUrls',
+//       data: {
+//         "files": mediaForUrls.map((e) => e.toJson()).toList(),
+//         "postId": postId
+//       },
+//     );
+//
+//     return AuthResponse(success: true, data: response.data);
+//
+//   } on DioException catch (e) {
+//     return AuthResponse(
+//         success: false,
+//         message: e.response?.data['error'] ?? "Ошибка получения ссылок для загрузки"
+//     );
+//   } catch (e) {
+//     return AuthResponse(success: false, message: "Системная ошибка: $e");
+//   }
+// }
 
 Future<bool> uploadSingleMediaFile(
     String filePath,

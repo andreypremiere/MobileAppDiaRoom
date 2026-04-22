@@ -19,13 +19,13 @@ enum PostCategory {
   craftDiy('craft-diy', 'Крафт и DIY'),
   lifestyle('lifestyle-blog', 'Жизнь и Блог');
 
-  final String id;
+  final String slug;
   final String label;
-  const PostCategory(this.id, this.label);
+  const PostCategory(this.slug, this.label);
 
   static PostCategory fromId(String? id) {
     return PostCategory.values.firstWhere(
-          (element) => element.id == id,
+          (element) => element.slug == id,
       orElse: () => PostCategory.defaultVal,
     );
   }

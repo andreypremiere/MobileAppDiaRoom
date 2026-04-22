@@ -10,9 +10,10 @@ import 'package:provider/provider.dart';
 
 import '../components/info_dialog_component.dart';
 import '../models/enums/post_categories.dart';
-import '../models/post_creator/block_post.dart';
+import '../models/internal_error.dart';
 import '../models/user.dart';
 import '../utils/auth_service.dart';
+import '../utils/file_storage_service.dart';
 
 class SetSettingsForPostScreen extends StatefulWidget {
   final PostDraft postDraft;
@@ -89,11 +90,9 @@ class _SetSettingsForPostState extends State<SetSettingsForPostScreen> {
     }
 
     print("Публикация разрешена!");
-    final token = context.read<AuthProvider>().accessToken;
-    User? user = User.fromJwt(token!);
-    CreatingPostService service = CreatingPostService(post: widget.postDraft, user: user!);
+    CreatingPostService service = CreatingPostService(post: widget.postDraft);
     service.startCreating();
-    context.push('/');
+    // context.push('/');
   }
 
   Future<void> _pickAndCropImage() async {
@@ -123,7 +122,10 @@ class _SetSettingsForPostState extends State<SetSettingsForPostScreen> {
       );
 
       if (croppedFile != null) {
-        setState(() => widget.postDraft.previewPath = croppedFile.path);
+        final ResultImageService permanentPath = await FileStorageService.wrapToPermanentStorage(croppedFile.path);
+        if (permanentPath.result) {
+          setState(() => widget.postDraft.previewPath = permanentPath.path);
+        }
       }
     }
   }
@@ -294,7 +296,7 @@ class _SetSettingsForPostState extends State<SetSettingsForPostScreen> {
   }
 
   Widget _buildImagePicker() {
-    if (widget.postDraft.previewPath == null) {
+    if (widget.postDraft.previewPath.isEmpty) {
       return InkWell(
         onTap: _pickAndCropImage,
         child: Container(
@@ -341,7 +343,7 @@ class _SetSettingsForPostState extends State<SetSettingsForPostScreen> {
               const SizedBox(width: 8),
               _buildCircleBtn(
                 Icons.delete_outline,
-                () => setState(() => widget.postDraft.previewPath = null),
+                () => setState(() => widget.postDraft.previewPath = ''),
                 isRed: true,
               ),
             ],

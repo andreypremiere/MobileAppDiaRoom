@@ -1,11 +1,13 @@
 import 'dart:io';
 import 'package:dia_room/components/info_dialog_component.dart';
+import 'package:dia_room/models/internal_error.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../models/post_creator/block_photos.dart';
+import '../../utils/file_storage_service.dart';
 
 class PhotosBlockWidget extends StatelessWidget {
-  final BlockPhotos block;
+  final BlockPhotosCreating block;
   final VoidCallback onChanged;
 
   const PhotosBlockWidget({
@@ -28,16 +30,21 @@ class PhotosBlockWidget extends StatelessWidget {
       final List<XFile> pickedFiles = await picker.pickMultiImage(limit: 10);
 
       if (pickedFiles.isNotEmpty) {
-        if (pickedFiles.length > BlockPhotos.limitPhotos - block.paths.length) {
+        if (pickedFiles.length > BlockPhotosCreating.limitPhotos - block.localPaths.length) {
           AppInfoDialog.show(context, "Можно выбрать не больше 10 фото :(");
           return;
         }
 
         for (final file in pickedFiles) {
-          await block.addPath(file.path);
+          final ResultImageService permanentPath = await FileStorageService.wrapToPermanentStorage(file.path);
+          if (permanentPath.result) {
+            await block.addPath(permanentPath.path);
+          }
         }
 
-        onChanged(); // Сообщаем родителю, что список путей изменился
+        print("Список после добавления файлов:  ${block.localPaths}");
+
+        onChanged();
       }
     } catch (e) {
       print("Ошибка при выборе изображений: $e");
@@ -85,10 +92,10 @@ class PhotosBlockWidget extends StatelessWidget {
                     ),
                   ),
                 ),
-              if (block.paths.isNotEmpty) const SizedBox(width: 8),
+              if (block.localPaths.isNotEmpty) const SizedBox(width: 8),
 
               // Список фото
-              ...block.paths.asMap().entries.map((entry) {
+              ...block.localPaths.asMap().entries.map((entry) {
                 final int photoIndex = entry.key;
                 final String path = entry.value;
 

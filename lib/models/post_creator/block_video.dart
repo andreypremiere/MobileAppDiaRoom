@@ -1,42 +1,42 @@
 import 'dart:io';
 
-import 'package:dia_room/models/enums/post_types.dart';
-import 'package:dia_room/models/post_creator/block_post.dart';
+import 'package:dia_room/models/internal_error.dart';
+import 'package:dia_room/models/payload/base_block.dart';
 import 'package:get_thumbnail_video/index.dart';
 import 'package:get_thumbnail_video/video_thumbnail.dart';
 import 'package:video_player/video_player.dart';
 import 'package:path_provider/path_provider.dart';
 
+import '../payload/post_creating_interface.dart';
 
-class BlockVideo extends BlockPost {
-  String? path;
-  String? fileName;
-  String? previewPath;
-  int? fileSize;
-  Duration? duration;
 
-  BlockVideo() : super(type: BlockPostType.videos);
+class BlockVideoCreating extends VideoBlockPost implements Validatable {
+  BlockVideoCreating()
+      : super(
+    localPath: '',
+    publicUrl: '',
+    presignedUrl: '',
+    previewLocalPath: '',
+    previewPublicUrl: '',
+    previewPresignedUrl: '',
+    fileSize: 0,
+    duration: Duration.zero,
+  );
 
   String getStringFileSize() {
-    if (fileSize != null) {
-      return "${(fileSize! / (1024 * 1024)).toStringAsFixed(2)} MB";
+    if (fileSize != 0) {
+      return "${(fileSize / (1024 * 1024)).toStringAsFixed(2)} MB";
     }
     else {
-      return "";
+      return "size is not defined";
     }
   }
 
-  /// Подгружает имя файла, размер файла, длительность файла
-  Future<bool> loadMetadata(String videoPath, int length) async {
+  Future<Result> loadMetadata(String videoPath, int length) async {
     try {
-      path = videoPath;
+      localPath = videoPath;
       final file = File(videoPath);
-      // final bytes = await file.length();
-
       fileSize = length;
-      fileName = videoPath
-          .split('/')
-          .last;
 
       // Получаем длительность через временный контроллер
       final controller = VideoPlayerController.file(file);
@@ -44,94 +44,61 @@ class BlockVideo extends BlockPost {
       duration = controller.value.duration;
       await controller.dispose();
     } catch (e) {
-      return false;
+      return Result(result: false, message: 'Ошибка при загрузке метаданных');
     }
-    return true;
+    return Result(result: true, message: '');
   }
 
-  Future<bool> generatePreview() async {
-    if (path == null) return false;
-
+  Future<Result> generatePreview() async {
     final uint8list = await VideoThumbnail.thumbnailFile(
-      video: path!,
+      video: localPath,
       thumbnailPath: (await getTemporaryDirectory()).path,
       imageFormat: ImageFormat.JPEG,
       maxHeight: 600,
       quality: 90,
     );
 
-    previewPath = uint8list.path;
+    previewLocalPath = uint8list.path;
     // print("Превью создано: $previewPath");
-    return true;
+    return Result(result: true, message: '');
   }
 
-  String getformattedDuration(Duration? duration) {
-    if (duration == null) return "0:00";
+  String getFormattedDuration() {
+    if (duration == Duration.zero) return "-:--";
+
     String twoDigits(int n) => n.toString().padLeft(2, "0");
-    String minutes = twoDigits(duration.inMinutes.remainder(60));
-    String seconds = twoDigits(duration.inSeconds.remainder(60));
-    return "$minutes:$seconds";
+
+    final hours = duration.inHours;
+    final minutes = duration.inMinutes.remainder(60);
+    final seconds = duration.inSeconds.remainder(60);
+
+    if (hours > 0) {
+      // Формат H:MM:SS
+      return "$hours:${twoDigits(minutes)}:${twoDigits(seconds)}";
+    } else {
+      // Формат M:SS
+      return "${duration.inMinutes}:${twoDigits(seconds)}";
+    }
   }
 
   Future<void> clearBlock() async {
-    if (path != null) {
-      if (await File(path!).exists()) await File(path!).delete();
-    }
+    if (await File(localPath).exists()) await File(localPath).delete();
 
-    if (previewPath != null) {
-      if (await File(previewPath!).exists()) await File(previewPath!).delete();
-    }
+    if (await File(previewLocalPath).exists()) await File(previewLocalPath).delete();
 
-    path = null;
-    fileName = null;
-    previewPath = null;
-    fileSize = null;
-    duration = null;
+
+    localPath = '';
+    publicUrl = '';
+    presignedUrl = '';
+    previewLocalPath = '';
+    previewPublicUrl = '';
+    previewPresignedUrl = '';
+    fileSize = 0;
+    duration: Duration.zero;
   }
 
-  @override
   bool isEmpty() {
-    return path?.isEmpty ?? true;
+    return localPath.isEmpty;
   }
 }
 
-class BlockVideoUpload extends BlockUpload {
-  String filePath;
-  String previewPath;
-  int fileSize;
-  Duration duration;
-
-  String uploadIdVideo;
-  String uploadIdPreview;
-
-  String? publicUrlVideo;
-  String? publicUrlPreview;
-
-  String? presignedUrlVideo;
-  String? presignedUrlPreview;
-
-  BlockVideoUpload({
-    required this.filePath,
-    required this.previewPath,
-    required this.fileSize,
-    required this.duration,
-    required this.uploadIdVideo,
-    required this.uploadIdPreview
-}) : super(type: BlockPostType.videos);
-
-  @override
-  Map<String, dynamic> toJson() {
-    return {
-      'type': type.name, // videos
-      'fileSize': fileSize,
-      'durationMs': duration.inMilliseconds, // Длительность лучше хранить в мс
-      'uploadIdVideo': uploadIdVideo,
-      'uploadIdPreview': uploadIdPreview,
-      'publicUrlVideo': publicUrlVideo,
-      'publicUrlPreview': publicUrlPreview,
-      // Пути к файлам (filePath) обычно на сервер не шлют, только URL из облака
-    };
-  }
-
-
-}

@@ -1,12 +1,14 @@
 import 'dart:io';
 
 import 'package:dia_room/components/info_dialog_component.dart';
+import 'package:dia_room/models/internal_error.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../models/post_creator/block_video.dart';
+import '../../utils/file_storage_service.dart';
 
 class VideoBlockWidget extends StatefulWidget {
-  final BlockVideo block;
+  final BlockVideoCreating block;
   final VoidCallback onChanged;
 
   const VideoBlockWidget({super.key, required this.block, required this.onChanged});
@@ -33,32 +35,63 @@ class _VideoBlockWidgetState extends State<VideoBlockWidget> {
   // }
 
   Future<void> _pickVideo(BuildContext context) async {
-    final ImagePicker picker = ImagePicker();
-    setState(() => _isProcessing = true);
-    final XFile? video = await picker.pickVideo(source: ImageSource.gallery);
+    try {
+      final ImagePicker picker = ImagePicker();
+      setState(() => _isProcessing = true);
+      final XFile? video = await picker.pickVideo(source: ImageSource.gallery);
 
-    if (video == null) {
-      setState(() => _isProcessing = false);
-      // Просто выходим из метода, ничего не делая
-      return;
-    }
+      if (video == null) {
+        setState(() => _isProcessing = false);
+        // Просто выходим из метода, ничего не делая
+        return;
+      }
 
-    final file = File(video.path);
-    final bytes = await file.length();
+      final file = File(video.path);
+      final bytes = await file.length();
 
-    // Проверка на 200 МБ
-    if (bytes > 200 * 1024 * 1024) {
-      await widget.block.clearBlock();
-      AppInfoDialog.show(context, "Размер видео слишком большой :O. Максимальный размер 200 мб.");
-      setState(() => _isProcessing = false);
-      return;
-    }
+      // Проверка на 200 МБ
+      if (bytes > 200 * 1024 * 1024) {
+        await widget.block.clearBlock();
+        AppInfoDialog.show(context,
+            "Размер видео слишком большой :O. Максимальный размер 200 мб.");
+        setState(() => _isProcessing = false);
+        return;
+      }
 
-    final resultLoad = await widget.block.loadMetadata(video.path, bytes);
-    final resultPreview = await widget.block.generatePreview();
+      final Result resultLoad = await widget.block.loadMetadata(
+          video.path, bytes);
+      final Result resultPreview = await widget.block.generatePreview();
 
-    if (!resultPreview || !resultLoad) {
-      AppInfoDialog.show(context, "Непредвиденная ошибка во время добавления видео :(");
+      if (!resultPreview.result || !resultLoad.result) {
+        AppInfoDialog.show(
+            context, "Ошибка во время добавления видео :(");
+        await widget.block.clearBlock();
+      }
+
+      final prevLocalPath = widget.block.localPath;
+      print('LocalPath до: ${widget.block.localPath}');
+      final ResultImageService permanentPath = await FileStorageService.wrapToPermanentStorage(widget.block.localPath);
+      if (permanentPath.result) {
+        widget.block.localPath = permanentPath.path;
+      } else {
+        AppInfoDialog.show(
+            context, "Ошибка во время копирования видео :(");
+        await widget.block.clearBlock();
+      }
+      print('LocalPath после: ${widget.block.localPath}');
+      print("prevLocalPath exist ${await File(prevLocalPath).exists()}");
+      final ResultImageService permanentPathPreview = await FileStorageService.wrapToPermanentStorage(widget.block.previewLocalPath);
+      if (permanentPathPreview.result) {
+        widget.block.previewLocalPath = permanentPathPreview.path;
+      } else {
+        AppInfoDialog.show(
+            context, "Ошибка во время копирования превью :(");
+        await widget.block.clearBlock();
+      }
+
+    } catch (e) {
+      AppInfoDialog.show(
+          context, "Непредвиденная ошибка во время добавления видео :(");
       await widget.block.clearBlock();
     }
     setState(() => _isProcessing = false);
@@ -75,7 +108,7 @@ class _VideoBlockWidgetState extends State<VideoBlockWidget> {
   @override
   Widget build(BuildContext context) {
     // Если видео нет и оно не обрабатывается, показываем кнопку добавления
-    if (widget.block.path == null && !_isProcessing) {
+    if (widget.block.localPath.isEmpty && !_isProcessing) {
       return _buildAddButton();
     }
 
@@ -144,7 +177,7 @@ class _VideoBlockWidgetState extends State<VideoBlockWidget> {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(7),
         child: Image.file(
-          File(widget.block.previewPath!),
+          File(widget.block.previewLocalPath),
           fit: BoxFit.cover,
         ),
       ),
@@ -158,7 +191,7 @@ class _VideoBlockWidgetState extends State<VideoBlockWidget> {
       children: [
         // Имя файла (жирное, с обрезкой)
         Text(
-          widget.block.fileName ?? 'Без названия',
+          'Без названия',
           style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
           maxLines: 1, // Чтобы имя не ломалось на две строки
           overflow: TextOverflow.ellipsis, // Три точки, если имя очень длинное
@@ -171,7 +204,7 @@ class _VideoBlockWidgetState extends State<VideoBlockWidget> {
             const Icon(Icons.access_time_filled, size: 16, color: Color(0xFF797979)),
             const SizedBox(width: 4),
             Text(
-              widget.block.getformattedDuration(widget.block.duration),
+              widget.block.getFormattedDuration(),
               style: const TextStyle(fontSize: 14, color: Color(0xFF333333)),
             ),
             const SizedBox(width: 12), // Отступ между временем и размером

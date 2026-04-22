@@ -8,6 +8,7 @@ String createFullPathAvatar(String prefix, String postfix) {
 FontWeight getFontWeight(int value) {
   switch (value) {
     case 400: return FontWeight.w400;
+    case 500: return FontWeight.w500;
     case 600: return FontWeight.w600;
     case 800: return FontWeight.w800;
     default: return FontWeight.w400;

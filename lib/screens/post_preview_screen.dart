@@ -74,11 +74,11 @@ class PostPreviewScreen extends StatelessWidget {
         itemBuilder: (context, index) {
           final block = postDraft.blocks[index];
 
-          if (block is BlockText) {
+          if (block is BlockTextCreating) {
             return _buildTextBlock(block);
-          } else if (block is BlockPhotos) {
+          } else if (block is BlockPhotosCreating) {
             return _buildPhotosBlock(block);
-          } else if (block is BlockVideo) {
+          } else if (block is BlockVideoCreating) {
             return _buildVideoBlock(block);
           }
 
@@ -89,12 +89,12 @@ class PostPreviewScreen extends StatelessWidget {
   }
 
   /// Рендерит текстовый блок с учетом стилей (размер, вес) из метаданных
-  Widget _buildTextBlock(BlockText block) {
+  Widget _buildTextBlock(BlockTextCreating block) {
     return Text(
       block.controller.text,
       style: TextStyle(
-        fontSize: block.metadata.size.toDouble(),
-        fontWeight: getFontWeight(block.metadata.weight),
+        fontSize: block.textType.size,
+        fontWeight: block.textType.weight,
         color: const Color(0xFF333333),
         fontFamily: 'SNPro',
       ),
@@ -102,14 +102,14 @@ class PostPreviewScreen extends StatelessWidget {
   }
 
   /// Рендерит блок фотографий, выбирая между слайдером или сеткой (плиткой)
-  Widget _buildPhotosBlock(BlockPhotos block) {
+  Widget _buildPhotosBlock(BlockPhotosCreating block) {
     return AspectRatio(
       aspectRatio: 1,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(12),
-        child: block.methodView == MethodViewPhoto.slider
-            ? _buildPhotoSlider(block.paths)
-            : _buildPhotoTiles(block.paths),
+        child: block.methodView == MethodView.slider
+            ? _buildPhotoSlider(block.localPaths)
+            : _buildPhotoTiles(block.localPaths),
       ),
     );
   }
@@ -205,7 +205,7 @@ class PostPreviewScreen extends StatelessWidget {
   }
 
   /// Рендерит видео-блок в виде интерактивного превью с длительностью и иконкой воспроизведения
-  Widget _buildVideoBlock(BlockVideo block) {
+  Widget _buildVideoBlock(BlockVideoCreating block) {
     return AspectRatio(
       aspectRatio: 1,
       child: ClipRRect(
@@ -214,7 +214,7 @@ class PostPreviewScreen extends StatelessWidget {
           fit: StackFit.expand,
           children: [
             Image.file(
-              File(block.previewPath!),
+              File(block.previewLocalPath),
               fit: BoxFit.cover,
             ),
             Container(color: Colors.black.withAlpha(100)),
@@ -235,7 +235,7 @@ class PostPreviewScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
-                  block.getformattedDuration(block.duration),
+                  block.getFormattedDuration(),
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 14,

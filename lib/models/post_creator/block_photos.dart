@@ -1,110 +1,75 @@
 import 'dart:io';
 
+import 'package:dia_room/configuration/constans.dart';
+import 'package:dia_room/models/payload/base_block.dart';
+
 import '../enums/post_types.dart';
-import 'block_post.dart';
+import '../internal_error.dart';
+import '../payload/post_creating_interface.dart';
 
-class BlockPhotos extends BlockPost {
-  List<String> paths;
-  MethodViewPhoto methodView;
-  List<int> photoSizes;
-  static const limitPhotos = 10;
+// Будет содержать методы для управления памятью и обновления всего
+class BlockPhotosCreating extends PhotoBlockPost implements Validatable {
+  static const limitPhotos = limitPhotosForBlock;
 
-  bool get isFull => paths.length >= limitPhotos;
+  BlockPhotosCreating()
+      : super(localPaths: [], publicUrls: [], presignedUrls: [], methodView: MethodView.tiles, photoSizes: []);
 
-  BlockPhotos({List<String>? paths, List<int>? photoSizes, this.methodView = MethodViewPhoto.tiles})
-      : paths = paths ?? [], photoSizes = photoSizes ?? [],
-        super(type: BlockPostType.photos);
+  bool get isFull => localPaths.length >= limitPhotos;
 
-  @override
+
   bool isEmpty() {
-    if (paths.isEmpty) {
-      return true;
-    }
-    return false;
+    return localPaths.isEmpty;
   }
 
-  Future<bool> addPath(String path) async {
-    if (paths.length >= limitPhotos) {
-      return false;
+  Future<Result> addPath(String path) async {
+    if (localPaths.length >= limitPhotos) {
+      return Result(result: false, message: "Достигнут лимит фотографий в блоке");
     }
 
     try {
       final file = File(path);
       if (await file.exists()) {
         int size = await file.length();
-        paths.add(path);
-        photoSizes.add(size); // Добавляем размер в соответствующий индекс
-        return true;
+        localPaths.add(path);
+        photoSizes.add(size);
+        return Result(result: true, message: '');
       }
     } catch (e) {
-      print("Ошибка при получении размера файла: $e");
+      return Result(result: false, message: "Непредвиденная ошибка при добавлении фотографии");
     }
-    return false;
+    return Result(result: false, message: "Файл не найден");
   }
 
-  Future<void> deletePhoto(int index) async {
+  Future<Result> deletePhoto(int index) async {
     try {
-      if (await File(paths[index]).exists()) {
-        await File(paths[index]).delete();
+      if (await File(localPaths[index]).exists()) {
+        await File(localPaths[index]).delete();
+      } else {
+        print("Файл не найден при удалении фотографии");
       }
     } catch (e) {
-      print("Файл уже удален или недоступен");
+      return Result(result: false, message: "Непредвиденная ошибка при удалении фотографии");
     }
 
-    paths.removeAt(index);
-    photoSizes.removeAt(index); // Удаляем размер вместе с путем
+    localPaths.removeAt(index);
+    photoSizes.removeAt(index);
+    return Result(result: true, message: '');
   }
 
-  Future<void> deleteAllPhotos() async {
-    for (String path in paths) {
+  Future<Result> deleteAllPhotos() async {
+    for (String path in localPaths) {
       try {
         final file = File(path);
         if (await file.exists()) await file.delete();
       } catch (e) {
-        print("Ошибка при удалении файла $path: $e");
+        return Result(result: false, message: 'Непредвиденная ошибка во время удаления фотографий');
       }
     }
-    paths.clear();
+    localPaths.clear();
     photoSizes.clear();
+    return Result(result: true, message: '');
   }
 }
 
-class PhotoInfo {
-  String filePath;
-  String uploadId;
-  String? publicUrl;
-  String? presignedUrl;
-  int size;
 
-  PhotoInfo({required this.filePath, required this.uploadId,
-  required this.size});
-
-  Map<String, dynamic> toJson() {
-    return {
-      'uploadId': uploadId,
-      'publicUrl': publicUrl,
-      // filePath и presignedUrl обычно НЕ отправляются в финальный payload для БД,
-      // так как они временные, но если они нужны для кэша — можно оставить.
-      'size': size,
-    };
-  }
-}
-
-class BlockPhotoUpload extends BlockUpload {
-  MethodViewPhoto methodView;
-  List<PhotoInfo> listPhoto;
-
-  BlockPhotoUpload({required this.methodView}) : listPhoto = <PhotoInfo>[],
-  super(type: BlockPostType.photos);
-
-
-  @override
-  Map<String, dynamic> toJson() {
-    return {
-      'type': type.name, // Используем name из Enum (photos)
-      'methodView': methodView.name, // Предполагаем, что это Enum
-      'listPhoto': listPhoto.map((photo) => photo.toJson()).toList(),
-    };
-  }
-}
 
