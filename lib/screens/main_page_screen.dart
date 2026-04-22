@@ -27,15 +27,13 @@ class _StateMainPageScreen extends State<MainPageScreen> {
   late Future<AuthResponse> _response;
   bool _isBottomMenuVisible = true;
   final ScrollController _scrollController = ScrollController();
-  bool _showBackToTop = false; // Видна ли кнопка "Вверх"
+  bool _showBackToTop = false;
 
   @override
   void initState() {
     super.initState();
 
     _scrollController.addListener(() {
-      // Показывать кнопку, только если отскроллили вниз больше чем на 300 пикселей
-      // и если мы сейчас скроллим вверх (используем направление)
       if (_scrollController.offset > 300 && !_showBackToTop && _isBottomMenuVisible) {
         setState(() => _showBackToTop = true);
       } else if ((_scrollController.offset <= 300 || !_isBottomMenuVisible) && _showBackToTop) {
@@ -45,13 +43,11 @@ class _StateMainPageScreen extends State<MainPageScreen> {
 
     _loadPosts();
 
-    // Слушаем изменение фокуса, чтобы скрывать/показывать кнопку поиска
     _focusNode.addListener(() {
       setState(() {
         _isFocused = _focusNode.hasFocus;
       });
     });
-    // Слушаем ввод текста для обновления состояния (например, для иконки очистки)
     _controller.addListener(() {
       setState(() {});
     });
@@ -59,8 +55,7 @@ class _StateMainPageScreen extends State<MainPageScreen> {
 
   @override
   void dispose() {
-    // Освобождение ресурсов контроллеров
-    _scrollController.dispose(); // Не забываем освобождать ресурсы
+    _scrollController.dispose();
     _controller.dispose();
     _focusNode.dispose();
     super.dispose();
@@ -79,7 +74,7 @@ class _StateMainPageScreen extends State<MainPageScreen> {
       if (_isBottomMenuVisible) {
         setState(() {
           _isBottomMenuVisible = false;
-          _showBackToTop = false; // Прячем всё при движении вниз
+          _showBackToTop = false;
         });
       }
     } else if (notification.direction == ScrollDirection.forward) {
@@ -109,18 +104,17 @@ class _StateMainPageScreen extends State<MainPageScreen> {
           slivers: [
             // SliverAppBar был тут
           SliverSafeArea(
-            top: true, // Сверху отступ даст SliverAppBar
+            top: true,
             bottom: true, sliver: SliverPadding(
               padding: const EdgeInsets.symmetric(vertical: 2),
               sliver: FutureBuilder<AuthResponse>(
                 future: _response,
                 builder: (context, snapshot) {
-                  // 1. СОСТОЯНИЕ ЗАГРУЗКИ
                   if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const SliverFillRemaining(
+                    return SliverFillRemaining(
                       child: Center(
                         child: CircularProgressIndicator(
-                          color: Color(0xFF722323), // Твой фирменный цвет
+                          color: context.ui.primaryColor,
                         ),
                       ),
                     );
@@ -132,10 +126,8 @@ class _StateMainPageScreen extends State<MainPageScreen> {
                     );
                   }
 
-                  // 3. ПОЛУЧЕНИЕ ДАННЫХ
                   final authResponse = snapshot.data;
 
-                  // Проверка на успех в твоем AuthResponse
                   if (authResponse == null || !authResponse.success) {
                     return SliverFillRemaining(
                       child: Center(
@@ -152,27 +144,19 @@ class _StateMainPageScreen extends State<MainPageScreen> {
                     );
                   }
 
-                  // 4. ОТОБРАЖЕНИЕ СПИСКА
                   return SliverList(
                     delegate: SliverChildBuilderDelegate(
                           (context, index) {
-                        // if (index == posts.length) {
-                        //   return SizedBox(height: MediaQuery.of(context).padding.bottom);
-                        // }
 
                         final post = posts[index];
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 10),
                           child: PostComponent(
                             post: post,
-                            // onTap: () {
-                            //   // Здесь переделать просто передавать
-                            //   context.push('/showPost', extra: post);
-                            // },
                           ),
                         );
                       },
-                      childCount: posts.length , // +1 для нижнего отступа
+                      childCount: posts.length,
                     ),
                   );
                 },
@@ -181,16 +165,16 @@ class _StateMainPageScreen extends State<MainPageScreen> {
           ],
         ),),
 
+        // Стрелка вверх
         floatingActionButton: AnimatedOpacity(
           duration: const Duration(milliseconds: 300),
           opacity: _showBackToTop ? 1.0 : 0.0,
           child: Container(
               padding: EdgeInsets.all(2),
-              // Стилизация контейнера: белый фон и скругление углов
               decoration: ShapeDecoration(
                 color: context.ui.containerColor,
-                shape: const StadiumBorder(), // Идеальное скругление сторон
-                shadows: [ // В ShapeDecoration используется 'shadows', а не 'boxShadow'
+                shape: const StadiumBorder(),
+                shadows: [
                   BoxShadow(
                     blurRadius: 8,
                     color: Colors.black.withAlpha(25),
@@ -202,9 +186,10 @@ class _StateMainPageScreen extends State<MainPageScreen> {
             ),
         ),
 
+        // Нижнее меню
         bottomNavigationBar: AnimatedSlide(
           duration: const Duration(milliseconds: 300),
-          offset: _isBottomMenuVisible ? Offset.zero : const Offset(0, 2), // Уезжает вниз
+          offset: _isBottomMenuVisible ? Offset.zero : const Offset(0, 2),
           child: AnimatedOpacity(
             duration: const Duration(milliseconds: 300),
             opacity: _isBottomMenuVisible ? 1.0 : 0.0,

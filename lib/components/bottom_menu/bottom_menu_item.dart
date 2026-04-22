@@ -18,7 +18,7 @@ class BottomMenuItem extends StatelessWidget {
       icon: Icon(
         icon,
         size: context.ui.iconSizeBottomPanel,
-        color: Theme.of(context).primaryColor,
+        color: context.ui.primaryColor,
       ),
     );
   }

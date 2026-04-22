@@ -104,7 +104,8 @@ class App extends StatelessWidget {
           // Главный экран ленты
           GoRoute(
             path: '/',
-            builder: (context, state) => MainPageScreen(),
+            // builder: (context, state) => MainPageScreen(),
+              builder: (context, state) => RoomScreen(roomId: '3a5b6fd2-a7af-4f21-a8d9-dc2b2e5b3e90')
             // builder: (context, state) {
             //   // Извлекаем параметр из state.pathParameters
             //   // return Login();
@@ -114,7 +115,7 @@ class App extends StatelessWidget {
 
           GoRoute(
             name: 'verifyCode',
-            path: '/verifyCode/:userId', // :userId — это динамический параметр
+            path: '/verifyCode/:userId',
             builder: (context, state) {
               // Извлекаем параметр из state.pathParameters
               final userId = state.pathParameters['userId']!;

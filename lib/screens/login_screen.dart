@@ -126,7 +126,7 @@ class _LoginState extends State<Login> {
                     // Кнопка подтверждения входа
                     AuthButton(
                       text: "Войти",
-                      backgroundColor: Theme.of(context).primaryColor,
+                      backgroundColor: context.ui.primaryColor,
                       onPressed: _handleLogin,
                     ),
                   ],

@@ -164,7 +164,7 @@ class _RegistrationState extends State<Registration> {
                     // Кнопка отправки данных формы
                     AuthButton(
                       text: "Регистрация",
-                      backgroundColor: Theme.of(context).primaryColor,
+                      backgroundColor: context.ui.primaryColor,
                       onPressed: _handleRegistration,
                     ),
                   ],

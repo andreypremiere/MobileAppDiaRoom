@@ -159,7 +159,7 @@ class _VerifyCodeState extends State<VerifyCode> {
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: Theme.of(context).primaryColor,
+                          color: context.ui.primaryColor,
                         ),
                       ),
                       const SizedBox(height: 15),
@@ -203,7 +203,7 @@ class _VerifyCodeState extends State<VerifyCode> {
                       const SizedBox(height: 15),
                       AuthButton(
                         text: "Проверить",
-                        backgroundColor: Theme.of(context).primaryColor,
+                        backgroundColor: context.ui.primaryColor,
                         onPressed: _handleSendCode,
                       ),
                     ],

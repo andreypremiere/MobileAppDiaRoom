@@ -126,12 +126,12 @@ class _StatePostComponent extends State<PostComponent> {
                             ),
                             placeholder: (context, url) => CircleAvatar(
                               radius: 20,
-                              backgroundColor: Theme.of(context).primaryColor,
+                              backgroundColor: context.ui.primaryColor,
                               child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                             ),
                             errorWidget: (context, url, error) => CircleAvatar(
                               radius: 20,
-                              backgroundColor: Theme.of(context).primaryColor,
+                              backgroundColor: context.ui.primaryColor,
                               child: Icon(Icons.person, color: Colors.white),
                             ),
                           ),

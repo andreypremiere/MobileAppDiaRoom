@@ -85,10 +85,12 @@ class AppTheme {
   }
 
   static UICustom _lightExtension() => UICustom(
+    primaryColor: const Color(0xFF722323),
     // Цвета (существующие)
     fontColorPrimary: const Color(0xFF101010),
     fontColorHint: const Color(0xFFA4A4A4),
     fontColorLight: const Color(0xFFF5F5F5),
+    sectionButtonColor: const Color(0xFF722323),
     // Новые цвета (заполни сам)
     buttonColorSecondary: Colors.white,
     containerColor: Colors.white,
@@ -113,12 +115,14 @@ class AppTheme {
   );
 
   static UICustom _darkExtension() => UICustom(
+    primaryColor: const Color(0xFF9B6D6D),
     // Цвета (существующие)
     fontColorPrimary: const Color(0xFFE1E1E1),
     fontColorHint: const Color(0xFF757575),
     fontColorLight: const Color(0xFF757575),
     // Новые цвета (заполни сам)
     buttonColorSecondary: const Color(0xFF000000),
+    sectionButtonColor: const Color(0xFF9B6D6D),
     containerColor: const Color(0xFF050505),
     inputBackgroundColor: const Color(0xFF131313),
     inputIconColor: const Color(0xFFA2A2A2),
@@ -144,6 +148,7 @@ class AppTheme {
 // --- UI CUSTOM EXTENSION ---
 @immutable
 class UICustom extends ThemeExtension<UICustom> {
+  final Color primaryColor;
   final Color fontColorPrimary;
   final Color fontColorHint;
   final Color fontColorLight;
@@ -151,6 +156,7 @@ class UICustom extends ThemeExtension<UICustom> {
   final Color containerColor;
   final Color inputBackgroundColor;
   final Color inputIconColor;
+  final Color sectionButtonColor;
 
   final double fontSizeHeader;
   final double fontSizeTitle;
@@ -178,6 +184,7 @@ class UICustom extends ThemeExtension<UICustom> {
   static const FontWeight textSemiRegular = FontWeight.w300;
 
   const UICustom({
+    required this.primaryColor,
     required this.fontColorPrimary,
     required this.fontColorHint,
     required this.fontColorLight,
@@ -192,6 +199,7 @@ class UICustom extends ThemeExtension<UICustom> {
     required this.fontSizeDefault,
     required this.borderRadiusBig,
     required this.borderRadiusMedium,
+    required this.sectionButtonColor,
     required this.borderRadiusSmall,
     required this.borderRadiusLittle,
     required this.iconSizePanel,
@@ -202,12 +210,14 @@ class UICustom extends ThemeExtension<UICustom> {
 
   @override
   UICustom copyWith({
+    Color? primaryColor,
     Color? fontColorPrimary,
     Color? fontColorHint,
     Color? fontColorLight,
     Color? buttonColorSecondary,
     Color? containerColor,
     Color? inputBackgroundColor,
+    Color? sectionButtonColor,
     Color? inputIconColor,
     double? fontSizeHeader,
     double? fontSizeTitle,
@@ -224,6 +234,7 @@ class UICustom extends ThemeExtension<UICustom> {
     double? avatarSizeAppBar,
   }) {
     return UICustom(
+      primaryColor: primaryColor ?? this.primaryColor,
       fontColorPrimary: fontColorPrimary ?? this.fontColorPrimary,
       fontColorHint: fontColorHint ?? this.fontColorHint,
       fontColorLight: fontColorLight ?? this.fontColorLight,
@@ -233,6 +244,7 @@ class UICustom extends ThemeExtension<UICustom> {
       inputIconColor: inputIconColor ?? this.inputIconColor,
       fontSizeHeader: fontSizeHeader ?? this.fontSizeHeader,
       fontSizeTitle: fontSizeTitle ?? this.fontSizeTitle,
+      sectionButtonColor: sectionButtonColor ?? this.sectionButtonColor,
       fontSizeButton: fontSizeButton ?? this.fontSizeButton,
       fontSizeButtonSecondary: fontSizeButtonSecondary ?? this.fontSizeButtonSecondary,
       fontSizeDefault: fontSizeDefault ?? this.fontSizeDefault,
@@ -251,12 +263,14 @@ class UICustom extends ThemeExtension<UICustom> {
   UICustom lerp(ThemeExtension<UICustom>? other, double t) {
     if (other is! UICustom) return this;
     return UICustom(
+      primaryColor: Color.lerp(primaryColor, other.primaryColor, t)!,
       fontColorPrimary: Color.lerp(fontColorPrimary, other.fontColorPrimary, t)!,
       fontColorHint: Color.lerp(fontColorHint, other.fontColorHint, t)!,
       fontColorLight: Color.lerp(fontColorLight, other.fontColorLight, t)!,
       buttonColorSecondary: Color.lerp(buttonColorSecondary, other.buttonColorSecondary, t)!,
       containerColor: Color.lerp(containerColor, other.containerColor, t)!,
       inputBackgroundColor: Color.lerp(inputBackgroundColor, other.inputBackgroundColor, t)!,
+      sectionButtonColor: Color.lerp(sectionButtonColor, other.sectionButtonColor, t)!,
       inputIconColor: Color.lerp(inputIconColor, other.inputIconColor, t)!,
       fontSizeHeader: lerpDouble(fontSizeHeader, other.fontSizeHeader, t)!,
       fontSizeTitle: lerpDouble(fontSizeTitle, other.fontSizeTitle, t)!,
