@@ -1,3 +1,4 @@
+import '../post_creator/block_post.dart';
 import '../post_view/author.dart';
 import '../post_view/statistics.dart';
 
@@ -5,7 +6,7 @@ class ShowingPost {
   final Author author;
   final Statistics stats;
   final String roomId;
-  final List<dynamic> payload; // Твой холст (canvas)
+  final List<BlockPost> payload; // Твой холст (canvas)
   final String categorySlug;
   final List<String> hashtags;
 
@@ -28,7 +29,9 @@ class ShowingPost {
       // Поля самого поста
       roomId: map['roomId'] ?? '',
       // payload приходит как List<dynamic>, внутри которого Map<String, dynamic>
-      payload: map['payload'] as List<dynamic>? ?? [],
+      payload: (map['payload'] as List<dynamic>? ?? [])
+          .map((blockMap) => BlockPost.fromMap(blockMap as Map<String, dynamic>))
+          .toList(),
       categorySlug: map['categorySlug'] ?? '',
       // Безопасное приведение списка строк
       hashtags: map['hashtags'] != null

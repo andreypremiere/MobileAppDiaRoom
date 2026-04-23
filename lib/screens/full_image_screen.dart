@@ -4,8 +4,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 
 class FullImageScreen extends StatefulWidget {
-  final List<String> imageUrls; // Список всех картинок блока
-  final int initialIndex; // Индекс картинки, на которую нажали
+  final List<String> imageUrls;
+  final int initialIndex;
 
   const FullImageScreen({
     super.key,

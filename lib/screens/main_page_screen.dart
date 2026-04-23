@@ -20,10 +20,9 @@ class MainPageScreen extends StatefulWidget {
 }
 
 class _StateMainPageScreen extends State<MainPageScreen> {
-  String? avatarUrl;
-  final TextEditingController _controller = TextEditingController();
-  final FocusNode _focusNode = FocusNode();
-  bool _isFocused = false;
+  // final TextEditingController _controller = TextEditingController();
+  // final FocusNode _focusNode = FocusNode();
+  // bool _isFocused = false;
   late Future<AuthResponse> _response;
   bool _isBottomMenuVisible = true;
   final ScrollController _scrollController = ScrollController();
@@ -43,21 +42,21 @@ class _StateMainPageScreen extends State<MainPageScreen> {
 
     _loadPosts();
 
-    _focusNode.addListener(() {
-      setState(() {
-        _isFocused = _focusNode.hasFocus;
-      });
-    });
-    _controller.addListener(() {
-      setState(() {});
-    });
+    // _focusNode.addListener(() {
+    //   setState(() {
+    //     _isFocused = _focusNode.hasFocus;
+    //   });
+    // });
+    // _controller.addListener(() {
+    //   setState(() {});
+    // });
   }
 
   @override
   void dispose() {
     _scrollController.dispose();
-    _controller.dispose();
-    _focusNode.dispose();
+    // _controller.dispose();
+    // _focusNode.dispose();
     super.dispose();
   }
 

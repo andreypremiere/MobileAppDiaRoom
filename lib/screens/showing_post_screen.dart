@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dia_room/configuration/urls.dart';
+import 'package:dia_room/models/post_creator/block_post.dart';
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -9,6 +10,10 @@ import '../api/post_api.dart';
 import '../components/showing_post/slider_block.dart';
 import '../models/auth_response.dart';
 import '../models/content_post/content_post.dart';
+import '../models/enums/post_types.dart';
+import '../models/post_creator/block_photos.dart';
+import '../models/post_creator/block_text.dart';
+import '../models/post_creator/block_video.dart';
 
 
 class ShowingPostScreen extends StatefulWidget {
@@ -132,18 +137,18 @@ class _ShowingPostScreenState extends State<ShowingPostScreen> {
             itemCount: post.payload.length,
             separatorBuilder: (context, index) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
-              final block = post.payload[index];
+              final BlockPost block = post.payload[index]; // Теперь это объект типа BlockPost
 
-              // Проверяем тип блока из Map
-              switch (block['type']) {
-                case 'text':
-                  return _buildTextBlock(block);
-                case 'photos':
-                  return _buildPhotosBlock(block);
-                case 'videos':
-                  return _buildVideoBlock(block);
+              // Проверяем тип объекта через runtime type или поле type (enum)
+              switch (block.type) {
+                case BlockType.text:
+                  return _buildTextBlock(block as TextBlockPost);
+                case BlockType.photos:
+                  return _buildPhotosBlock(block as BlockPhotos);
+                case BlockType.videos:
+                  return _buildVideoBlock(block as BlockVideo);
                 default:
-                  return const SizedBox.shrink(); // Неизвестный блок игнорируем
+                  return const SizedBox.shrink();
               }
             },
           ),
@@ -157,16 +162,13 @@ class _ShowingPostScreenState extends State<ShowingPostScreen> {
   // ===========================================================================
 
   /// Рендерит текстовый блок
-  Widget _buildTextBlock(Map<String, dynamic> block) {
-    final metadata = block['metadata'] ?? {};
-    final double size = (metadata['size'] ?? 16).toDouble();
-    final int weightInt = metadata['weight'] ?? 400;
+  Widget _buildTextBlock(TextBlockPost block) {
 
     return Text(
-      block['text'] ?? '',
+      block.value,
       style: TextStyle(
-        fontSize: size,
-        fontWeight: _getFontWeight(weightInt),
+        fontSize: block.textType.size,
+        fontWeight: block.textType.weight,
         color: const Color(0xFF333333),
         fontFamily: 'SNPro',
       ),
@@ -174,19 +176,18 @@ class _ShowingPostScreenState extends State<ShowingPostScreen> {
   }
 
   /// Рендерит блок фотографий
-  Widget _buildPhotosBlock(Map<String, dynamic> block) {
-    final List<dynamic> listPhoto = block['listPhoto'] ?? [];
+  Widget _buildPhotosBlock(BlockPhotos block) {
+    final List<PhotoInfo> listPhoto = block.listPhoto;
     if (listPhoto.isEmpty) return const SizedBox.shrink();
 
     // Достаем URL-адреса из массива объектов
-    final List<String> urls = listPhoto.map((e) => _getFullUrl(e['publicUrl'])).toList();
-    final String methodView = block['methodView'] ?? 'tiles';
+    final List<String> urls = listPhoto.map((e) => _getFullUrl(e.publicUrl)).toList();
 
     return AspectRatio(
       aspectRatio: 1,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(12),
-        child: methodView == 'slider'
+        child: block.methodView == MethodViewPhoto.slider
             ? PhotoSlider(
           urls: urls,
           onTap: (index) => _openGalleryPreview(urls, index),
@@ -323,11 +324,9 @@ class _ShowingPostScreenState extends State<ShowingPostScreen> {
     context.push('/full_screen_video', extra: videoUrl);
   }
 
-  Widget _buildVideoBlock(Map<String, dynamic> block) {
-    final String previewUrl = _getFullUrl(block['publicUrlPreview'] ?? '');
-    // Достаем URL самого видео:
-    final String videoUrl = _getFullUrl(block['publicUrlVideo'] ?? '');
-    final int durationMs = block['durationMs'] ?? 0;
+  Widget _buildVideoBlock(BlockVideo block) {
+    final String previewUrl = _getFullUrl(block.previewPublicUrl);
+    final String videoUrl = _getFullUrl(block.publicUrl);
 
     return GestureDetector(
       onTap: () => _openFullScreenVideo(videoUrl), // По клику открываем плеер
@@ -357,7 +356,7 @@ class _ShowingPostScreenState extends State<ShowingPostScreen> {
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
-                    _formatDuration(durationMs),
+                    block.getFormattedDuration(),
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 14,
@@ -371,26 +370,6 @@ class _ShowingPostScreenState extends State<ShowingPostScreen> {
         ),
       ),
     );
-  }
-
-  // ===========================================================================
-  // ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ (ХЕЛПЕРЫ)
-  // ===========================================================================
-
-  /// Конвертирует int из JSON в FontWeight
-  FontWeight _getFontWeight(int weight) {
-    switch (weight) {
-      case 100: return FontWeight.w100;
-      case 200: return FontWeight.w200;
-      case 300: return FontWeight.w300;
-      case 400: return FontWeight.w400;
-      case 500: return FontWeight.w500;
-      case 600: return FontWeight.w600;
-      case 700: return FontWeight.w700;
-      case 800: return FontWeight.w800;
-      case 900: return FontWeight.w900;
-      default: return FontWeight.normal;
-    }
   }
 
   /// Форматирует миллисекунды в строку mm:ss

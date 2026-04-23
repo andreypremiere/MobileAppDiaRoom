@@ -12,15 +12,6 @@ class TextBlockPost extends BlockPost {
     required this.textType,
   }) : super(type: BlockType.text);
 
-  // @override
-  // Map<String, dynamic> toMap() {
-  //   return {
-  //     'blockType': type.slug,
-  //     'value': value,
-  //     'textType': textType.slug,
-  //   };
-  // }
-
   // Статический метод для создания объекта из Map
   static TextBlockPost fromMap(Map<String, dynamic> map) {
     return TextBlockPost(

@@ -22,37 +22,4 @@ class PostDraft {
     List<BlockPost>? blocks,
     Map<String, dynamic>? metadata
   }) : hashtags = hashtags ?? [], blocks = blocks ?? [];
-
-
-  // Map<String, dynamic> toPublishedPayload() {
-  //   return {
-  //     "blocks": blocks.map((block) {
-  //       if (block is BlockTextCreating) {
-  //         return {
-  //           "blockType": "text",
-  //           "content": block.controller.text,
-  //           "textType": block.textType.slug,
-  //         };
-  //       }
-  //       else if (block is BlockPhotosCreating) {
-  //         return {
-  //           "blockType": "photos",
-  //           "paths": block.paths, // уже публичные URL после загрузки
-  //           "methodView": block.methodView.slug,
-  //         };
-  //       }
-  //       else if (block is BlockVideoCreating) {
-  //         return {
-  //           "blockType": "video",
-  //           "path": block.path,           // публичная ссылка на видео
-  //           "previewPath": block.previewPath, // публичная ссылка на превью
-  //           "duration": block.duration?.inSeconds,
-  //         };
-  //       }
-  //       return {};
-  //     }).toList(),
-  //     "previewUrl": previewPath,
-  //     "hashtags": hashtags,
-  //   };
-  // }
 }

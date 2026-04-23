@@ -29,6 +29,35 @@ class BlockVideo extends BlockPost {
     required this.duration,
   }) : super(type: BlockType.videos);
 
+  factory BlockVideo.fromMap(Map<String, dynamic> map) {
+    return BlockVideo(
+      localPath: map['localPath'] ?? '',
+      publicUrl: map['publicUrlVideo'] ?? '',
+      fileName: map['fileName'] ?? '',
+      previewLocalPath: map['previewLocalPath'] ?? '',
+      previewPublicUrl: map['publicUrlPreview'] ?? '',
+      fileSize: (map['fileSize'] as num? ?? 0).toInt(),
+      duration: Duration(milliseconds: (map['durationMs'] as num? ?? 0).toInt()),
+    );
+  }
+
+  String getFormattedDuration() {
+    if (duration == Duration.zero) return "-:--";
+
+    String twoDigits(int n) => n.toString().padLeft(2, "0");
+
+    final hours = duration.inHours;
+    final minutes = duration.inMinutes.remainder(60);
+    final seconds = duration.inSeconds.remainder(60);
+
+    if (hours > 0) {
+      // Формат H:MM:SS
+      return "$hours:${twoDigits(minutes)}:${twoDigits(seconds)}";
+    } else {
+      // Формат M:SS
+      return "${duration.inMinutes}:${twoDigits(seconds)}";
+    }
+  }
 }
 
 class BlockVideoCreating extends BlockVideo implements Validatable {

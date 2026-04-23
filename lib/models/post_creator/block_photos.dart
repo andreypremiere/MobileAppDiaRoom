@@ -13,6 +13,20 @@ class BlockPhotos extends BlockPost {
 
   BlockPhotos({required this.listPhoto, required this.methodView}) : super(type: BlockType.photos);
 
+  static BlockPhotos fromMap(Map<String, dynamic> map) {
+    final List<dynamic> photosRaw = map['listPhoto'] ?? [];
+    final List<PhotoInfo> photos = photosRaw
+        .map((photoMap) => PhotoInfo.fromMap(photoMap as Map<String, dynamic>))
+        .toList();
+
+    final viewMethod = MethodViewPhoto.fromMap(map);
+
+    return BlockPhotos(
+      listPhoto: photos,
+      methodView: viewMethod,
+    );
+  }
+
 }
 
 class BlockPhotosCreating extends BlockPhotos implements Validatable {
@@ -88,6 +102,16 @@ class PhotoInfo {
       'publicUrl': publicUrl,
       'size': size,
     };
+  }
+
+  factory PhotoInfo.fromMap(Map<String, dynamic> map) {
+    return PhotoInfo(
+      filePath: map['filePath'] ?? '',
+      uploadId: map['uploadId'] ?? '',
+      publicUrl: map['publicUrl'] ?? '',
+      presignedUrl: map['presignedUrl'] ?? '',
+      size: (map['size'] as num? ?? 0).toInt(),
+    );
   }
 }
 
