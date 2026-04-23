@@ -8,14 +8,14 @@ import 'package:video_player/video_player.dart';
 import 'package:path_provider/path_provider.dart';
 
 
-class BlockVideo extends BlockPost {
+class BlockVideoCreating extends BlockPost {
   String? path;
   String? fileName;
   String? previewPath;
   int? fileSize;
   Duration? duration;
 
-  BlockVideo() : super(type: BlockPostType.videos);
+  BlockVideoCreating() : super(type: BlockType.videos);
 
   String getStringFileSize() {
     if (fileSize != null) {
@@ -117,19 +117,18 @@ class BlockVideoUpload extends BlockUpload {
     required this.duration,
     required this.uploadIdVideo,
     required this.uploadIdPreview
-}) : super(type: BlockPostType.videos);
+}) : super(type: BlockType.videos);
 
   @override
   Map<String, dynamic> toJson() {
     return {
-      'type': type.name, // videos
+      'blockType': type.slug, // videos
       'fileSize': fileSize,
       'durationMs': duration.inMilliseconds, // Длительность лучше хранить в мс
       'uploadIdVideo': uploadIdVideo,
       'uploadIdPreview': uploadIdPreview,
       'publicUrlVideo': publicUrlVideo,
       'publicUrlPreview': publicUrlPreview,
-      // Пути к файлам (filePath) обычно на сервер не шлют, только URL из облака
     };
   }
 

@@ -5,7 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../models/post_creator/block_photos.dart';
 
 class PhotosBlockWidget extends StatelessWidget {
-  final BlockPhotos block;
+  final BlockPhotosCreating block;
   final VoidCallback onChanged;
 
   const PhotosBlockWidget({
@@ -28,7 +28,7 @@ class PhotosBlockWidget extends StatelessWidget {
       final List<XFile> pickedFiles = await picker.pickMultiImage(limit: 10);
 
       if (pickedFiles.isNotEmpty) {
-        if (pickedFiles.length > BlockPhotos.limitPhotos - block.paths.length) {
+        if (pickedFiles.length > BlockPhotosCreating.limitPhotos - block.paths.length) {
           AppInfoDialog.show(context, "Можно выбрать не больше 10 фото :(");
           return;
         }

@@ -11,8 +11,6 @@ class PostDraft {
   String? previewPath;
   PostCategory category;
   List<String> hashtags;
-  // Сюда потом можно будет класть ссылку на мастерскую например
-  Map<String, dynamic> metadata;
 
   static const int maxCountHashtags = 6;
 
@@ -23,43 +21,29 @@ class PostDraft {
     List<String>? hashtags,
     List<BlockPost>? blocks,
     Map<String, dynamic>? metadata
-  }) : hashtags = hashtags ?? [], blocks = blocks ?? [], metadata = metadata ?? {};
+  }) : hashtags = hashtags ?? [], blocks = blocks ?? [];
 
-  @override
-  String toString() {
-    return '''
-      PostDraft {
-      name: $name,
-      previewPath: $previewPath,
-      category: ${category.id},
-      hashtags: $hashtags,
-      blocksCount: ${blocks.length},
-      metadata: $metadata
-}''';
-  }
 
-  // ИСПРАВИТЬ
   Map<String, dynamic> toPublishedPayload() {
     return {
       "blocks": blocks.map((block) {
-        if (block is BlockText) {
+        if (block is BlockTextCreating) {
           return {
-            "type": "text",
+            "blockType": "text",
             "content": block.controller.text,
-            "textType": block.textType.name,
-            "metadata": block.metadata,
+            "textType": block.textType.slug,
           };
         }
-        else if (block is BlockPhotos) {
+        else if (block is BlockPhotosCreating) {
           return {
-            "type": "photos",
+            "blockType": "photos",
             "paths": block.paths, // уже публичные URL после загрузки
-            "methodView": block.methodView.name,
+            "methodView": block.methodView.slug,
           };
         }
-        else if (block is BlockVideo) {
+        else if (block is BlockVideoCreating) {
           return {
-            "type": "video",
+            "blockType": "video",
             "path": block.path,           // публичная ссылка на видео
             "previewPath": block.previewPath, // публичная ссылка на превью
             "duration": block.duration?.inSeconds,
@@ -67,7 +51,6 @@ class PostDraft {
         }
         return {};
       }).toList(),
-      // "title": name,
       "previewUrl": previewPath,
       "hashtags": hashtags,
     };

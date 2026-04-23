@@ -6,7 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../models/post_creator/block_video.dart';
 
 class VideoBlockWidget extends StatefulWidget {
-  final BlockVideo block;
+  final BlockVideoCreating block;
   final VoidCallback onChanged;
 
   const VideoBlockWidget({super.key, required this.block, required this.onChanged});

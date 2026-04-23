@@ -1,7 +1,7 @@
 import '../enums/post_types.dart';
 
 abstract class BlockPost {
-  final BlockPostType type;
+  final BlockType type;
 
   BlockPost({required this.type});
 
@@ -9,7 +9,7 @@ abstract class BlockPost {
 }
 
 abstract class BlockUpload {
-  final BlockPostType type;
+  final BlockType type;
 
   BlockUpload({required this.type});
 

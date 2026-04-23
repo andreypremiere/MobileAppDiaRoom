@@ -58,21 +58,21 @@ class PostBlockWrapper extends StatelessWidget {
   }
 
   Widget _buildBlockContent() {
-    if (block is BlockText) {
+    if (block is BlockTextCreating) {
       return TextBlockWidget(
-        block: block as BlockText,
+        block: block as BlockTextCreating,
         onFocus: onFocus,
       );
     }
-    if (block is BlockPhotos) {
+    if (block is BlockPhotosCreating) {
       return PhotosBlockWidget(
-        block: block as BlockPhotos,
+        block: block as BlockPhotosCreating,
         onChanged: onChanged, // Передаем колбэк для обновления фото
       );
     }
-    if (block is BlockVideo) {
+    if (block is BlockVideoCreating) {
       return VideoBlockWidget(
-        block: block as BlockVideo,
+        block: block as BlockVideoCreating,
         onChanged: onChanged,
       );
     }

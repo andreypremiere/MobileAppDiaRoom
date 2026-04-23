@@ -89,11 +89,9 @@ class _SetSettingsForPostState extends State<SetSettingsForPostScreen> {
     }
 
     print("Публикация разрешена!");
-    final token = context.read<AuthProvider>().accessToken;
-    User? user = User.fromJwt(token!);
-    CreatingPostService service = CreatingPostService(post: widget.postDraft, user: user!);
+    CreatingPostService service = CreatingPostService(post: widget.postDraft);
     service.startCreating();
-    context.push('/');
+    // context.push('/');
   }
 
   Future<void> _pickAndCropImage() async {

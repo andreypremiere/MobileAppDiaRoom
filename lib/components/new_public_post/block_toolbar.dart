@@ -29,17 +29,17 @@ class PostToolbar extends StatelessWidget {
 
   /// Определяет, какой набор инструментов показать в зависимости от типа [block]
   Widget _buildContent() {
-    if (block is BlockText) {
-      return _buildTextToolbar(block as BlockText);
+    if (block is BlockTextCreating) {
+      return _buildTextToolbar(block as BlockTextCreating);
     }
-    if (block is BlockPhotos) {
-      return _buildPhotoToolbar(block as BlockPhotos);
+    if (block is BlockPhotosCreating) {
+      return _buildPhotoToolbar(block as BlockPhotosCreating);
     }
     return const SizedBox();
   }
 
   /// Собирает инструменты для работы с текстовым блоком (заголовки, подзаголовки)
-  Widget _buildTextToolbar(BlockText textBlock) {
+  Widget _buildTextToolbar(BlockTextCreating textBlock) {
     return Row(
       children: [
         _buildPopupSelector<TextType>(
@@ -47,17 +47,10 @@ class PostToolbar extends StatelessWidget {
           items: TextType.values,
           onSelected: (value) {
             textBlock.textType = value;
-            if (value == TextType.header) {
-              textBlock.setTitleType();
-            } else if (value == TextType.subtitle) {
-              textBlock.setSubtitleType();
-            } else {
-              textBlock.setUsualText();
-            }
             onChanged();
           },
           itemLabel: (type) => type.label,
-          iconBuilder: (type) => type == TextType.header ? Icons.title : Icons.notes,
+          iconBuilder: (type) => type.icon,
           isSelected: (type) => textBlock.textType == type,
         ),
       ],
@@ -65,7 +58,7 @@ class PostToolbar extends StatelessWidget {
   }
 
   /// Собирает инструменты для работы с блоком фотографий (сетка или карусель)
-  Widget _buildPhotoToolbar(BlockPhotos photoBlock) {
+  Widget _buildPhotoToolbar(BlockPhotosCreating photoBlock) {
     return Row(
       children: [
         _buildPopupSelector<MethodViewPhoto>(

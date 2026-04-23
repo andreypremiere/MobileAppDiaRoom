@@ -25,31 +25,25 @@ import 'media_upload_planner.dart';
 
 class CreatingPostService {
   final PostDraft post;
-  final User user;
   PublicationPost publicationPost;
 
-  CreatingPostService({required this.post, required this.user})
+  CreatingPostService({required this.post})
     : publicationPost = PublicationPost.fromDraft(
         draft: post,
-        roomId: user.roomId,
       );
 
   List<BlockUpload> createUploadFiles(List<BlockPost> blocks) {
     List<BlockUpload> blocksUpload = [];
 
     for (final block in blocks) {
-      if (block is BlockText) {
-        final newMetadata = MetadataText();
-        newMetadata.size = block.metadata.size;
-        newMetadata.weight = block.metadata.weight;
+      if (block is BlockTextCreating) {
         blocksUpload.add(
           BlockTextUpload(
             text: block.controller.text,
             textType: block.textType,
-            metadata: newMetadata,
           ),
         );
-      } else if (block is BlockPhotos) {
+      } else if (block is BlockPhotosCreating) {
         final photoUpload = BlockPhotoUpload(methodView: block.methodView);
 
         for (var i = 0; i < block.paths.length; i++) {
@@ -62,7 +56,7 @@ class CreatingPostService {
           );
         }
         blocksUpload.add(photoUpload);
-      } else if (block is BlockVideo) {
+      } else if (block is BlockVideoCreating) {
         final videoUpload = BlockVideoUpload(
           filePath: block.path!,
           previewPath: block.previewPath!,
@@ -228,12 +222,10 @@ class CreatingPostService {
     AuthResponse resultCreating;
 
     /// Выполняем запрос на создание поста и получаем сразу ссылки
-    /// на превью (публичную и загрузку
+    /// на превью (публичную и загрузку)
     try {
       final postCreating = {
         "title": publicationPost.title,
-        "postStatus": publicationPost.postStatus.name,
-        "aiStatus": publicationPost.aiCheckStatus.name,
         "categorySlug": publicationPost.categorySlug.id,
         "hashtags": publicationPost.hashtags,
       };
@@ -270,7 +262,6 @@ class CreatingPostService {
     if (!resultUploadPreview) {
       print('Превью не было загружено, продолжаем создание поста');
     }
-    /// ---Конец блока
 
     /// Формируем список для будущего payload поста
     print("🛠️ [ШАГ 3: Payload] Сбор файлов из блоков контента...");
@@ -295,12 +286,8 @@ class CreatingPostService {
       print("✅ [ШАГ 4: S3 Links] Ссылки успешно получены.");
     }
 
-    /// Заполняем ссылками payload
     print("📝 [ШАГ 5: Payload Update] Привязка полученных ссылок к блокам...");
     applyPresignedResponse(publicationPost.payload!, responseUrls.data!['files']);
-
-    final result = await uploadAllMediaFromBlocks(publicationPost.payload!);
-    print('Результат загрузки медиа в хранилище $result');
 
     print("📡 [ШАГ 6: Canvas] Отправка финального холста (Canvas) на сервер...");
     final resultCreatingCanvas = savePostCanvas(
@@ -309,6 +296,8 @@ class CreatingPostService {
     );
 
     print('📊 [ШАГ 6: Canvas] Результат сохранения холста: $resultCreatingCanvas');
+    final result = await uploadAllMediaFromBlocks(publicationPost.payload!);
+    print('Результат загрузки медиа в хранилище $result');
 
     print('--- [FINISH] Процесс создания поста завершен успешно ---');
   }

@@ -39,7 +39,7 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
 
     final block = postDraft.blocks[index];
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (block is BlockText) {
+      if (block is BlockTextCreating) {
         block.focusNode.requestFocus();
       } else {
         FocusScope.of(context).unfocus();
@@ -50,13 +50,13 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
   /// Удаляет из списка блоки, которые не содержат контента.
   void removeEmptyBlocks() {
     postDraft.blocks.removeWhere((block) {
-      if (block is BlockText) {
+      if (block is BlockTextCreating) {
         return block.controller.text.trim().isEmpty;
       }
-      if (block is BlockPhotos) {
+      if (block is BlockPhotosCreating) {
         return block.paths.isEmpty;
       }
-      if (block is BlockVideo) {
+      if (block is BlockVideoCreating) {
         return block.path == null;
       }
       return false;
@@ -64,16 +64,16 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
   }
 
   /// Общий метод добавления нового контентного блока
-  void _addBlock(BlockPostType type) {
+  void _addBlock(BlockType type) {
     FocusManager.instance.primaryFocus?.unfocus();
     FocusScope.of(context).unfocus();
 
-    if (type == BlockPostType.text) {
+    if (type == BlockType.text) {
       _addTextBlock();
-    } else if (type == BlockPostType.photos) {
+    } else if (type == BlockType.photos) {
       int countPhotoBlock = 0;
       for (var block in postDraft.blocks) {
-        if (block.type == BlockPostType.photos) {
+        if (block.type == BlockType.photos) {
           countPhotoBlock += 1;
         }
       }
@@ -85,10 +85,10 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
 
       _addPhotosBlock();
 
-    } else if (type == BlockPostType.videos) {
+    } else if (type == BlockType.videos) {
       int countVideoBlock = 0;
       for (var block in postDraft.blocks) {
-        if (block.type == BlockPostType.photos) {
+        if (block.type == BlockType.photos) {
           countVideoBlock += 1;
         }
       }
@@ -129,9 +129,9 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
     final block = postDraft.blocks[index];
 
     // 1. Проверяем тип блока и вызываем очистку ресурсов
-    if (block is BlockPhotos) {
+    if (block is BlockPhotosCreating) {
       await block.deleteAllPhotos(); // Твой новый метод для очистки списка фото
-    } else if (block is BlockVideo) {
+    } else if (block is BlockVideoCreating) {
       await block.clearBlock(); // Метод для удаления видео и его превью
     }
 
@@ -147,7 +147,7 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
   /// Специфичные методы инициализации блоков (Текст, Фото, Видео)
   void _addTextBlock() {
     final newController = TextEditingController();
-    final newBlock = BlockText(controller: newController);
+    final newBlock = BlockTextCreating(controller: newController);
 
     setState(() {
       postDraft.blocks.add(newBlock);
@@ -160,7 +160,7 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
   }
 
   void _addPhotosBlock() {
-    final newBlock = BlockPhotos();
+    final newBlock = BlockPhotosCreating();
     setState(() {
       postDraft.blocks.add(newBlock);
       _focusedIndex = postDraft.blocks.length - 1;
@@ -171,7 +171,7 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
   }
 
   void _addVideoBlock() {
-    final newBlock = BlockVideo();
+    final newBlock = BlockVideoCreating();
     setState(() {
       postDraft.blocks.add(newBlock);
       _focusedIndex = postDraft.blocks.length - 1;
@@ -270,7 +270,7 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
                       'Добавьте первое значение',
                       style: TextStyle(fontFamily: 'SNPro', fontSize: 24),
                     ),
-                    PopupMenuButton<BlockPostType>(
+                    PopupMenuButton<BlockType>(
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
@@ -288,9 +288,9 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
                         child: const Icon(Icons.add, size: 40),
                       ),
                       onSelected: (value) => _addBlock(value),
-                      itemBuilder: (context) => BlockPostType.values
+                      itemBuilder: (context) => BlockType.values
                           .map(
-                            (type) => PopupMenuItem<BlockPostType>(
+                            (type) => PopupMenuItem<BlockType>(
                               height: 40,
                               value: type,
                               child: Row(
@@ -345,7 +345,7 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
                   Positioned(
                     bottom: 10,
                     right: 10,
-                    child: PopupMenuButton<BlockPostType>(
+                    child: PopupMenuButton<BlockType>(
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
@@ -363,9 +363,9 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
                         child: const Icon(Icons.add, size: 40),
                       ),
                       onSelected: (value) => _addBlock(value),
-                      itemBuilder: (context) => BlockPostType.values
+                      itemBuilder: (context) => BlockType.values
                           .map(
-                            (type) => PopupMenuItem<BlockPostType>(
+                            (type) => PopupMenuItem<BlockType>(
                               height: 40,
                               value: type,
                               child: Row(
@@ -396,8 +396,8 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
                   if (_focusedIndex != null)
                     /// Появляется только для определенного типа
                     if (_focusedIndex != null &&
-                        (postDraft.blocks[_focusedIndex!] is BlockText ||
-                            postDraft.blocks[_focusedIndex!] is BlockPhotos))
+                        (postDraft.blocks[_focusedIndex!] is BlockTextCreating ||
+                            postDraft.blocks[_focusedIndex!] is BlockPhotosCreating))
                       Positioned(
                         bottom: 10,
                         left: 10,

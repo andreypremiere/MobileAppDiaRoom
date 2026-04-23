@@ -1,50 +1,105 @@
 import 'package:flutter/material.dart';
 
-enum BlockPostType {
-  text,
-  photos,
-  videos,
-  audio,
-  file
-}
+enum BlockType {
+  text('Текст', 'text', Icons.text_fields),
+  photos('Фотографии', 'photos', Icons.photo),
+  videos('Видео', 'videos', Icons.videocam);
 
-extension BlockPostTypeExtension on BlockPostType {
-  String get label {
-    switch (this) {
-      case BlockPostType.text: return 'Текст';
-      case BlockPostType.photos: return 'Фотографии';
-      case BlockPostType.videos: return 'Видео';
-      case BlockPostType.audio: return 'Аудио';
-      case BlockPostType.file: return 'Файл';
-    }
+  final String label;
+  final String slug;
+  final IconData icon;
+
+  const BlockType(this.label, this.slug, this.icon);
+
+  Map<String, dynamic> toMap() {
+    return {
+      'blockType': slug,
+    };
   }
 
-  IconData get icon {
-    switch (this) {
-      case BlockPostType.text: return Icons.text_fields;
-      case BlockPostType.photos: return Icons.photo;
-      case BlockPostType.videos: return Icons.videocam;
-      case BlockPostType.audio: return Icons.audiotrack;
-      case BlockPostType.file: return Icons.description;
-    }
+  static BlockType fromMap(Map<String, dynamic> map) {
+    final mapSlug = map['blockType'] as String?;
+    return BlockType.values.firstWhere(
+          (e) => e.slug == mapSlug,
+      orElse: () => BlockType.text,
+    );
   }
 }
 
 enum TextType {
-  header('Заголовок'),
-  subtitle('Подзаголовок'),
-  text('Текст');
+  title(
+    label: 'Заголовок',
+    slug: 'title',
+    size: 22,
+    weight: FontWeight.w700,
+    icon: Icons.format_size, // Или Icons.title
+  ),
+  subtitle(
+    label: 'Подзаголовок',
+    slug: 'subtitle',
+    size: 20,
+    weight: FontWeight.w600,
+    icon: Icons.format_align_left,
+  ),
+  text(
+    label: 'Текст',
+    slug: 'text',
+    size: 18,
+    weight: FontWeight.w500,
+    icon: Icons.notes,
+  );
 
   final String label;
+  final String slug;
+  final double size;
+  final FontWeight weight;
+  final IconData icon; // Новое поле
 
-  const TextType(this.label);
+  const TextType({
+    required this.label,
+    required this.slug,
+    required this.size,
+    required this.weight,
+    required this.icon,
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'textType': slug,
+    };
+  }
+
+  static TextType fromMap(Map<String, dynamic> map) {
+    final mapSlug = map['textType'] as String?;
+    return TextType.values.firstWhere(
+          (e) => e.slug == mapSlug,
+      orElse: () => TextType.text,
+    );
+  }
 }
 
 enum MethodViewPhoto {
-  tiles('Плитки'),
-  slider('Слайдер');
+  tiles('Плитки', 'tiles', Icons.grid_view_rounded),
+  slider('Слайдер', 'slider', Icons.view_carousel_rounded);
 
   final String label;
+  final String slug;
+  final IconData icon;
 
-  const MethodViewPhoto(this.label);
+  const MethodViewPhoto(this.label, this.slug, this.icon);
+
+  Map<String, dynamic> toMap() {
+    return {
+      'methodViewPhoto': slug,
+    };
+  }
+
+  // Получаем из Map от сервера
+  static MethodViewPhoto fromMap(Map<String, dynamic> map) {
+    final mapSlug = map['methodViewPhoto'] as String?;
+    return MethodViewPhoto.values.firstWhere(
+          (e) => e.slug == mapSlug,
+      orElse: () => MethodViewPhoto.tiles,
+    );
+  }
 }

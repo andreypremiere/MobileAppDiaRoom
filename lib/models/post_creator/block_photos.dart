@@ -3,7 +3,7 @@ import 'dart:io';
 import '../enums/post_types.dart';
 import 'block_post.dart';
 
-class BlockPhotos extends BlockPost {
+class BlockPhotosCreating extends BlockPost {
   List<String> paths;
   MethodViewPhoto methodView;
   List<int> photoSizes;
@@ -11,9 +11,9 @@ class BlockPhotos extends BlockPost {
 
   bool get isFull => paths.length >= limitPhotos;
 
-  BlockPhotos({List<String>? paths, List<int>? photoSizes, this.methodView = MethodViewPhoto.tiles})
+  BlockPhotosCreating({List<String>? paths, List<int>? photoSizes, this.methodView = MethodViewPhoto.tiles})
       : paths = paths ?? [], photoSizes = photoSizes ?? [],
-        super(type: BlockPostType.photos);
+        super(type: BlockType.photos);
 
   @override
   bool isEmpty() {
@@ -81,10 +81,7 @@ class PhotoInfo {
 
   Map<String, dynamic> toJson() {
     return {
-      'uploadId': uploadId,
       'publicUrl': publicUrl,
-      // filePath и presignedUrl обычно НЕ отправляются в финальный payload для БД,
-      // так как они временные, но если они нужны для кэша — можно оставить.
       'size': size,
     };
   }
@@ -95,14 +92,14 @@ class BlockPhotoUpload extends BlockUpload {
   List<PhotoInfo> listPhoto;
 
   BlockPhotoUpload({required this.methodView}) : listPhoto = <PhotoInfo>[],
-  super(type: BlockPostType.photos);
+  super(type: BlockType.photos);
 
 
   @override
   Map<String, dynamic> toJson() {
     return {
-      'type': type.name, // Используем name из Enum (photos)
-      'methodView': methodView.name, // Предполагаем, что это Enum
+      'blockType': type.slug, // Используем name из Enum (photos)
+      'methodView': methodView.slug, // Предполагаем, что это Enum
       'listPhoto': listPhoto.map((photo) => photo.toJson()).toList(),
     };
   }

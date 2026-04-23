@@ -24,7 +24,7 @@ class PublicationPost {
 
   PublicationPost({
     this.id,
-    this.postStatus = PostStatus.pending,
+    this.postStatus = PostStatus.processing,
     this.aiCheckStatus = AiCheckStatus.notChecked,
     required this.title,
     this.previewPublicURL,
@@ -37,7 +37,6 @@ class PublicationPost {
 
   factory PublicationPost.fromDraft({
     required PostDraft draft,
-    required String roomId,
   }) {
     return PublicationPost(
       id: null,
@@ -46,7 +45,6 @@ class PublicationPost {
       // На старте это локальный путь
       categorySlug: draft.category,
       hashtags: List.from(draft.hashtags),
-      metadata: Map.from(draft.metadata),
       payload: null,
     );
   }
