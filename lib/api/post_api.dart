@@ -93,7 +93,7 @@ Future<AuthResponse> savePostCanvas({
 }) async {
   try {
     final response = await ApiService.post(
-      '/post/$postId/canvas',
+      '/post/saveCanvas/$postId',
       data: {
         'payload': canvasPayload,
       },
@@ -169,5 +169,25 @@ Future<AuthResponse> getPost(String postId) async {
       success: false,
       data: {"error": "Непредвиденная ошибка: $e"},
     );
+  }
+}
+
+Future<AuthResponse> updateStatusPost({
+  required String postId,
+}) async {
+  try {
+    await ApiService.post(
+      '/post/updateStatusUploaded/$postId',
+    );
+
+    return AuthResponse(success: true, data: null);
+
+  } on DioException catch (e) {
+    return AuthResponse(
+        success: false,
+        message: e.response?.data['error'] ?? "Ошибка сохранения холста"
+    );
+  } catch (e) {
+    return AuthResponse(success: false, message: "Ошибка: $e");
   }
 }

@@ -214,7 +214,7 @@ class PostPreviewScreen extends StatelessWidget {
           fit: StackFit.expand,
           children: [
             Image.file(
-              File(block.previewPath!),
+              File(block.previewLocalPath),
               fit: BoxFit.cover,
             ),
             Container(color: Colors.black.withAlpha(100)),
@@ -235,7 +235,7 @@ class PostPreviewScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
-                  block.getformattedDuration(block.duration),
+                  block.getFormattedDuration(),
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 14,

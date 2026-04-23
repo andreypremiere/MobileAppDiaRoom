@@ -57,7 +57,7 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
         return block.isEmpty();
       }
       if (block is BlockVideoCreating) {
-        return block.path == null;
+        return block.isEmpty();
       }
       return false;
     });
@@ -171,7 +171,16 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
   }
 
   void _addVideoBlock() {
-    final newBlock = BlockVideoCreating();
+    final newBlock = BlockVideoCreating(
+        presignedUrl: '',
+        previewPresignedUrl: '',
+        localPath: '',
+        publicUrl: '',
+        previewLocalPath: '',
+        fileName: '',
+        previewPublicUrl: '',
+        fileSize: 0
+        );
     setState(() {
       postDraft.blocks.add(newBlock);
       _focusedIndex = postDraft.blocks.length - 1;
@@ -422,7 +431,9 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
 
   /// Проверка холста на наличие хотя бы одного заполненного блока
   bool _isValidCanvas() {
-    for (final block in postDraft.blocks) {
+    final validatableBlocks = postDraft.blocks.whereType<Validatable>();
+
+    for (final block in validatableBlocks) {
       if (!block.isEmpty()) return true;
     }
     return false;

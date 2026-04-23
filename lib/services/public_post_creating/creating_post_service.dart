@@ -10,10 +10,8 @@ import 'package:dia_room/models/post_creator/block_post.dart';
 import 'package:dia_room/models/post_creator/block_text.dart';
 import 'package:dia_room/models/post_creator/block_video.dart';
 import 'package:dia_room/models/post_creator/post_draft.dart';
-import 'package:dia_room/models/post_creator/preview_request.dart';
 import 'package:dia_room/models/post_creator/publication_post.dart';
 import 'package:dia_room/models/post_creator/upload_file_info.dart';
-import 'package:dia_room/models/user.dart';
 import 'package:uuid/uuid.dart';
 
 // import 'package:http/http.dart' as http;
@@ -60,10 +58,10 @@ class CreatingPostService {
         blocksUpload.add(photoUpload);
       } else if (block is BlockVideoCreating) {
         final videoUpload = BlockVideoUpload(
-          filePath: block.path!,
-          previewPath: block.previewPath!,
-          fileSize: block.fileSize!,
-          duration: block.duration ?? Duration.zero,
+          filePath: block.localPath,
+          previewPath: block.previewLocalPath,
+          fileSize: block.fileSize,
+          duration: block.duration,
           uploadIdVideo: const Uuid().v4(),
           uploadIdPreview: const Uuid().v4(),
         );
@@ -159,10 +157,10 @@ class CreatingPostService {
       if (block is BlockPhotoUpload) {
         // Загружаем список фотографий в блоке
         for (final photo in block.listPhoto) {
-          if (photo.presignedUrl != null) {
+          if (photo.presignedUrl.isNotEmpty) {
             final success = await uploadSingleMediaFile(
               photo.filePath,
-              photo.presignedUrl!,
+              photo.presignedUrl,
               "image/jpeg",
             );
             if (!success) allSuccess = false;
@@ -170,9 +168,9 @@ class CreatingPostService {
         }
       } else if (block is BlockVideoUpload) {
         // 1. Загружаем само видео
-        if (block.presignedUrlVideo != null) {
+        if (block.presignedUrlVideo != null && block.presignedUrlVideo!.isNotEmpty) {
           final videoSuccess = await uploadSingleMediaFile(
-            block.filePath!,
+            block.filePath,
             block.presignedUrlVideo!,
             'video/mp4', // убедитесь, что это поле есть (обычно video/mp4)
           );
@@ -180,7 +178,7 @@ class CreatingPostService {
         }
 
         // 2. Загружаем превью (обложку) видео
-        if (block.presignedUrlPreview != null) {
+        if (block.presignedUrlPreview != null && block.presignedUrlPreview!.isNotEmpty) {
           final previewSuccess = await uploadSingleMediaFile(
             block.previewPath,
             block.presignedUrlPreview!,
@@ -300,6 +298,10 @@ class CreatingPostService {
     print('📊 [ШАГ 6: Canvas] Результат сохранения холста: $resultCreatingCanvas');
     final result = await uploadAllMediaFromBlocks(publicationPost.payload!);
     print('Результат загрузки медиа в хранилище $result');
+
+    print("📡 [ШАГ 7: Canvas] Обновление статуса и добавление в очередь на проверку...");
+    final resultStatusUpdating = await updateStatusPost(postId: resultCreating.data!['postId']);
+    print("Результат обновления статуса ${resultStatusUpdating.success}");
 
     print('--- [FINISH] Процесс создания поста завершен успешно ---');
   }
