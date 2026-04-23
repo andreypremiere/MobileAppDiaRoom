@@ -1,30 +1,36 @@
 import 'dart:io';
 
+import 'package:flutter/cupertino.dart';
+
 import '../enums/post_types.dart';
 import 'block_post.dart';
 
-class BlockPhotosCreating extends BlockPost {
-  List<String> paths;
+
+
+class BlockPhotos extends BlockPost {
+  List<PhotoInfo> listPhoto;
   MethodViewPhoto methodView;
-  List<int> photoSizes;
+
+  BlockPhotos({required this.listPhoto, required this.methodView}) : super(type: BlockType.photos);
+
+}
+
+class BlockPhotosCreating extends BlockPhotos implements Validatable {
   static const limitPhotos = 10;
 
-  bool get isFull => paths.length >= limitPhotos;
 
-  BlockPhotosCreating({List<String>? paths, List<int>? photoSizes, this.methodView = MethodViewPhoto.tiles})
-      : paths = paths ?? [], photoSizes = photoSizes ?? [],
-        super(type: BlockType.photos);
+
+  BlockPhotosCreating({required super.listPhoto, required super.methodView});
+
+  bool get isFull => listPhoto.length >= limitPhotos;
 
   @override
   bool isEmpty() {
-    if (paths.isEmpty) {
-      return true;
-    }
-    return false;
+    return listPhoto.isEmpty;
   }
 
   Future<bool> addPath(String path) async {
-    if (paths.length >= limitPhotos) {
+    if (listPhoto.length >= limitPhotos) {
       return false;
     }
 
@@ -32,8 +38,8 @@ class BlockPhotosCreating extends BlockPost {
       final file = File(path);
       if (await file.exists()) {
         int size = await file.length();
-        paths.add(path);
-        photoSizes.add(size); // Добавляем размер в соответствующий индекс
+        final newPhoto = PhotoInfo(filePath: path, uploadId: '', size: size, publicUrl: '', presignedUrl: '');
+        listPhoto.add(newPhoto);
         return true;
       }
     } catch (e) {
@@ -44,40 +50,38 @@ class BlockPhotosCreating extends BlockPost {
 
   Future<void> deletePhoto(int index) async {
     try {
-      if (await File(paths[index]).exists()) {
-        await File(paths[index]).delete();
+      if (await File(listPhoto[index].filePath).exists()) {
+        await File(listPhoto[index].filePath).delete();
       }
     } catch (e) {
       print("Файл уже удален или недоступен");
     }
 
-    paths.removeAt(index);
-    photoSizes.removeAt(index); // Удаляем размер вместе с путем
+    listPhoto.removeAt(index);
   }
 
   Future<void> deleteAllPhotos() async {
-    for (String path in paths) {
+    for (final item in listPhoto) {
       try {
-        final file = File(path);
+        final file = File(item.filePath);
         if (await file.exists()) await file.delete();
       } catch (e) {
-        print("Ошибка при удалении файла $path: $e");
+        print("Ошибка при удалении файла $item.filePath: $e");
       }
     }
-    paths.clear();
-    photoSizes.clear();
+    listPhoto.clear();
   }
 }
 
 class PhotoInfo {
   String filePath;
   String uploadId;
-  String? publicUrl;
-  String? presignedUrl;
+  String publicUrl;
+  String presignedUrl;
   int size;
 
   PhotoInfo({required this.filePath, required this.uploadId,
-  required this.size});
+  required this.size, required this.publicUrl, required this.presignedUrl});
 
   Map<String, dynamic> toJson() {
     return {

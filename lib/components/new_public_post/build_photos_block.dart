@@ -28,7 +28,7 @@ class PhotosBlockWidget extends StatelessWidget {
       final List<XFile> pickedFiles = await picker.pickMultiImage(limit: 10);
 
       if (pickedFiles.isNotEmpty) {
-        if (pickedFiles.length > BlockPhotosCreating.limitPhotos - block.paths.length) {
+        if (pickedFiles.length > BlockPhotosCreating.limitPhotos - block.listPhoto.length) {
           AppInfoDialog.show(context, "Можно выбрать не больше 10 фото :(");
           return;
         }
@@ -85,12 +85,12 @@ class PhotosBlockWidget extends StatelessWidget {
                     ),
                   ),
                 ),
-              if (block.paths.isNotEmpty) const SizedBox(width: 8),
+              if (block.listPhoto.isNotEmpty) const SizedBox(width: 8),
 
               // Список фото
-              ...block.paths.asMap().entries.map((entry) {
+              ...block.listPhoto.asMap().entries.map((entry) {
                 final int photoIndex = entry.key;
-                final String path = entry.value;
+                final String path = entry.value.filePath;
 
                 return Padding(
                   padding: const EdgeInsets.only(right: 8),

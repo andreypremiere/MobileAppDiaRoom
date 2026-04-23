@@ -3,18 +3,56 @@ import 'package:flutter/material.dart';
 import '../enums/post_types.dart';
 import 'block_post.dart';
 
-
-
-class BlockTextCreating extends BlockPost {
-  TextEditingController controller;
-  final FocusNode focusNode;
+class TextBlockPost extends BlockPost {
+  String value;
   TextType textType;
 
+  TextBlockPost({
+    required this.value,
+    required this.textType,
+  }) : super(type: BlockType.text);
+
+  // @override
+  // Map<String, dynamic> toMap() {
+  //   return {
+  //     'blockType': type.slug,
+  //     'value': value,
+  //     'textType': textType.slug,
+  //   };
+  // }
+
+  // Статический метод для создания объекта из Map
+  static TextBlockPost fromMap(Map<String, dynamic> map) {
+    return TextBlockPost(
+      value: map['text'] ?? 'Не удалось извлечь значение текстового блока. Это шаблонный текст.',
+      textType: TextType.fromMap(map),
+    );
+  }
+}
+
+
+
+class BlockTextCreating extends TextBlockPost implements Validatable{
+  TextEditingController controller;
+  final FocusNode focusNode;
+
   BlockTextCreating({
-    required this.controller,
-    this.textType = TextType.text,
-  }) : focusNode = FocusNode(),
-        super(type: BlockType.text);
+    TextEditingController? controller,
+    FocusNode? focusNode,
+  })  : controller = controller ?? TextEditingController(),
+        focusNode = focusNode ?? FocusNode(),
+        super(
+        value: controller?.text ?? '',
+        textType: TextType.text,
+      );
+
+  @override
+  String get value => controller.text;
+
+  @override
+  set value(String newValue) {
+    controller.text = newValue;
+  }
 
   void dispose() {
     controller.dispose();
@@ -23,7 +61,7 @@ class BlockTextCreating extends BlockPost {
 
   @override
   bool isEmpty() {
-    return controller.text.isEmpty;
+    return value.isEmpty;
   }
 }
 

@@ -5,7 +5,7 @@ abstract class BlockPost {
 
   BlockPost({required this.type});
 
-  bool isEmpty();
+  // bool isEmpty();
 }
 
 abstract class BlockUpload {
@@ -14,4 +14,9 @@ abstract class BlockUpload {
   BlockUpload({required this.type});
 
   Map<String, dynamic> toJson();
+}
+
+abstract class Validatable {
+  bool isEmpty();
+  // Map<String, dynamic> toMap();
 }

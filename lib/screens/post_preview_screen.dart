@@ -91,7 +91,7 @@ class PostPreviewScreen extends StatelessWidget {
   /// Рендерит текстовый блок с учетом стилей (размер, вес) из метаданных
   Widget _buildTextBlock(BlockTextCreating block) {
     return Text(
-      block.controller.text,
+      block.value,
       style: TextStyle(
         fontSize: block.textType.size,
         fontWeight: block.textType.weight,
@@ -108,8 +108,8 @@ class PostPreviewScreen extends StatelessWidget {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(12),
         child: block.methodView == MethodViewPhoto.slider
-            ? _buildPhotoSlider(block.paths)
-            : _buildPhotoTiles(block.paths),
+            ? _buildPhotoSlider(block.listPhoto.map((photoItem) => photoItem.filePath).toList())
+            : _buildPhotoTiles(block.listPhoto.map((photoItem) => photoItem.filePath).toList()),
       ),
     );
   }

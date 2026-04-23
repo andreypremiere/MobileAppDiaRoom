@@ -7,6 +7,7 @@ import 'package:get_thumbnail_video/video_thumbnail.dart';
 import 'package:video_player/video_player.dart';
 import 'package:path_provider/path_provider.dart';
 
+// Переделать это
 
 class BlockVideoCreating extends BlockPost {
   String? path;

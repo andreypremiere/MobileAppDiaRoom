@@ -39,19 +39,21 @@ class CreatingPostService {
       if (block is BlockTextCreating) {
         blocksUpload.add(
           BlockTextUpload(
-            text: block.controller.text,
+            text: block.value,
             textType: block.textType,
           ),
         );
       } else if (block is BlockPhotosCreating) {
         final photoUpload = BlockPhotoUpload(methodView: block.methodView);
 
-        for (var i = 0; i < block.paths.length; i++) {
+        for (var i = 0; i < block.listPhoto.length; i++) {
           photoUpload.listPhoto.add(
             PhotoInfo(
-              filePath: block.paths[i],
+              filePath: block.listPhoto[i].filePath,
               uploadId: const Uuid().v4(),
-              size: block.photoSizes[i],
+              size: block.listPhoto[i].size,
+              publicUrl: '',
+              presignedUrl: '',
             ),
           );
         }

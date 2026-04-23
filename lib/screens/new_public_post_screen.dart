@@ -54,7 +54,7 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
         return block.controller.text.trim().isEmpty;
       }
       if (block is BlockPhotosCreating) {
-        return block.paths.isEmpty;
+        return block.isEmpty();
       }
       if (block is BlockVideoCreating) {
         return block.path == null;
@@ -160,7 +160,7 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
   }
 
   void _addPhotosBlock() {
-    final newBlock = BlockPhotosCreating();
+    final newBlock = BlockPhotosCreating(listPhoto: [], methodView: MethodViewPhoto.tiles);
     setState(() {
       postDraft.blocks.add(newBlock);
       _focusedIndex = postDraft.blocks.length - 1;
