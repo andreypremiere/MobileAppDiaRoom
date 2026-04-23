@@ -10,8 +10,7 @@ import '../models/post_creator/block_video.dart';
 import '../models/post_creator/post_draft.dart';
 import '../utils/utils.dart';
 
-/// Экран предварительного просмотра публикации.
-/// Отображает блоки контента в том виде, в котором их увидит конечный пользователь.
+
 class PostPreviewScreen extends StatelessWidget {
   final PostDraft postDraft;
 

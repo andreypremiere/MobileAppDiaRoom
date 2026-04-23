@@ -371,12 +371,4 @@ class _ShowingPostScreenState extends State<ShowingPostScreen> {
       ),
     );
   }
-
-  /// Форматирует миллисекунды в строку mm:ss
-  String _formatDuration(int ms) {
-    final duration = Duration(milliseconds: ms);
-    final minutes = duration.inMinutes;
-    final seconds = (duration.inSeconds % 60).toString().padLeft(2, '0');
-    return '$minutes:$seconds';
-  }
 }

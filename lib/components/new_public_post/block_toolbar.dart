@@ -95,8 +95,8 @@ class PostToolbar extends StatelessWidget {
       offset: const Offset(0, 45),
       onSelected: onSelected,
       child: Container(
-        width: 120,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        // width: 120,
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
         decoration: BoxDecoration(
           color: const Color(0xFF525252),
           borderRadius: BorderRadius.circular(20),

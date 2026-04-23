@@ -1,8 +1,8 @@
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:go_router/go_router.dart';
 
-import '../components/post_component.dart';
 import '../configuration/urls.dart';
 import '../utils/utils.dart';
 
@@ -32,19 +32,21 @@ class _StatePersonalPostsScreen extends State<PersonalPostsScreen> {
           title: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              CircleAvatar(
-                radius: 16,
-                // Проверка: загружать кастомный аватар из хранилища или дефолтный
-                backgroundImage: (avatarUrl != null && avatarUrl!.isNotEmpty)
-                    ? NetworkImage(
-                        createFullPathAvatar(objectStoragePath, avatarUrl!),
-                      )
-                    : NetworkImage(
-                        createFullPathAvatar(
-                          objectStoragePath,
-                          defaultAvatarPath,
-                        ),
-                      ),
+              CachedNetworkImage(
+                imageUrl: avatarUrl ?? '',
+                imageBuilder: (context, imageProvider) => CircleAvatar(
+                  radius: 18,
+                  backgroundImage: imageProvider,
+                ),
+                placeholder: (context, url) => CircleAvatar(
+                  radius: 18,
+                  backgroundColor: context.ui.primaryColor,
+                ),
+                errorWidget: (context, url, error) => CircleAvatar(
+                  radius: 18,
+                  backgroundColor: context.ui.primaryColor,
+                  child: Icon(Icons.person, color: Colors.white, size: 20),
+                ),
               ),
               const SizedBox(width: 10),
               const Text(

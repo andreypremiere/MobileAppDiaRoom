@@ -412,7 +412,7 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
                         left: 10,
                         child: Container(
                           height: 56,
-                          width: 240,
+                          // width: 240,
                           decoration: BoxDecoration(
                             color: Colors.blueGrey,
                             borderRadius: BorderRadius.circular(28),
