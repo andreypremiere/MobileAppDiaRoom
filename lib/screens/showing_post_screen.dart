@@ -83,8 +83,7 @@ class _ShowingPostScreenState extends State<ShowingPostScreen> {
               // Внутри AppBar title:
               title: InkWell(
                 onTap: () {
-                  print('Переход в профиль: ${post.roomId}');
-                  // context.push('/room/${post.roomId}');
+                  context.push('/room/${post.roomId}');
                 },
                 borderRadius: BorderRadius.circular(12), // Скругляем область клика
                 child: Padding(

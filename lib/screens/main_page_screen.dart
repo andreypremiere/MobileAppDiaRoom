@@ -5,7 +5,7 @@ import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import '../api/post_api.dart';
-import '../components/bottom_menu_component.dart';
+import '../components/bottom_menu/bottom_menu_component.dart';
 import '../components/post_component.dart';
 import '../models/post_view/feed_post.dart';
 

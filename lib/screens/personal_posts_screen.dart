@@ -1,14 +1,21 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:dia_room/models/post_view/author.dart';
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
+import '../api/post_api.dart';
 import '../configuration/urls.dart';
+import '../models/auth_response.dart';
+import '../utils/auth_service.dart';
 import '../utils/utils.dart';
 
 // PersonalPostsScreen отображает список постов конкретной комнаты
 class PersonalPostsScreen extends StatefulWidget {
-  const PersonalPostsScreen({super.key});
+  final String roomId;
+
+  const PersonalPostsScreen({super.key, required this.roomId});
 
   @override
   State<PersonalPostsScreen> createState() {
@@ -17,74 +24,142 @@ class PersonalPostsScreen extends StatefulWidget {
 }
 
 class _StatePersonalPostsScreen extends State<PersonalPostsScreen> {
-  // Данные для тестов
-  String? avatarUrl;
+  late Future<AuthResponse> _postsFuture;
+  late Future<AuthResponse> _roomInfoFuture;
+  bool isMyRoom = false;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Проверяем, принадлежит ли комната текущему пользователю
+    final myId = context.read<AuthProvider>().roomId;
+    isMyRoom = widget.roomId == myId;
+
+    if (!isMyRoom) {
+      _roomInfoFuture = getRoomInfoById(widget.roomId);
+    }
+
+    if (isMyRoom) {
+      _postsFuture = getPersonalPosts();
+    }
+    // else {
+    //   _postsFuture = getRoomPosts(widget.roomId);
+    // }
+  }
+
+  // Вспомогательный виджет для  загрузки
+  Widget _buildSkeletonItem({required double width, required double height, double radius = 8}) {
+    return Container(
+      width: width,
+      height: height,
+      decoration: BoxDecoration(
+        color: Colors.grey.withAlpha(20),
+        borderRadius: BorderRadius.circular(radius),
+      ),
+    );
+  }
+
+  Widget _buildShimmerTitle() {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Скелет для аватара
+        _buildSkeletonItem(width: 36, height: 36, radius: 18),
+        const SizedBox(width: 10),
+        // Скелет для имени
+        _buildSkeletonItem(width: 100, height: 20, radius: 4),
+      ],
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      // Убираем фокус с полей ввода при нажатии на свободную область
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
-        appBar: AppBar(
-          centerTitle: true,
-          // Заголовок AppBar с аватаром и названием комнаты в центре
-          title: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CachedNetworkImage(
-                imageUrl: avatarUrl ?? '',
-                imageBuilder: (context, imageProvider) => CircleAvatar(
-                  radius: 18,
-                  backgroundImage: imageProvider,
-                ),
-                placeholder: (context, url) => CircleAvatar(
-                  radius: 18,
-                  backgroundColor: context.ui.primaryColor,
-                ),
-                errorWidget: (context, url, error) => CircleAvatar(
-                  radius: 18,
-                  backgroundColor: context.ui.primaryColor,
-                  child: Icon(Icons.person, color: Colors.white, size: 20),
-                ),
-              ),
-              const SizedBox(width: 10),
-              const Text(
-                'Room name',
-                style: TextStyle(
-                  fontFamily: 'SNPro',
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            Padding(padding: EdgeInsets.only(right: 0),
-                child: IconButton(onPressed: () {
-                  print('Переход в черновики');
-                }, icon: Icon(Icons.folder_copy_outlined,
-                  size: 30,
-                  color: Color(0xFF1F1F1F),))),
-            // SizedBox(width: 2,),
-            Padding(padding: EdgeInsets.only(right: 4),
-            child: IconButton(onPressed: () {
-              context.push('/newPublicPost');
-            }, icon: Icon(Icons.add,
-            size: 34,
-            color: Color(0xFF1F1F1F),))),
-          ],
-          // Установка прозрачного фона для AppBar (использование withAlpha для плавности)
-          backgroundColor: const Color(0xFFFFA6A6).withAlpha(0),
-          // Кастомная кнопка "Назад" с использованием SVG
+        appBar: PreferredSize(
+          preferredSize: const Size.fromHeight(60),
+          child: AppBar(
+          backgroundColor: context.ui.appBarColor,
           leading: IconButton(
-            onPressed: () {
-              context.pop();
-            },
-            icon: Icon(Icons.arrow_back_rounded, size: 34,
-              color: Color(0xFF1F1F1F),)
+            onPressed: () => context.pop(),
+            icon: Icon(Icons.arrow_back_rounded,
+                size: context.ui.iconSizePanel),
+            color: context.ui.fontColorPrimary,
           ),
-        ),
+          title: isMyRoom
+              ? Text(
+            'Публикации',
+            style: TextStyle(
+              color: context.ui.fontColorPrimary,
+              fontFamily: 'SNPro',
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+            ),
+          )
+              : FutureBuilder<AuthResponse>(
+            future: _roomInfoFuture,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return _buildShimmerTitle();
+              }
+
+              if (snapshot.hasError || !snapshot.hasData || !snapshot.data!.success) {
+                return const SizedBox.shrink();
+              }
+
+              // Данные загружены
+              final roomInfo = snapshot.data!.data!['roomInfo'] as Author;
+
+              return InkWell(
+                onTap: () => context.push('/room/${widget.roomId}'),
+                borderRadius: BorderRadius.circular(12),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      CachedNetworkImage(
+                        imageUrl: roomInfo.avatar,
+                        imageBuilder: (context, imageProvider) => CircleAvatar(
+                          radius: 18,
+                          backgroundImage: imageProvider,
+                        ),
+                        errorWidget: (context, url, error) => CircleAvatar(
+                          radius: 18,
+                          backgroundColor: context.ui.primaryColor,
+                          child: const Icon(Icons.person, color: Colors.white, size: 20),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Text(
+                        roomInfo.roomName,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: context.ui.fontColorPrimary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+          actions: isMyRoom ? [
+            // IconButton(
+            //   onPressed: () => print('Переход в черновики'),
+            //   icon: const Icon(Icons.folder_copy_outlined, size: 28),
+            //   color: context.ui.fontColorPrimary,
+            // ),
+            IconButton(
+              onPressed: () => context.push('/newPublicPost'),
+              icon: const Icon(Icons.add_rounded, size: 34),
+              color: context.ui.fontColorPrimary,
+            ),
+          ] : null,
+        ),),
         // Прокручиваемая колонка с постами
         body: SingleChildScrollView(
           child: Column(

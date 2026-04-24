@@ -1,4 +1,4 @@
-import 'package:dia_room/components/bottom_menu_component.dart';
+import 'package:dia_room/components/bottom_menu/bottom_menu_component.dart';
 import 'package:dia_room/components/info_dialog_component.dart';
 import 'package:dia_room/models/auth_response.dart';
 import 'package:dia_room/models/base_room.dart';
@@ -279,7 +279,7 @@ class _RoomState extends State<RoomScreen> {
                                   const SizedBox(height: 10),
                                   RoomActionButton(
                                     title: 'Витрина',
-                                    onPressed: () => context.push('/roomPosts'),
+                                    onPressed: () => context.push('/personalRoomPosts/${widget.roomId}'),
                                   ),
                                   const SizedBox(height: 10),
                                   RoomActionButton(title: 'Мастерская', onPressed: () {}),

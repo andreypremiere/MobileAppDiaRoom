@@ -205,6 +205,7 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
       },
       behavior: HitTestBehavior.opaque,
       child: Scaffold(
+        extendBody: true,
         appBar: PreferredSize(
           preferredSize: Size.fromHeight(60),
           child: AppBar(
@@ -248,34 +249,36 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
             ],
           ),
         ),
-        body: postDraft.blocks.isEmpty
+        body: SafeArea(
+          top: false,
+          bottom: true,
+          child: postDraft.blocks.isEmpty
             /// Плейсхолдер для пустого экрана: кнопка добавления первого блока
             ? Container(
-                color: Color(0xFFEAEAEA),
                 width: double.infinity,
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
                       'Добавьте первое значение',
-                      style: TextStyle(fontFamily: 'SNPro', fontSize: 24),
+                      style: TextStyle(fontFamily: 'SNPro', fontSize: 24, color: context.ui.fontColorPrimary, fontWeight: FontWeight.w600),
                     ),
                     PopupMenuButton<BlockType>(
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      color: Colors.white,
+                      color: context.ui.containerColor,
                       elevation: 5,
                       offset: const Offset(10, 10),
                       child: ElevatedButton(
                         onPressed: null,
                         style: ElevatedButton.styleFrom(
-                          disabledBackgroundColor: const Color(0xFF525252),
-                          disabledForegroundColor: Colors.white,
+                          disabledBackgroundColor: context.ui.toolbarContainerColor,
+                          disabledForegroundColor: context.ui.fontColorLight,
                           shape: const CircleBorder(),
                           padding: const EdgeInsets.all(8),
                         ),
-                        child: const Icon(Icons.add, size: 40),
+                        child: const Icon(Icons.add_rounded, size: 40),
                       ),
                       onSelected: (value) => _addBlock(value),
                       itemBuilder: (context) => BlockType.values
@@ -287,16 +290,16 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
                                 children: [
                                   Icon(
                                     type.icon,
-                                    color: const Color(0xFF797979),
+                                    color: context.ui.fontColorPrimary,
                                     size: 22,
                                   ),
                                   const SizedBox(width: 6),
                                   Text(
                                     type.label,
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w500,
-                                      color: Color(0xFF333333),
+                                      color: context.ui.fontColorPrimary,
                                     ),
                                   ),
                                 ],
@@ -339,18 +342,18 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      color: Colors.white,
+                      color: context.ui.containerColor,
                       elevation: 5,
                       offset: const Offset(10, 10),
                       child: ElevatedButton(
                         onPressed: null,
                         style: ElevatedButton.styleFrom(
-                          disabledBackgroundColor: const Color(0xFF525252),
-                          disabledForegroundColor: Colors.white,
+                          disabledBackgroundColor: context.ui.toolbarContainerColor,
+                          disabledForegroundColor: context.ui.fontColorLight,
                           shape: const CircleBorder(),
                           padding: const EdgeInsets.all(8),
                         ),
-                        child: const Icon(Icons.add, size: 40),
+                        child: Icon(Icons.add_rounded, size: 40),
                       ),
                       onSelected: (value) => _addBlock(value),
                       itemBuilder: (context) => BlockType.values
@@ -362,16 +365,16 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
                                 children: [
                                   Icon(
                                     type.icon,
-                                    color: const Color(0xFF797979),
+                                    color: context.ui.fontColorPrimary,
                                     size: 22,
                                   ),
                                   const SizedBox(width: 6),
                                   Text(
                                     type.label,
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w500,
-                                      color: Color(0xFF333333),
+                                      color: context.ui.fontColorPrimary,
                                     ),
                                   ),
                                 ],
@@ -395,7 +398,7 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
                           height: 56,
                           // width: 240,
                           decoration: BoxDecoration(
-                            color: Colors.blueGrey,
+                            color: context.ui.toolbarContainerColor,
                             borderRadius: BorderRadius.circular(28),
                           ),
                           child: PostToolbar(
@@ -406,7 +409,7 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
                       ),
                 ],
               ),
-      ),
+      ),),
     );
   }
 

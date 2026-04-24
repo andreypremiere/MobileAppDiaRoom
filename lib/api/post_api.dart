@@ -3,7 +3,9 @@ import 'dart:io';
 
 import 'package:dia_room/configuration/urls.dart';
 import 'package:dia_room/models/post_creator/preview_request.dart';
+import 'package:dia_room/models/post_view/author.dart';
 import 'package:dia_room/models/post_view/feed_post.dart';
+import 'package:dia_room/models/post_view/personal_post.dart';
 import 'package:dio/dio.dart';
 import 'package:http/http.dart' as http;
 
@@ -189,5 +191,64 @@ Future<AuthResponse> updateStatusPost({
     );
   } catch (e) {
     return AuthResponse(success: false, message: "Ошибка: $e");
+  }
+}
+
+Future<AuthResponse> getPersonalPosts() async {
+  try {
+    final response = await ApiService.get('/post/getPersonalPosts');
+
+    if (response.data is List) {
+      final List<dynamic> data = response.data;
+
+      final List<PersonalPost> listPosts = data
+          .map((json) => PersonalPost.fromMap(json))
+          .toList();
+
+      return AuthResponse(
+          success: true,
+          data: {"listPosts": listPosts}
+      );
+    }
+
+    return AuthResponse(
+        success: false,
+        data: {"error": "Ошибка формата данных от сервера"}
+    );
+
+  } on DioException catch (e) {
+    final errorMessage = e.response?.data['message'] ?? "Ошибка получения личных постов";
+    return AuthResponse(success: false, data: {"error": errorMessage});
+
+  } catch (e) {
+    return AuthResponse(success: false, data: {"error": "Непредвиденная ошибка: $e"});
+  }
+}
+
+Future<AuthResponse> getRoomInfoById(String roomId) async {
+  try {
+    final response = await ApiService.get('/account/getRoomInfoById/$roomId');
+
+    if (response.data != null && response.data is Map<String, dynamic>) {
+      response.data['roomId'] = roomId;
+      final roomInfo = Author.fromMap(response.data);
+
+      return AuthResponse(
+          success: true,
+          data: {"roomInfo": roomInfo}
+      );
+    }
+
+    return AuthResponse(
+        success: false,
+        data: {"error": "Не удалось загрузить данные комнаты"}
+    );
+
+  } on DioException catch (e) {
+    final errorMessage = e.response?.data['message'] ?? "Ошибка получения данных комнаты";
+    return AuthResponse(success: false, data: {"error": errorMessage});
+
+  } catch (e) {
+    return AuthResponse(success: false, data: {"error": "Непредвиденная ошибка: $e"});
   }
 }

@@ -166,8 +166,12 @@ class App extends StatelessWidget {
 
           // Список постов внутри комнаты
           GoRoute(
-            path: '/roomPosts',
-            builder: (context, state) => const PersonalPostsScreen(),
+            path: '/personalRoomPosts/:roomId',
+            builder: (context, state) {
+              final String roomId = state.pathParameters['roomId']!;
+
+              return PersonalPostsScreen(roomId: roomId);
+            },
           ),
 
           // Новый пост для витрины

@@ -116,7 +116,9 @@ class AppTheme {
     viewingPostColor: const Color(0xFFFAFAFA),
     elementsPhotoViewerColor: const Color(0xFFDADADA),
     elementsVideoPlayerColor: const Color(0xFFDADADA),
-    backgroundViewer: Colors.black
+    backgroundViewer: Colors.black,
+    toolbarContainerColor: const Color(0xFF575757),
+    toolbarItemColor: const Color(0xFFBBBBBB),
   );
 
   static UICustom _darkExtension() => UICustom(
@@ -151,7 +153,9 @@ class AppTheme {
     viewingPostColor: const Color(0xFF1C1C1C),
     elementsPhotoViewerColor: const Color(0xFFDADADA),
     elementsVideoPlayerColor: const Color(0xFFDADADA),
-    backgroundViewer: Colors.black
+    backgroundViewer: Colors.black,
+    toolbarContainerColor: const Color(0xFF575757),
+    toolbarItemColor: const Color(0xFF777777),
   );
 }
 
@@ -189,9 +193,12 @@ class UICustom extends ThemeExtension<UICustom> {
   final double iconSizeBottomPanel;
   final double avatarSizeAppBar;
 
+
   final Color elementsVideoPlayerColor;
   final Color elementsPhotoViewerColor;
   final Color backgroundViewer;
+  final Color toolbarContainerColor;
+  final Color toolbarItemColor;
 
   // Константы начертания
   static const FontWeight textBold = FontWeight.w800;
@@ -228,7 +235,9 @@ class UICustom extends ThemeExtension<UICustom> {
     required this.avatarSizeAppBar,
     required this.elementsVideoPlayerColor,
     required this.elementsPhotoViewerColor,
-    required this.backgroundViewer
+    required this.backgroundViewer,
+    required this.toolbarContainerColor,
+    required this.toolbarItemColor,
   });
 
   @override
@@ -242,8 +251,8 @@ class UICustom extends ThemeExtension<UICustom> {
     Color? inputBackgroundColor,
     Color? inputIconColor,
     Color? sectionButtonColor,
-    Color? appBarColor,      // Добавлено
-    Color? viewingPostColor,  // Добавлено
+    Color? appBarColor,
+    Color? viewingPostColor,
     double? fontSizeHeader,
     double? fontSizeTitle,
     double? fontSizeButton,
@@ -259,7 +268,9 @@ class UICustom extends ThemeExtension<UICustom> {
     double? avatarSizeAppBar,
     Color? elementsVideoPlayerColor,
     Color? elementsPhotoViewerColor,
-    Color? backgroundViewer
+    Color? backgroundViewer,
+    Color? toolbarContainerColor,
+    Color? toolbarItemColor,
   }) {
     return UICustom(
       primaryColor: primaryColor ?? this.primaryColor,
@@ -289,6 +300,8 @@ class UICustom extends ThemeExtension<UICustom> {
       elementsVideoPlayerColor: elementsVideoPlayerColor ?? this.elementsVideoPlayerColor,
       elementsPhotoViewerColor: elementsPhotoViewerColor ?? this.elementsPhotoViewerColor,
       backgroundViewer: backgroundViewer ?? this.backgroundViewer,
+      toolbarContainerColor: toolbarContainerColor ?? this.toolbarContainerColor,
+      toolbarItemColor: toolbarItemColor ?? this.toolbarItemColor,
     );
   }
 
@@ -305,8 +318,8 @@ class UICustom extends ThemeExtension<UICustom> {
       inputBackgroundColor: Color.lerp(inputBackgroundColor, other.inputBackgroundColor, t)!,
       sectionButtonColor: Color.lerp(sectionButtonColor, other.sectionButtonColor, t)!,
       inputIconColor: Color.lerp(inputIconColor, other.inputIconColor, t)!,
-      appBarColor: Color.lerp(appBarColor, other.appBarColor, t)!,           // Добавлено
-      viewingPostColor: Color.lerp(viewingPostColor, other.viewingPostColor, t)!, // Добавлено
+      appBarColor: Color.lerp(appBarColor, other.appBarColor, t)!,
+      viewingPostColor: Color.lerp(viewingPostColor, other.viewingPostColor, t)!,
       fontSizeHeader: lerpDouble(fontSizeHeader, other.fontSizeHeader, t)!,
       fontSizeTitle: lerpDouble(fontSizeTitle, other.fontSizeTitle, t)!,
       fontSizeButton: lerpDouble(fontSizeButton, other.fontSizeButton, t)!,
@@ -323,6 +336,8 @@ class UICustom extends ThemeExtension<UICustom> {
       elementsVideoPlayerColor: Color.lerp(elementsVideoPlayerColor, other.elementsVideoPlayerColor, t)!,
       elementsPhotoViewerColor: Color.lerp(elementsPhotoViewerColor, other.elementsPhotoViewerColor, t)!,
       backgroundViewer: Color.lerp(backgroundViewer, other.backgroundViewer, t)!,
+      toolbarContainerColor: Color.lerp(toolbarContainerColor, other.toolbarContainerColor, t)!,
+      toolbarItemColor: Color.lerp(toolbarItemColor, other.toolbarItemColor, t)!,
     );
   }
 

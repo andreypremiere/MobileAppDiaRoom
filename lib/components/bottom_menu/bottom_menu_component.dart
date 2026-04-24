@@ -6,8 +6,8 @@ import 'package:flutter_svg/svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import '../api/account_api.dart';
-import 'bottom_menu/bottom_menu_item.dart';
+import '../../api/account_api.dart';
+import 'bottom_menu_item.dart';
 
 // BottomMenu представляет собой навигационную панель в нижней части экрана
 class BottomMenu extends StatelessWidget {
