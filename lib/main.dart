@@ -1,3 +1,4 @@
+import 'package:dia_room/models/enums/file_type.dart';
 import 'package:dia_room/models/post_creator/post_draft.dart';
 import 'package:dia_room/screens/full_image_screen.dart';
 import 'package:dia_room/screens/full_video_screen.dart';
@@ -187,8 +188,12 @@ class App extends StatelessWidget {
           GoRoute(
             path: '/full_screen_video',
             builder: (context, state) {
-              final String videoUrl = state.extra as String;
-              return FullScreenVideoScreen(videoUrl: videoUrl);
+              final extra = state.extra as Map<String, dynamic>;
+
+              final String videoUrl = extra['url'] as String;
+              final FileType type = extra['type'] as FileType;
+
+              return FullScreenVideoScreen(videoUrl: videoUrl, type: type,);
             },
           ),
         ],

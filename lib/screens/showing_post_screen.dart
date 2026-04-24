@@ -8,12 +8,14 @@ import 'package:go_router/go_router.dart';
 
 import '../api/post_api.dart';
 import '../components/showing_post/slider_block.dart';
+import '../components/showing_post/video_preview_widget.dart';
 import '../models/auth_response.dart';
 import '../models/content_post/content_post.dart';
 import '../models/enums/post_types.dart';
 import '../models/post_creator/block_photos.dart';
 import '../models/post_creator/block_text.dart';
 import '../models/post_creator/block_video.dart';
+import '../utils/utils.dart';
 
 
 class ShowingPostScreen extends StatefulWidget {
@@ -33,12 +35,6 @@ class _ShowingPostScreenState extends State<ShowingPostScreen> {
     super.initState();
     // Запускаем загрузку поста при открытии экрана
     _postFuture = getPost(widget.postId);
-  }
-
-  // Вспомогательная функция для получения полного URL
-  String _getFullUrl(String path) {
-    if (path.startsWith('http')) return path;
-    return '$s3BaseUrl$path';
   }
 
   @override
@@ -146,7 +142,7 @@ class _ShowingPostScreenState extends State<ShowingPostScreen> {
                 case BlockType.photos:
                   return _buildPhotosBlock(block as BlockPhotos);
                 case BlockType.videos:
-                  return _buildVideoBlock(block as BlockVideo);
+                  return VideoPreviewWidget(block: block as BlockVideo,);
                 default:
                   return const SizedBox.shrink();
               }
@@ -181,7 +177,7 @@ class _ShowingPostScreenState extends State<ShowingPostScreen> {
     if (listPhoto.isEmpty) return const SizedBox.shrink();
 
     // Достаем URL-адреса из массива объектов
-    final List<String> urls = listPhoto.map((e) => _getFullUrl(e.publicUrl)).toList();
+    final List<String> urls = listPhoto.map((e) => getFullUrl(e.publicUrl)).toList();
 
     return AspectRatio(
       aspectRatio: 1,
@@ -319,56 +315,56 @@ class _ShowingPostScreenState extends State<ShowingPostScreen> {
     );
   }
 
-  /// Рендерит видео-блок
-  void _openFullScreenVideo(String videoUrl) {
-    context.push('/full_screen_video', extra: videoUrl);
-  }
+  // /// Рендерит видео-блок
+  // void _openFullScreenVideo(String videoUrl) {
+  //   context.push('/full_screen_video', extra: videoUrl);
+  // }
 
-  Widget _buildVideoBlock(BlockVideo block) {
-    final String previewUrl = _getFullUrl(block.previewPublicUrl);
-    final String videoUrl = _getFullUrl(block.publicUrl);
-
-    return GestureDetector(
-      onTap: () => _openFullScreenVideo(videoUrl), // По клику открываем плеер
-      child: AspectRatio(
-        aspectRatio: 1,
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(12),
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              _buildNetworkImage(previewUrl),
-              Container(color: Colors.black.withAlpha(100)),
-              const Center(
-                child: Icon(
-                  Icons.play_circle_fill,
-                  color: Colors.white,
-                  size: 64,
-                ),
-              ),
-              Positioned(
-                bottom: 12,
-                right: 12,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withAlpha(150),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    block.getFormattedDuration(),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+  // Widget _buildVideoBlock(BlockVideo block) {
+  //   final String previewUrl = _getFullUrl(block.previewPublicUrl);
+  //   final String videoUrl = _getFullUrl(block.publicUrl);
+  //
+  //   return GestureDetector(
+  //     onTap: () => _openFullScreenVideo(videoUrl),
+  //     child: AspectRatio(
+  //       aspectRatio: 1,
+  //       child: ClipRRect(
+  //         borderRadius: BorderRadius.circular(12),
+  //         child: Stack(
+  //           fit: StackFit.expand,
+  //           children: [
+  //             _buildNetworkImage(previewUrl),
+  //             Container(color: Colors.black.withAlpha(100)),
+  //             const Center(
+  //               child: Icon(
+  //                 Icons.play_circle_fill,
+  //                 color: Colors.white,
+  //                 size: 64,
+  //               ),
+  //             ),
+  //             Positioned(
+  //               bottom: 12,
+  //               right: 12,
+  //               child: Container(
+  //                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+  //                 decoration: BoxDecoration(
+  //                   color: Colors.black.withAlpha(150),
+  //                   borderRadius: BorderRadius.circular(6),
+  //                 ),
+  //                 child: Text(
+  //                   block.getFormattedDuration(),
+  //                   style: const TextStyle(
+  //                     color: Colors.white,
+  //                     fontSize: 14,
+  //                     fontWeight: FontWeight.w600,
+  //                   ),
+  //                 ),
+  //               ),
+  //             ),
+  //           ],
+  //         ),
+  //       ),
+  //     ),
+  //   );
+  // }
 }

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 
+import '../components/showing_post/video_preview_widget.dart';
 import '../models/enums/post_types.dart';
 import '../models/post_creator/block_text.dart';
 import '../models/post_creator/block_photos.dart';
@@ -78,7 +79,7 @@ class PostPreviewScreen extends StatelessWidget {
           } else if (block is BlockPhotosCreating) {
             return _buildPhotosBlock(block);
           } else if (block is BlockVideoCreating) {
-            return _buildVideoBlock(block);
+            return VideoPreviewWidget(block: block,);
           }
 
           return const SizedBox.shrink();
