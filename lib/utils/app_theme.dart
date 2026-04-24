@@ -114,6 +114,9 @@ class AppTheme {
     avatarSizeAppBar: 18,
     appBarColor: const Color(0xFFB4B4B4),
     viewingPostColor: const Color(0xFFFAFAFA),
+    elementsPhotoViewerColor: const Color(0xFFDADADA),
+    elementsVideoPlayerColor: const Color(0xFFDADADA),
+    backgroundViewer: Colors.black
   );
 
   static UICustom _darkExtension() => UICustom(
@@ -146,6 +149,9 @@ class AppTheme {
     avatarSizeAppBar: 18,
     appBarColor: const Color(0xFF595959),
     viewingPostColor: const Color(0xFF1C1C1C),
+    elementsPhotoViewerColor: const Color(0xFFDADADA),
+    elementsVideoPlayerColor: const Color(0xFFDADADA),
+    backgroundViewer: Colors.black
   );
 }
 
@@ -161,8 +167,8 @@ class UICustom extends ThemeExtension<UICustom> {
   final Color inputBackgroundColor;
   final Color inputIconColor;
   final Color sectionButtonColor;
-  final Color appBarColor;     // Добавлено
-  final Color viewingPostColor; // Добавлено
+  final Color appBarColor;
+  final Color viewingPostColor;
 
   // Размеры и шрифты
   final double fontSizeHeader;
@@ -183,6 +189,10 @@ class UICustom extends ThemeExtension<UICustom> {
   final double iconSizeBottomPanel;
   final double avatarSizeAppBar;
 
+  final Color elementsVideoPlayerColor;
+  final Color elementsPhotoViewerColor;
+  final Color backgroundViewer;
+
   // Константы начертания
   static const FontWeight textBold = FontWeight.w800;
   static const FontWeight textSemiBold = FontWeight.w700;
@@ -201,8 +211,8 @@ class UICustom extends ThemeExtension<UICustom> {
     required this.inputBackgroundColor,
     required this.inputIconColor,
     required this.sectionButtonColor,
-    required this.appBarColor,      // Добавлено
-    required this.viewingPostColor,  // Добавлено
+    required this.appBarColor,
+    required this.viewingPostColor,
     required this.fontSizeHeader,
     required this.fontSizeTitle,
     required this.fontSizeButton,
@@ -216,6 +226,9 @@ class UICustom extends ThemeExtension<UICustom> {
     required this.iconSizeBottomPanel,
     required this.iconSizeCategory,
     required this.avatarSizeAppBar,
+    required this.elementsVideoPlayerColor,
+    required this.elementsPhotoViewerColor,
+    required this.backgroundViewer
   });
 
   @override
@@ -244,6 +257,9 @@ class UICustom extends ThemeExtension<UICustom> {
     double? iconSizeBottomPanel,
     double? iconSizeCategory,
     double? avatarSizeAppBar,
+    Color? elementsVideoPlayerColor,
+    Color? elementsPhotoViewerColor,
+    Color? backgroundViewer
   }) {
     return UICustom(
       primaryColor: primaryColor ?? this.primaryColor,
@@ -255,8 +271,8 @@ class UICustom extends ThemeExtension<UICustom> {
       inputBackgroundColor: inputBackgroundColor ?? this.inputBackgroundColor,
       inputIconColor: inputIconColor ?? this.inputIconColor,
       sectionButtonColor: sectionButtonColor ?? this.sectionButtonColor,
-      appBarColor: appBarColor ?? this.appBarColor,           // Добавлено
-      viewingPostColor: viewingPostColor ?? this.viewingPostColor, // Добавлено
+      appBarColor: appBarColor ?? this.appBarColor,
+      viewingPostColor: viewingPostColor ?? this.viewingPostColor,
       fontSizeHeader: fontSizeHeader ?? this.fontSizeHeader,
       fontSizeTitle: fontSizeTitle ?? this.fontSizeTitle,
       fontSizeButton: fontSizeButton ?? this.fontSizeButton,
@@ -270,6 +286,9 @@ class UICustom extends ThemeExtension<UICustom> {
       iconSizeBottomPanel: iconSizeBottomPanel ?? this.iconSizeBottomPanel,
       iconSizeCategory: iconSizeCategory ?? this.iconSizeCategory,
       avatarSizeAppBar: avatarSizeAppBar ?? this.avatarSizeAppBar,
+      elementsVideoPlayerColor: elementsVideoPlayerColor ?? this.elementsVideoPlayerColor,
+      elementsPhotoViewerColor: elementsPhotoViewerColor ?? this.elementsPhotoViewerColor,
+      backgroundViewer: backgroundViewer ?? this.backgroundViewer,
     );
   }
 
@@ -301,6 +320,9 @@ class UICustom extends ThemeExtension<UICustom> {
       iconSizeBottomPanel: lerpDouble(iconSizeBottomPanel, other.iconSizeBottomPanel, t)!,
       iconSizeCategory: lerpDouble(iconSizeCategory, other.iconSizeCategory, t)!,
       avatarSizeAppBar: lerpDouble(avatarSizeAppBar, other.avatarSizeAppBar, t)!,
+      elementsVideoPlayerColor: Color.lerp(elementsVideoPlayerColor, other.elementsVideoPlayerColor, t)!,
+      elementsPhotoViewerColor: Color.lerp(elementsPhotoViewerColor, other.elementsPhotoViewerColor, t)!,
+      backgroundViewer: Color.lerp(backgroundViewer, other.backgroundViewer, t)!,
     );
   }
 
