@@ -1,8 +1,10 @@
 import 'package:dia_room/models/post_creator/block_video.dart';
+import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import '../components/app_bar_button.dart';
 import '../components/info_dialog_component.dart';
 import '../components/new_public_post/block_toolbar.dart';
 import '../components/new_public_post/post_block_widget.dart';
@@ -206,63 +208,42 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
         appBar: PreferredSize(
           preferredSize: Size.fromHeight(60),
           child: AppBar(
-            backgroundColor: Color(0xFFB4B4B4),
+            backgroundColor: context.ui.appBarColor,
             leading: IconButton(
               onPressed: () => context.pop(),
-              icon: SvgPicture.asset(
-                'assets/icons/button_back.svg',
-                width: 32,
-                height: 32,
-              ),
+              icon: Icon(Icons.arrow_back_rounded,
+                  size: context.ui.iconSizePanel),
+              color: context.ui.fontColorPrimary,
             ),
             title: Text(
               'Создание публикации',
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.w600,
-                fontFamily: 'SNPro',
+                color: context.ui.fontColorPrimary
               ),
             ),
             actions: [
-              /// Кнопка перехода к предварительному просмотру и финальным настройкам
-              ElevatedButton(
-                onPressed: () {
-                  if (postDraft.blocks.isEmpty) {
-                    AppInfoDialog.show(
-                      context,
-                      "Ваш холст пустой! Добавьте содержимое",
-                    );
-                    return;
-                  }
-                  if (_isValidCanvas()) {
-                    removeEmptyBlocks();
-                    context.read<DraftProvider>().startNewDraft(postDraft);
-                    context.push('/post_preview');
-                  } else {
-                    AppInfoDialog.show(
-                      context,
-                      "Все ваши блоки пустые :( ! Заполните их! ",
-                    );
-                    return;
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(vertical: 4, horizontal: 12),
-                  backgroundColor: Color(0xFFC9C9C9),
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: Text(
-                  'Далее',
-                  style: TextStyle(
-                    fontFamily: 'SNPro',
-                    fontSize: 16,
-                    color: Colors.black54,
-                  ),
-                ),
-              ),
+              AppBarButton(text: "Далее", onPressed: () {
+                if (postDraft.blocks.isEmpty) {
+                  AppInfoDialog.show(
+                    context,
+                    "Ваш холст пустой! Добавьте содержимое",
+                  );
+                  return;
+                }
+                if (_isValidCanvas()) {
+                  removeEmptyBlocks();
+                  context.read<DraftProvider>().startNewDraft(postDraft);
+                  context.push('/post_preview');
+                } else {
+                  AppInfoDialog.show(
+                    context,
+                    "Все ваши блоки пустые :( ! Заполните их! ",
+                  );
+                  return;
+                }
+              },),
               SizedBox(width: 6),
             ],
           ),

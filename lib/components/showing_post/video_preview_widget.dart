@@ -34,7 +34,7 @@ class VideoPreviewWidget extends StatelessWidget {
             children: [
               _buildPreviewImage(previewPath, isLocal),
 
-              Container(color: Colors.black.withAlpha(80)),
+              // Container(color: Colors.black.withAlpha(80)),
 
               Center(
                 child: Icon(
@@ -83,11 +83,11 @@ class VideoPreviewWidget extends StatelessWidget {
         imageUrl: path,
         fit: BoxFit.cover,
         placeholder: (context, url) => Container(
-          color: Colors.white.withAlpha(10),
-          child: const Center(
+          color: context.ui.containerColor.withAlpha(10),
+          child: Center(
             child: CircularProgressIndicator(
               strokeWidth: 2,
-              color: Colors.white24,
+              color: context.ui.primaryColor,
             ),
           ),
         ),

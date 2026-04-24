@@ -179,9 +179,14 @@ class App extends StatelessWidget {
             builder: (context, state) {
               // Достаем параметры из extra
               final Map<String, dynamic> params = state.extra as Map<String, dynamic>;
+              final List<String> paths = params['urls'] as List<String>;
+              final int initIdx = params['index'] as int;
+              final FileType fileType = params['type'];
+
               return FullImageScreen(
-                imageUrls: params['urls'] as List<String>,
-                initialIndex: params['index'] as int,
+                imageUrls: paths,
+                initialIndex: initIdx,
+                type: fileType,
               );
             },
           ),
