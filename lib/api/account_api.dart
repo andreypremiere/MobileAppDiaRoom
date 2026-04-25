@@ -247,3 +247,5 @@ Future<AuthResponse?> requestLogout(BuildContext context) async {
     return AuthResponse(success: false, message: "Ошибка инициализации данных: $e");
   }
 }
+
+

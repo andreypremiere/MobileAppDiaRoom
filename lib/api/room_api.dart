@@ -52,3 +52,65 @@ Future<AuthResponse> getRoomByRoomId(String roomId) async {
     );
   }
 }
+
+Future<AuthResponse> checkSubscription(String roomId) async {
+  try {
+    final response = await ApiService.get('/account/checkRoomSubscription/$roomId');
+    return AuthResponse(
+        success: true,
+        data: response.data
+    );
+
+  } on DioException catch (e) {
+    return _handleDioError(e);
+  } catch (e) {
+    return AuthResponse(success: false, message: "Ошибка: $e");
+  }
+}
+
+Future<AuthResponse> followRoom(String roomId) async {
+  try {
+    final response = await ApiService.post(
+      '/account/followRoom',
+      data: {
+        "following_id": roomId,
+      },
+    );
+
+    return AuthResponse(success: true);
+  } on DioException catch (e) {
+    return _handleDioError(e);
+  } catch (e) {
+    return AuthResponse(success: false, message: "Ошибка: $e");
+  }
+}
+
+// Функция отписки
+Future<AuthResponse> unfollowRoom(String roomId) async {
+  try {
+    final response = await ApiService.delete(
+      '/account/unfollowRoom',
+      data: {
+        "following_id": roomId,
+      },
+    );
+
+    return AuthResponse(success: true);
+  } on DioException catch (e) {
+    return _handleDioError(e);
+  } catch (e) {
+    return AuthResponse(success: false, message: "Ошибка: $e");
+  }
+}
+
+AuthResponse _handleDioError(DioException e) {
+  String errorMessage = "Произошла ошибка";
+
+  if (e.type == DioExceptionType.connectionTimeout || e.type == DioExceptionType.receiveTimeout) {
+    errorMessage = "Сервер не отвечает";
+  } else if (e.response != null) {
+    errorMessage = e.response?.data['message'] ?? e.response?.data['error'] ?? "Ошибка сервера";
+  }
+
+  return AuthResponse(success: false, message: errorMessage);
+}

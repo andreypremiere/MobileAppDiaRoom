@@ -2,13 +2,19 @@
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 
+import '../follow_button.dart';
+
 class RoomHeader extends StatelessWidget {
+  final bool isMyRoom;
+  final String roomId;
   final String roomName;
   final String avatarUrl;
   final String backgroundUrl;
 
   const RoomHeader({
     super.key,
+    required this.isMyRoom,
+    required this.roomId,
     required this.roomName,
     required this.avatarUrl,
     required this.backgroundUrl,
@@ -79,6 +85,7 @@ class RoomHeader extends StatelessWidget {
                   ),
                 ),
               ),
+              !isMyRoom ? Positioned(bottom: 15, right: 15, child: FollowButton(roomId: roomId,)) : SizedBox.shrink(),
             ],
           ),
         ),

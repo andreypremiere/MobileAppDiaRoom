@@ -125,6 +125,8 @@ class _RoomState extends State<RoomScreen> {
                 Column(
                   children: [
                     RoomHeader(
+                      isMyRoom: isMyRoom,
+                      roomId: widget.roomId,
                       roomName: room.roomName,
                       avatarUrl: room.avatarUrl,
                       backgroundUrl: room.backgroundUrl,
