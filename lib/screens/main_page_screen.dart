@@ -5,8 +5,8 @@ import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import '../api/post_api.dart';
+import '../components/base_post_card.dart';
 import '../components/bottom_menu/bottom_menu_component.dart';
-import '../components/post_component.dart';
 import '../models/post_view/feed_post.dart';
 
 
@@ -150,7 +150,7 @@ class _StateMainPageScreen extends State<MainPageScreen> {
                         final post = posts[index];
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 10),
-                          child: PostComponent(
+                          child: FeedPostComponent(
                             post: post,
                           ),
                         );

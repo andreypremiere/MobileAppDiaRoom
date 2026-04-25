@@ -1,11 +1,13 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dia_room/models/post_view/author.dart';
+import 'package:dia_room/models/post_view/personal_post.dart';
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../api/post_api.dart';
+import '../components/base_post_card.dart';
 import '../configuration/urls.dart';
 import '../models/auth_response.dart';
 import '../utils/auth_service.dart';
@@ -39,13 +41,11 @@ class _StatePersonalPostsScreen extends State<PersonalPostsScreen> {
     if (!isMyRoom) {
       _roomInfoFuture = getRoomInfoById(widget.roomId);
     }
-
     if (isMyRoom) {
-      _postsFuture = getPersonalPosts();
+      _postsFuture = getOwnPosts();
+    } else {
+      _postsFuture = getRoomPosts(widget.roomId);
     }
-    // else {
-    //   _postsFuture = getRoomPosts(widget.roomId);
-    // }
   }
 
   // Вспомогательный виджет для  загрузки
@@ -161,17 +161,42 @@ class _StatePersonalPostsScreen extends State<PersonalPostsScreen> {
           ] : null,
         ),),
         // Прокручиваемая колонка с постами
-        body: SingleChildScrollView(
-          child: Column(
-            // Автоматические отступы между элементами списка
-            spacing: 10,
-            children: const [
-              // PostComponent(),
-              // PostComponent(),
-              // PostComponent(),
-              // PostComponent(),
-            ],
-          ),
+        body: FutureBuilder<AuthResponse>(
+          future: _postsFuture,
+          builder: (context, snapshot) {
+            // 1. Состояние ожидания
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            // 2. Обработка ошибок
+            if (snapshot.hasError || (snapshot.hasData && !snapshot.data!.success)) {
+              return Center(child: Text('Ошибка загрузки: ${snapshot.error}'));
+            }
+
+            // 3. Данные получены
+            final List posts = snapshot.data!.data!['listPosts'] ?? [];
+
+            if (posts.isEmpty) {
+              return const Center(child: Text('Постов пока нет'));
+            }
+
+            return ListView.separated(
+              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+              itemCount: posts.length,
+              // Отступы между карточками (твои spacing: 10)
+              separatorBuilder: (context, index) => const SizedBox(height: 10),
+              itemBuilder: (context, index) {
+                final post = posts[index];
+
+                if (isMyRoom) {
+                  return OwnPostComponent(post: post);
+                } else {
+                  return AnotherPostComponent(post: post);
+                }
+              },
+            );
+          },
         ),
       ),
     );

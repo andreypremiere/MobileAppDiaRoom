@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:dia_room/configuration/urls.dart';
 import 'package:dia_room/models/post_creator/preview_request.dart';
 import 'package:dia_room/models/post_view/author.dart';
+import 'package:dia_room/models/post_view/base_post.dart';
 import 'package:dia_room/models/post_view/feed_post.dart';
 import 'package:dia_room/models/post_view/personal_post.dart';
 import 'package:dio/dio.dart';
@@ -194,7 +195,7 @@ Future<AuthResponse> updateStatusPost({
   }
 }
 
-Future<AuthResponse> getPersonalPosts() async {
+Future<AuthResponse> getOwnPosts() async {
   try {
     final response = await ApiService.get('/post/getPersonalPosts');
 
@@ -246,6 +247,37 @@ Future<AuthResponse> getRoomInfoById(String roomId) async {
 
   } on DioException catch (e) {
     final errorMessage = e.response?.data['message'] ?? "Ошибка получения данных комнаты";
+    return AuthResponse(success: false, data: {"error": errorMessage});
+
+  } catch (e) {
+    return AuthResponse(success: false, data: {"error": "Непредвиденная ошибка: $e"});
+  }
+}
+
+Future<AuthResponse> getRoomPosts(String roomId) async {
+  try {
+    final response = await ApiService.get('/post/getRoomPosts/$roomId');
+
+    if (response.data is List) {
+      final List<dynamic> data = response.data;
+
+      final List<BasePost> listPosts = data
+          .map((json) => BasePost.fromMap(json))
+          .toList();
+
+      return AuthResponse(
+          success: true,
+          data: {"listPosts": listPosts}
+      );
+    }
+
+    return AuthResponse(
+        success: false,
+        data: {"error": "Ошибка формата данных от сервера"}
+    );
+
+  } on DioException catch (e) {
+    final errorMessage = e.response?.data['message'] ?? "Ошибка получения личных постов";
     return AuthResponse(success: false, data: {"error": errorMessage});
 
   } catch (e) {
