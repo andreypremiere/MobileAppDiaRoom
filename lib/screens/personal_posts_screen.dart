@@ -48,6 +48,19 @@ class _StatePersonalPostsScreen extends State<PersonalPostsScreen> {
     }
   }
 
+  Future<void> _handleRefresh() async {
+    setState(() {
+      if (isMyRoom) {
+        _postsFuture = getOwnPosts();
+      } else {
+        _postsFuture = getRoomPosts(widget.roomId);
+        _roomInfoFuture = getRoomInfoById(widget.roomId);
+      }
+    });
+
+    await _postsFuture;
+  }
+
   // Вспомогательный виджет для  загрузки
   Widget _buildSkeletonItem({required double width, required double height, double radius = 8}) {
     return Container(
@@ -161,7 +174,10 @@ class _StatePersonalPostsScreen extends State<PersonalPostsScreen> {
           ] : null,
         ),),
         // Прокручиваемая колонка с постами
-        body: FutureBuilder<AuthResponse>(
+        body: RefreshIndicator(
+          color: context.ui.primaryColor,
+          onRefresh: _handleRefresh,
+          child: FutureBuilder<AuthResponse>(
           future: _postsFuture,
           builder: (context, snapshot) {
             // 1. Состояние ожидания
@@ -197,7 +213,7 @@ class _StatePersonalPostsScreen extends State<PersonalPostsScreen> {
               },
             );
           },
-        ),
+        ),),
       ),
     );
   }

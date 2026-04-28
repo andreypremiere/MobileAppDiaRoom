@@ -1,4 +1,5 @@
 import 'package:dia_room/models/post_creator/block_video.dart';
+import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 import '../../models/enums/post_types.dart';
 import '../../models/post_creator/block_post.dart';
@@ -95,7 +96,7 @@ class PostBlockWrapper extends StatelessWidget {
               width: double.infinity,
               decoration: BoxDecoration(
                 border: Border.all(
-                  color: isFocused ? Colors.blue : const Color(0xFFC9C9C9),
+                  color: isFocused ? context.ui.fontColorPrimary : context.ui.fontColorHint,
                   width: 1,
                 ),
                 borderRadius: BorderRadius.circular(8),

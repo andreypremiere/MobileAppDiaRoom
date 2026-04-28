@@ -113,7 +113,7 @@ class AppTheme {
     iconSizeCategory: 16,
     avatarSizeAppBar: 18,
     appBarColor: const Color(0xFFB4B4B4),
-    viewingPostColor: const Color(0xFFFAFAFA),
+    viewingPostColor: const Color(0xFFF5F5F5),
     elementsPhotoViewerColor: const Color(0xFFDADADA),
     elementsVideoPlayerColor: const Color(0xFFDADADA),
     backgroundViewer: Colors.black,

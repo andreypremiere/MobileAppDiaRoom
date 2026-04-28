@@ -11,6 +11,7 @@ import 'package:go_router/go_router.dart';
 
 import '../api/post_api.dart';
 import '../components/showing_post/photos_block_widget.dart';
+import '../components/showing_post/post_footer.dart';
 import '../components/showing_post/showing_canvas.dart';
 import '../components/showing_post/slider_block.dart';
 import '../components/showing_post/video_preview_widget.dart';
@@ -21,7 +22,6 @@ import '../models/post_creator/block_photos.dart';
 import '../models/post_creator/block_text.dart';
 import '../models/post_creator/block_video.dart';
 import '../utils/utils.dart';
-
 
 class ShowingPostScreen extends StatefulWidget {
   final String postId;
@@ -41,7 +41,10 @@ class _ShowingPostScreenState extends State<ShowingPostScreen> {
     super.initState();
     // Запускаем загрузку поста при открытии экрана
     _postFuture = getPost(widget.postId);
-    _viewTimer = Timer(const Duration(seconds: 4), () => sendView(postId: widget.postId));
+    _viewTimer = Timer(
+      const Duration(seconds: 4),
+      () => sendView(postId: widget.postId),
+    );
   }
 
   @override
@@ -49,7 +52,6 @@ class _ShowingPostScreenState extends State<ShowingPostScreen> {
     _viewTimer?.cancel();
     super.dispose();
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -60,13 +62,17 @@ class _ShowingPostScreenState extends State<ShowingPostScreen> {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Scaffold(
             backgroundColor: context.ui.viewingPostColor,
-            body: Center(child: CircularProgressIndicator(color: context.ui.primaryColor)),
+            body: Center(
+              child: CircularProgressIndicator(color: context.ui.primaryColor),
+            ),
           );
         }
 
         // 2. Обработка ошибки запроса
-        if (snapshot.hasError || (snapshot.hasData && !snapshot.data!.success)) {
-          final errorMsg = snapshot.data?.data?['error'] ?? snapshot.error.toString();
+        if (snapshot.hasError ||
+            (snapshot.hasData && !snapshot.data!.success)) {
+          final errorMsg =
+              snapshot.data?.data?['error'] ?? snapshot.error.toString();
           print(errorMsg);
           return Scaffold(
             backgroundColor: context.ui.viewingPostColor,
@@ -86,8 +92,10 @@ class _ShowingPostScreenState extends State<ShowingPostScreen> {
               backgroundColor: context.ui.appBarColor,
               leading: IconButton(
                 onPressed: () => context.pop(),
-                icon: Icon(Icons.arrow_back_rounded,
-                    size: context.ui.iconSizePanel),
+                icon: Icon(
+                  Icons.arrow_back_rounded,
+                  size: context.ui.iconSizePanel,
+                ),
                 color: context.ui.fontColorPrimary,
               ),
               // Кликабельный виджет автора в AppBar
@@ -96,9 +104,13 @@ class _ShowingPostScreenState extends State<ShowingPostScreen> {
                 onTap: () {
                   context.push('/room/${post.roomId}');
                 },
-                borderRadius: BorderRadius.circular(12), // Скругляем область клика
+                borderRadius: BorderRadius.circular(12),
+                // Скругляем область клика
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -116,7 +128,11 @@ class _ShowingPostScreenState extends State<ShowingPostScreen> {
                         errorWidget: (context, url, error) => CircleAvatar(
                           radius: 18,
                           backgroundColor: context.ui.primaryColor,
-                          child: const Icon(Icons.person, color: Colors.white, size: 20),
+                          child: const Icon(
+                            Icons.person,
+                            color: Colors.white,
+                            size: 20,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 10),
@@ -137,13 +153,27 @@ class _ShowingPostScreenState extends State<ShowingPostScreen> {
                 // Иконка функций, здесь будет, поделиться, пожаловаться, не интересует
                 IconButton(
                   onPressed: () {},
-                  icon: Icon(Icons.more_horiz, color: context.ui.fontColorPrimary, size: context.ui.iconSizePanel),
+                  icon: Icon(
+                    Icons.more_horiz,
+                    color: context.ui.fontColorPrimary,
+                    size: context.ui.iconSizePanel,
+                  ),
                 ),
               ],
             ),
           ),
 
-          body: ShowingCanvas(blocks: post.payload,)
+          body: ShowingCanvas(
+            blocks: post.payload,
+            // Внедряем панель опционально
+            footer: PostFooter(
+              postId: widget.postId,
+              authorRoomId: post.roomId,
+              likesCount: post.stats.likes,
+              viewsCount: post.stats.views,
+              hashtags: post.hashtags,
+            ),
+          ),
         );
       },
     );

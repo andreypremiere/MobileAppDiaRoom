@@ -1,6 +1,5 @@
 import 'package:dia_room/models/post_creator/block_post.dart';
 import 'package:flutter/material.dart';
-// Импортируй свои модели и виджеты блоков
 import '../../models/enums/post_types.dart';
 import '../../models/post_creator/block_photos.dart';
 import '../../models/post_creator/block_text.dart';
@@ -13,11 +12,13 @@ class ShowingCanvas extends StatelessWidget {
   final List<BlockPost> blocks;
   final EdgeInsetsGeometry? padding;
   final double gap;
+  final Widget? footer;
 
   const ShowingCanvas({
     super.key,
     required this.blocks,
     this.padding = const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+    this.footer,
     this.gap = 12,
   });
 
@@ -29,13 +30,15 @@ class ShowingCanvas extends StatelessWidget {
 
     return ListView.separated(
       shrinkWrap: true,
-      // physics: const NeverScrollableScrollPhysics(),
-      padding: padding?.add(EdgeInsets.only(bottom: bottomPadding)),
-      itemCount: blocks.length,
+      itemCount: footer != null ? blocks.length + 1 : blocks.length,
+      padding: padding?.add(EdgeInsets.only(bottom: bottomPadding + 20)),
       separatorBuilder: (context, index) => SizedBox(height: gap),
       itemBuilder: (context, index) {
-        final BlockPost block = blocks[index];
+        if (footer != null && index == blocks.length) {
+          return footer!;
+        }
 
+        final BlockPost block = blocks[index];
         return _resolveBlockWidget(block);
       },
     );

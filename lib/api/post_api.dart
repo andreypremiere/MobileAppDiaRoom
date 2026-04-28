@@ -297,3 +297,23 @@ Future<void> sendView({
     return;
   }
 }
+
+Future<AuthResponse> toggleLike(String postId, bool isLike) async {
+  try {
+    final response = isLike
+        ? await ApiService.post('/post/like/$postId')
+        : await ApiService.delete('/post/like/$postId');
+    return AuthResponse(success: true);
+  } catch (e) {
+    return AuthResponse(success: false, message: e.toString());
+  }
+}
+
+Future<bool> getLikeStatus(String postId) async {
+  try {
+    final response = await ApiService.get('/post/isLiked/$postId');
+    return response.data['isLiked'] ?? false;
+  } catch (e) {
+    return false;
+  }
+}

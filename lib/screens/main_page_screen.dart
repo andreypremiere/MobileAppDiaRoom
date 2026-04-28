@@ -90,12 +90,20 @@ class _StateMainPageScreen extends State<MainPageScreen> {
     });
   }
 
+  Future<void> _onRefresh() async {
+    _loadPosts();
+    await _response;
+  }
+
   @override
   Widget build(BuildContext context) {
     return KeyboardDismissible(
       child: Scaffold(
         extendBody: true,
-        body: NotificationListener<UserScrollNotification>(
+        body: RefreshIndicator(
+          color: context.ui.primaryColor,
+          onRefresh: _onRefresh,
+          child: NotificationListener<UserScrollNotification>(
           onNotification: _handleScrollNotification,
 
           child: CustomScrollView(
@@ -162,7 +170,7 @@ class _StateMainPageScreen extends State<MainPageScreen> {
               ),
             ),)
           ],
-        ),),
+        ),),),
 
         // Стрелка вверх
         floatingActionButton: AnimatedOpacity(
