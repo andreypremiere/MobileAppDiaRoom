@@ -47,9 +47,14 @@ class _RoomState extends State<RoomScreen> {
     myRoomId = auth.roomId;
     isMyRoom = (myRoomId == widget.roomId);
 
-    // Просто присваиваем вызов функции переменной.
-    // НЕ пишем await здесь!
     _roomFuture = api.getRoomByRoomId(widget.roomId);
+  }
+
+  Future<void> _onRefresh() async {
+    setState(() {
+      _roomFuture = api.getRoomByRoomId(widget.roomId);
+    });
+    await _roomFuture;
   }
 
   @override
@@ -58,7 +63,8 @@ class _RoomState extends State<RoomScreen> {
       future: _roomFuture,
       builder: (context, snapshot) {
         // СОСТОЯНИЕ: ЗАГРУЗКА
-        if (snapshot.connectionState == ConnectionState.waiting) {
+        if (snapshot.connectionState == ConnectionState.waiting &&
+            !snapshot.hasData) {
           return const Scaffold(
             body: Center(
               child: CircularProgressIndicator(color: Color(0xFF810202)),
@@ -76,7 +82,6 @@ class _RoomState extends State<RoomScreen> {
           );
         }
 
-
         final response = snapshot.data!;
 
         // 3. Сервер вернул ошибку (success: false)
@@ -92,7 +97,9 @@ class _RoomState extends State<RoomScreen> {
           room = BaseRoom.fromMap(response.data!);
         } catch (e) {
           print("Ошибка парсинга: $e");
-          return const Scaffold(body: Center(child: Text("Ошибка обработки данных")));
+          return const Scaffold(
+            body: Center(child: Text("Ошибка обработки данных")),
+          );
         }
 
         return GestureDetector(
@@ -113,190 +120,239 @@ class _RoomState extends State<RoomScreen> {
               forceMaterialTransparency: true,
               leading: IconButton(
                 onPressed: () => context.pop(),
-                icon: Icon(Icons.arrow_back_rounded,
-                    size: context.ui.iconSizePanel),
+                icon: Icon(
+                  Icons.arrow_back_rounded,
+                  size: context.ui.iconSizePanel,
+                ),
                 color: context.ui.fontColorPrimary,
               ),
             ),
             body: SafeArea(
               top: false,
               child: Stack(
-              children: [
-                Column(
-                  children: [
-                    RoomHeader(
-                      isMyRoom: isMyRoom,
-                      roomId: widget.roomId,
-                      roomName: room.roomName,
-                      avatarUrl: room.avatarUrl,
-                      backgroundUrl: room.backgroundUrl,
-                    ),
-                    // Основной контент под шторкой
-                    Expanded(
-                      child: SingleChildScrollView(
-                        child: Column(
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const SizedBox(height: 10),
-                                  Container(
-                                    width: double.infinity,
-                                    decoration: BoxDecoration(
-                                      color: context.ui.containerColor,
-                                      borderRadius: BorderRadius.circular(16),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black.withAlpha(25),
-                                          blurRadius: 10,
-                                          spreadRadius: 2,
-                                          offset: const Offset(0, 4),
-                                        ),
-                                      ],
-                                    ),
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(16),
-                                      // общие отступы внутри карточки
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          SingleChildScrollView(
-                                            scrollDirection: Axis.horizontal,
-                                            padding: const EdgeInsets.symmetric(
-                                              vertical: 4,
-                                              horizontal: 4
-                                            ),
-                                            child: Row(
-                                              children: room.listCategory.map((
-                                                category,
-                                              ) {
-                                                return CategoryChip(
-                                                  slug: category.slug,
-                                                  name: category.name,
-                                                );
-                                              }).toList(),
-                                            ),
+                children: [
+                  Column(
+                    children: [
+                      RoomHeader(
+                        isMyRoom: isMyRoom,
+                        roomId: widget.roomId,
+                        roomName: room.roomName,
+                        avatarUrl: room.avatarUrl,
+                        backgroundUrl: room.backgroundUrl,
+                      ),
+                      // Основной контент под шторкой
+                      Expanded(
+                        child: RefreshIndicator(
+                          color: const Color(0xFF810202),
+                          // Твой фирменный цвет DiaRoom
+                          onRefresh: _onRefresh,
+                          child: SingleChildScrollView(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            child: Column(
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      const SizedBox(height: 10),
+                                      Container(
+                                        width: double.infinity,
+                                        decoration: BoxDecoration(
+                                          color: context.ui.containerColor,
+                                          borderRadius: BorderRadius.circular(
+                                            16,
                                           ),
-
-                                          if (room.listCategory.isNotEmpty)
-                                            const SizedBox(height: 10),
-
-                                          Padding(
-                                            padding: const EdgeInsets.symmetric(
-                                              vertical: 8,
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.black.withAlpha(25),
+                                              blurRadius: 10,
+                                              spreadRadius: 2,
+                                              offset: const Offset(0, 4),
                                             ),
-                                            child: GestureDetector(
-                                              onTap: () async {
-                                                final idToCopy = room.uniqueRoomId; // без символа @
-
-                                                await Clipboard.setData(
-                                                  ClipboardData(text: idToCopy),
-                                                );
-                                              },
-                                              child: Text(
-                                                '@${room.uniqueRoomId}',
-                                                style: TextStyle(
-                                                  color: context.ui.fontColorPrimary,
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.w500,
+                                          ],
+                                        ),
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(16),
+                                          // общие отступы внутри карточки
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              SingleChildScrollView(
+                                                scrollDirection:
+                                                    Axis.horizontal,
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      vertical: 4,
+                                                      horizontal: 4,
+                                                    ),
+                                                child: Row(
+                                                  children: room.listCategory
+                                                      .map((category) {
+                                                        return CategoryChip(
+                                                          slug: category.slug,
+                                                          name: category.name,
+                                                        );
+                                                      })
+                                                      .toList(),
                                                 ),
                                               ),
-                                            ),
-                                          ),
 
-                                          const SizedBox(height: 6),
+                                              if (room.listCategory.isNotEmpty)
+                                                const SizedBox(height: 10),
 
-                                          // Кнопка "Показать описание" по центру
-                                          if (room.bio.isNotEmpty)
-                                            Center(
-                                              child: InkWell(
-                                                onTap: () => setState(
-                                                  () => _isBioVisible =
-                                                      !_isBioVisible,
-                                                ),
-                                                borderRadius:
-                                                    BorderRadius.circular(8),
-                                                child: Padding(
-                                                  padding:
-                                                      const EdgeInsets.symmetric(
-                                                        vertical: 8,
-                                                        horizontal: 16,
+                                              Padding(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      vertical: 8,
+                                                    ),
+                                                child: GestureDetector(
+                                                  onTap: () async {
+                                                    final idToCopy = room
+                                                        .uniqueRoomId; // без символа @
+
+                                                    await Clipboard.setData(
+                                                      ClipboardData(
+                                                        text: idToCopy,
                                                       ),
+                                                    );
+                                                  },
                                                   child: Text(
-                                                    _isBioVisible
-                                                        ? "Скрыть описание"
-                                                        : "Показать описание",
+                                                    '@${room.uniqueRoomId}',
                                                     style: TextStyle(
-                                                      color: context.ui.fontColorHint,
+                                                      color: context
+                                                          .ui
+                                                          .fontColorPrimary,
+                                                      fontSize: 16,
                                                       fontWeight:
-                                                          FontWeight.w600,
-                                                      fontSize: 15,
+                                                          FontWeight.w500,
                                                     ),
                                                   ),
                                                 ),
                                               ),
-                                            ),
 
-                                          // const SizedBox(height: 12),
+                                              const SizedBox(height: 6),
 
-                                          // Само описание (выровнено слева)
-                                          if (_isBioVisible &&
-                                              room.bio.isNotEmpty)
-                                            Padding(
-                                              padding: const EdgeInsets.only(
-                                                left: 4,
-                                                right: 4,
-                                              ),
-                                              child: Text(
-                                                room.bio,
-                                                textAlign: TextAlign.left,
-                                                style: TextStyle(
-                                                  fontSize: 15,
-                                                  height: 1.5,
-                                                  fontStyle: FontStyle.italic,
-                                                  color: context.ui.fontColorPrimary
+                                              // Кнопка "Показать описание" по центру
+                                              if (room.bio.isNotEmpty)
+                                                Center(
+                                                  child: InkWell(
+                                                    onTap: () => setState(
+                                                      () => _isBioVisible =
+                                                          !_isBioVisible,
+                                                    ),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          8,
+                                                        ),
+                                                    child: Padding(
+                                                      padding:
+                                                          const EdgeInsets.symmetric(
+                                                            vertical: 8,
+                                                            horizontal: 16,
+                                                          ),
+                                                      child: Text(
+                                                        _isBioVisible
+                                                            ? "Скрыть описание"
+                                                            : "Показать описание",
+                                                        style: TextStyle(
+                                                          color: context
+                                                              .ui
+                                                              .fontColorHint,
+                                                          fontWeight:
+                                                              FontWeight.w600,
+                                                          fontSize: 15,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
                                                 ),
-                                              ),
+
+                                              // const SizedBox(height: 12),
+
+                                              // Само описание (выровнено слева)
+                                              if (_isBioVisible &&
+                                                  room.bio.isNotEmpty)
+                                                Padding(
+                                                  padding:
+                                                      const EdgeInsets.only(
+                                                        left: 4,
+                                                        right: 4,
+                                                      ),
+                                                  child: Text(
+                                                    room.bio,
+                                                    textAlign: TextAlign.left,
+                                                    style: TextStyle(
+                                                      fontSize: 15,
+                                                      height: 1.5,
+                                                      fontStyle:
+                                                          FontStyle.italic,
+                                                      color: context
+                                                          .ui
+                                                          .fontColorPrimary,
+                                                    ),
+                                                  ),
+                                                ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 10),
+                                      Row(
+                                        children: [
+                                          // Виджет Подписчики
+                                          Expanded( // Expanded теперь ПРЯМОЙ потомок Row
+                                            child: StatCard(
+                                              value: room.countFollowers.toString(),
+                                              label: 'подписчики',
+                                              onTap: () => context.push('/followers/${widget.roomId}'),
                                             ),
+                                          ),
+                                          const SizedBox(width: 12),
+                                          Expanded( // И здесь тоже
+                                            child: StatCard(
+                                              value: room.countFollowing.toString(),
+                                              label: 'подписки',
+                                              onTap: () => context.push('/following/${widget.roomId}'),
+                                            ),
+                                          ),
                                         ],
                                       ),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 10),
-                                  Row(
-                                    children: [
-                                      // Виджет Подписчики
-                                      StatCard(value: '524', label: 'подписчики'),
-                                      const SizedBox(width: 12),
-                                      StatCard(value: '42', label: 'подписки'),
+                                      const SizedBox(height: 10),
+                                      RoomActionButton(
+                                        title: 'Дневник',
+                                        onPressed: () {},
+                                      ),
+                                      const SizedBox(height: 10),
+                                      RoomActionButton(
+                                        title: 'Витрина',
+                                        onPressed: () => context.push(
+                                          '/personalRoomPosts/${widget.roomId}',
+                                        ),
+                                      ),
+                                      const SizedBox(height: 10),
+                                      RoomActionButton(
+                                        title: 'Мастерская',
+                                        onPressed: () {},
+                                      ),
+                                      const SizedBox(height: 10),
                                     ],
                                   ),
-                                  const SizedBox(height: 10),
-                                  RoomActionButton(title: 'Дневник', onPressed: () {}),
-                                  const SizedBox(height: 10),
-                                  RoomActionButton(
-                                    title: 'Витрина',
-                                    onPressed: () => context.push('/personalRoomPosts/${widget.roomId}'),
-                                  ),
-                                  const SizedBox(height: 10),
-                                  RoomActionButton(title: 'Мастерская', onPressed: () {}),
-                                  const SizedBox(height: 10),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
-                          ],
+                          ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-              ],
-            ),),
+                    ],
+                  ),
+                ],
+              ),
+            ),
           ),
         );
       }, // Конец builder

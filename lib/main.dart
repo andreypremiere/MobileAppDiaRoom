@@ -1,5 +1,6 @@
 import 'package:dia_room/models/enums/file_type.dart';
 import 'package:dia_room/models/post_creator/post_draft.dart';
+import 'package:dia_room/screens/followers_screen.dart';
 import 'package:dia_room/screens/full_image_screen.dart';
 import 'package:dia_room/screens/full_video_screen.dart';
 import 'package:dia_room/screens/login_screen.dart';
@@ -33,6 +34,8 @@ void main() async {
 
   print('Пользователь аутентифицирован?\nuserId: ${authProvider.userId}\nroomId: ${authProvider.roomId}\n'
       'isAuthenticated: ${authProvider.isAuthenticated}\nisConfigured: ${authProvider.isConfigured} ');
+
+  print(authProvider.accessToken);
 
   runApp(
     MultiProvider(
@@ -163,7 +166,13 @@ class App extends StatelessWidget {
               return RoomScreen(roomId: roomId);
             },
           ),
-
+          GoRoute(
+            path: '/followers/:roomId',
+            builder: (context, state) {
+              final roomId = state.pathParameters['roomId']!;
+              return FollowersScreen(roomId: roomId);
+            },
+          ),
           // Список постов внутри комнаты
           GoRoute(
             path: '/personalRoomPosts/:roomId',

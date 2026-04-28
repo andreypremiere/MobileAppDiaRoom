@@ -130,20 +130,10 @@ Future<AuthResponse> requestGetRoom(String roomId) async {
 // Внутри твоего класса запросов (например, RoomService)
 Future<AuthResponse> requestUpdateRoom(BuildContext context, SaveRoomRequest room) async {
   try {
-    // final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    // final String? token = authProvider.accessToken;
-
-    // if (token == null) {
-    //   return AuthResponse(success: false, message: "Вы не авторизованы");
-    // }
-
-    // 2. Отправляем POST запрос
     final response = await ApiService.post(
       '/account/updateRoom',
       data: room.toMap(),
     );
-
-
 
     return AuthResponse(
       success: true,
@@ -245,6 +235,49 @@ Future<AuthResponse?> requestLogout(BuildContext context) async {
   } catch (e) {
     print("$e");
     return AuthResponse(success: false, message: "Ошибка инициализации данных: $e");
+  }
+}
+
+Future<AuthResponse> requestGetFollowers({
+  required String roomId,
+  required int page,
+  required int limit,
+}) async {
+  try {
+    final response = await ApiService.get(
+      '/account/followers/$roomId',
+      queryParameters: {
+        'page': page,
+        'limit': limit,
+      },
+    );
+
+    return AuthResponse(
+      success: true,
+      data: response.data,
+    );
+
+  } on DioException catch (e) {
+    String errorMessage = "Не удалось загрузить список подписчиков";
+
+    if (e.type == DioExceptionType.connectionTimeout) {
+      errorMessage = "Превышено время ожидания сервера";
+    } else if (e.type == DioExceptionType.connectionError) {
+      errorMessage = "Проблемы с интернет-соединением";
+    } else if (e.response != null) {
+      // Ошибка от твоего Go-сервиса (например, 404 если комната удалена)
+      errorMessage = e.response?.data['error'] ?? "Ошибка сервера при получении списка";
+    }
+
+    return AuthResponse(
+        success: false,
+        message: "$errorMessage (${e.response?.statusCode ?? '?'})"
+    );
+  } catch (e) {
+    return AuthResponse(
+        success: false,
+        message: "Произошла непредвиденная ошибка: $e"
+    );
   }
 }
 

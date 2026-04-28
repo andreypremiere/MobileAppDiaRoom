@@ -5,12 +5,15 @@ import 'package:flutter/material.dart';
 class StatCard extends StatelessWidget {
   final String value;
   final String label;
+  final VoidCallback? onTap;
 
-  const StatCard({super.key, required this.value, required this.label});
+  const StatCard({super.key, required this.value, required this.label, this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 6),
         decoration: BoxDecoration(

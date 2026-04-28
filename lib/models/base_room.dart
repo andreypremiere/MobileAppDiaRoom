@@ -9,6 +9,8 @@ class BaseRoom {
   String avatarUrl;
   String backgroundUrl;
   List<RoomCategory> listCategory;
+  int countFollowers;
+  int countFollowing;
 
   BaseRoom({
     required this.uniqueRoomId,
@@ -16,7 +18,9 @@ class BaseRoom {
     required this.bio,
     required this.avatarUrl,
     required this.backgroundUrl,
-    required this.listCategory
+    required this.listCategory,
+    required this.countFollowers,
+    required this.countFollowing
 });
 
   static BaseRoom fromMap(Map<String, dynamic> map) {
@@ -31,6 +35,8 @@ class BaseRoom {
           ?.map((slug) => RoomCategory.fromSlug(slug.toString()))
           .whereType<RoomCategory>()
           .toList() ?? [],
+      countFollowers: map['countFollowers'] ?? 0,
+      countFollowing: map['countFollowing'] ?? 0
     );
   }
 }
