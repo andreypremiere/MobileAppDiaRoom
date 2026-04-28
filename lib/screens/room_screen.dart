@@ -2,6 +2,7 @@ import 'package:dia_room/components/bottom_menu/bottom_menu_component.dart';
 import 'package:dia_room/components/info_dialog_component.dart';
 import 'package:dia_room/models/auth_response.dart';
 import 'package:dia_room/models/base_room.dart';
+import 'package:dia_room/screens/rooms_list_screen.dart';
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -13,6 +14,7 @@ import 'package:dia_room/configuration/urls.dart';
 import 'package:provider/provider.dart';
 
 import 'package:dia_room/api/room_api.dart' as api;
+import '../api/account_api.dart';
 import '../components/room_screen/category_chip.dart';
 import '../components/room_screen/room_header.dart';
 import '../components/room_screen/section_action_button.dart';
@@ -305,19 +307,52 @@ class _RoomState extends State<RoomScreen> {
                                       Row(
                                         children: [
                                           // Виджет Подписчики
-                                          Expanded( // Expanded теперь ПРЯМОЙ потомок Row
+                                          Expanded(
+                                            // Expanded теперь ПРЯМОЙ потомок Row
                                             child: StatCard(
-                                              value: room.countFollowers.toString(),
+                                              value: room.countFollowers
+                                                  .toString(),
                                               label: 'подписчики',
-                                              onTap: () => context.push('/followers/${widget.roomId}'),
+                                              onTap: () => Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      RoomListScreen(
+                                                        title: 'Подписчики',
+                                                        loadAction: (page, limit) =>
+                                                            requestGetFollowers(
+                                                              roomId:
+                                                                  widget.roomId,
+                                                              page: page,
+                                                              limit: limit,
+                                                            ),
+                                                      ),
+                                                ),
+                                              ),
                                             ),
                                           ),
                                           const SizedBox(width: 12),
-                                          Expanded( // И здесь тоже
+                                          Expanded(
                                             child: StatCard(
-                                              value: room.countFollowing.toString(),
+                                              value: room.countFollowing
+                                                  .toString(),
                                               label: 'подписки',
-                                              onTap: () => context.push('/following/${widget.roomId}'),
+                                              onTap: () => Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      RoomListScreen(
+                                                        title: 'Подписки',
+                                                        loadAction: (page, limit) =>
+                                                            requestGetFollowing(
+                                                              roomId:
+                                                                  widget.roomId,
+                                                              page: page,
+                                                              limit: limit,
+                                                            ),
+                                                      ),
+                                                ),
+                                              ),
                                             ),
                                           ),
                                         ],

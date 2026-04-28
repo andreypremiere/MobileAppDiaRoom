@@ -2,20 +2,25 @@ import 'package:dia_room/models/auth_response.dart';
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../api/account_api.dart';
 import '../components/room_screen/author_tile.dart';
 import '../models/post_view/author.dart';
 
-class FollowersScreen extends StatefulWidget {
-  final String roomId;
-  const FollowersScreen({super.key, required this.roomId});
+class RoomListScreen extends StatefulWidget {
+  final String title;
+  final Future<AuthResponse> Function(int page, int limit) loadAction;
+
+  const RoomListScreen({
+    super.key,
+    required this.title,
+    required this.loadAction,
+  });
 
   @override
-  State<FollowersScreen> createState() => _FollowersScreenState();
+  State<RoomListScreen> createState() => _RoomListScreenState();
 }
 
-class _FollowersScreenState extends State<FollowersScreen> {
-  final List<Author> _authors = [];
+class _RoomListScreenState extends State<RoomListScreen> {
+  final List<Author> _users = [];
   bool _isLoading = false;
   bool _hasMore = true;
   int _page = 1;
@@ -39,29 +44,23 @@ class _FollowersScreenState extends State<FollowersScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final AuthResponse response = await requestGetFollowers(
-          roomId: widget.roomId,
-          page: _page,
-          limit: _limit
-      );
+      final AuthResponse response = await widget.loadAction(_page, _limit);
 
       if (response.success) {
-        // 1. Получаем сырой список (dynamic)
         final List<dynamic> rawAuthors = response.data?['authors'] ?? [];
 
-        // 2. Превращаем его в список объектов Author
-        final List<Author> newAuthors = rawAuthors
+        final List<Author> newUsers = rawAuthors
             .map((item) => Author.fromMap(item as Map<String, dynamic>))
             .toList();
 
         setState(() {
           _page++;
-          _authors.addAll(newAuthors);
-          if (newAuthors.length < _limit) _hasMore = false;
+          _users.addAll(newUsers);
+          if (newUsers.length < _limit) _hasMore = false;
         });
       }
     } catch (e) {
-      debugPrint("Ошибка загрузки подписчиков: $e");
+      debugPrint("Ошибка загрузки списка (${widget.title}): $e");
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -72,35 +71,39 @@ class _FollowersScreenState extends State<FollowersScreen> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: context.ui.appBarColor,
+        elevation: 0,
         leading: IconButton(
           onPressed: () => context.pop(),
           icon: Icon(Icons.arrow_back_rounded, size: context.ui.iconSizePanel),
           color: context.ui.fontColorPrimary,
         ),
         title: Text(
-          'Подписчики',
-          style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600, color: context.ui.fontColorPrimary),
+          widget.title,
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.w600,
+            color: context.ui.fontColorPrimary,
+          ),
         ),
       ),
       body: RefreshIndicator(
         onRefresh: () async {
           setState(() {
-            _authors.clear();
+            _users.clear();
             _page = 1;
             _hasMore = true;
           });
           await _loadMore();
         },
-        child: _authors.isEmpty && _isLoading
+        child: _users.isEmpty && _isLoading
             ? const Center(child: CircularProgressIndicator())
-            : ListView.separated(
+            : ListView.builder(
           controller: _scrollController,
           padding: const EdgeInsets.symmetric(vertical: 10),
-          itemCount: _authors.length + (_hasMore ? 1 : 0),
-          separatorBuilder: (context, index) => const Divider(height: 1, indent: 70),
+          itemCount: _users.length + (_hasMore ? 1 : 0),
           itemBuilder: (context, index) {
-            if (index < _authors.length) {
-              return AuthorListTile(author: _authors[index]);
+            if (index < _users.length) {
+              return AuthorListTile(author: _users[index]);
             } else {
               return const Padding(
                 padding: EdgeInsets.all(16.0),
