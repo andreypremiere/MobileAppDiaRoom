@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dia_room/components/showing_post/text_block_widget.dart';
 import 'package:dia_room/configuration/urls.dart';
@@ -32,13 +34,22 @@ class ShowingPostScreen extends StatefulWidget {
 
 class _ShowingPostScreenState extends State<ShowingPostScreen> {
   late Future<AuthResponse> _postFuture;
+  Timer? _viewTimer;
 
   @override
   void initState() {
     super.initState();
     // Запускаем загрузку поста при открытии экрана
     _postFuture = getPost(widget.postId);
+    _viewTimer = Timer(const Duration(seconds: 4), () => sendView(postId: widget.postId));
   }
+
+  @override
+  void dispose() {
+    _viewTimer?.cancel();
+    super.dispose();
+  }
+
 
   @override
   Widget build(BuildContext context) {

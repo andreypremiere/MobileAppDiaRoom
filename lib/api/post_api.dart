@@ -284,3 +284,16 @@ Future<AuthResponse> getRoomPosts(String roomId) async {
     return AuthResponse(success: false, data: {"error": "Непредвиденная ошибка: $e"});
   }
 }
+
+Future<void> sendView({
+  required String postId,
+}) async {
+  try {
+    await ApiService.post(
+      '/post/view/$postId',
+    );
+
+  } catch (e) {
+    return;
+  }
+}
