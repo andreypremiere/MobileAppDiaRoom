@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../api/post_api.dart';
+import '../../screens/rooms_list_screen.dart';
 
 class LikeButton extends StatefulWidget {
   final String postId;
@@ -69,7 +70,32 @@ class _LikeButtonState extends State<LikeButton> {
           ),
           onPressed: _isLoading ? null : _handleLike,
         ),
-        Text('$_count', style: const TextStyle(fontWeight: FontWeight.bold)),
+        GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => RoomListScreen(
+                  title: 'Понравилось',
+                  loadAction: (page, limit) => requestGetLikers(
+                    postId: widget.postId,
+                    page: page,
+                    limit: limit,
+                  ),
+                ),
+              ),
+            );
+          },
+          child: Padding(
+            padding: const EdgeInsets.only(right: 8.0, top: 4.0, bottom: 4.0, left: 8),
+            child: Text(
+                '$_count',
+                style: const TextStyle(
+                  fontWeight: FontWeight.w500,
+                )
+            ),
+          ),
+        ),
       ],
     );
   }

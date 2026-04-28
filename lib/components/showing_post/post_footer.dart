@@ -49,7 +49,7 @@ class PostFooter extends StatelessWidget {
         Row(
           children: [
             LikeButton(postId: postId, initialCount: likesCount),
-            const SizedBox(width: 16),
+            const SizedBox(width: 24),
 
             // Просмотры
             Icon(Icons.visibility_outlined, size: 20, color: context.ui.fontColorHint),

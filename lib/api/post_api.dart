@@ -317,3 +317,46 @@ Future<bool> getLikeStatus(String postId) async {
     return false;
   }
 }
+
+Future<AuthResponse> requestGetLikers({
+  required String postId,
+  required int page,
+  required int limit,
+}) async {
+  try {
+    final response = await ApiService.get(
+      '/post/likers/$postId',
+      queryParameters: {
+        'page': page,
+        'limit': limit,
+      },
+    );
+
+    return AuthResponse(
+      success: true,
+      data: response.data,
+    );
+
+  } on DioException catch (e) {
+    String errorMessage = "Не удалось загрузить список комнат";
+
+    if (e.type == DioExceptionType.connectionTimeout) {
+      errorMessage = "Превышено время ожидания сервера";
+    } else if (e.type == DioExceptionType.connectionError) {
+      errorMessage = "Проблемы с интернет-соединением";
+    } else if (e.response != null) {
+      // Ошибка от твоего Go-сервиса (например, 404 если комната удалена)
+      errorMessage = e.response?.data['error'] ?? "Ошибка сервера при получении списка";
+    }
+
+    return AuthResponse(
+        success: false,
+        message: "$errorMessage (${e.response?.statusCode ?? '?'})"
+    );
+  } catch (e) {
+    return AuthResponse(
+        success: false,
+        message: "Произошла непредвиденная ошибка: $e"
+    );
+  }
+}
