@@ -4,10 +4,10 @@ import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../components/auth_screens/app_text_field.dart';
-import '../components/auth_screens/auth_button.dart';
-import '../components/auth_screens/auth_form_container.dart';
-import '../components/auth_screens/keyboard_dismissible.dart';
+import '../../components/auth_screens/app_text_field.dart';
+import '../../components/auth_screens/auth_button.dart';
+import '../../components/auth_screens/auth_form_container.dart';
+import '../../components/auth_screens/keyboard_dismissible.dart';
 
 
 // Login представляет экран входа пользователя в систему

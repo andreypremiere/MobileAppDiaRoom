@@ -1,9 +1,9 @@
-import 'package:dia_room/models/auth_response.dart';
+import 'package:dia_room/api/auth_response.dart';
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../components/room_screen/author_tile.dart';
-import '../models/post_view/author.dart';
+import '../../components/room_screen/author_tile.dart';
+import '../../models/post_view/author.dart';
 
 class RoomListScreen extends StatefulWidget {
   final String title;

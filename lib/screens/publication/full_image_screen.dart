@@ -3,7 +3,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../models/enums/file_type.dart';
+import '../../models/enums/file_type.dart';
 
 class FullImageScreen extends StatefulWidget {
   final List<String> imageUrls;

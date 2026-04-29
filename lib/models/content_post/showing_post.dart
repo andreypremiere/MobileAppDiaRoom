@@ -6,7 +6,7 @@ class ShowingPost {
   final Author author;
   final Statistics stats;
   final String roomId;
-  final List<BlockPost> payload; // Твой холст (canvas)
+  final List<BlockPost> payload;
   final String categorySlug;
   final List<String> hashtags;
 
@@ -19,21 +19,15 @@ class ShowingPost {
     required this.hashtags,
   });
 
-  // Базовая фабрика, если вдруг понадобится создать просто пост
   factory ShowingPost.fromMap(Map<String, dynamic> map) {
     return ShowingPost(
-      // Группируем данные автора
       author: Author.fromMap(map),
-      // Группируем статистику
       stats: Statistics.fromMap(map),
-      // Поля самого поста
       roomId: map['roomId'] ?? '',
-      // payload приходит как List<dynamic>, внутри которого Map<String, dynamic>
       payload: (map['payload'] as List<dynamic>? ?? [])
           .map((blockMap) => BlockPost.fromMap(blockMap as Map<String, dynamic>))
           .toList(),
       categorySlug: map['categorySlug'] ?? '',
-      // Безопасное приведение списка строк
       hashtags: map['hashtags'] != null
           ? List<String>.from(map['hashtags'])
           : [],

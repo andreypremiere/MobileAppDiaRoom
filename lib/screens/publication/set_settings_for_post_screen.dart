@@ -6,13 +6,9 @@ import 'package:flutter_svg/svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:provider/provider.dart';
+import '../../components/info_dialog_component.dart';
+import '../../models/enums/post_categories.dart';
 
-import '../components/info_dialog_component.dart';
-import '../models/enums/post_categories.dart';
-import '../models/post_creator/block_post.dart';
-import '../models/user.dart';
-import '../utils/auth_service.dart';
 
 class SetSettingsForPostScreen extends StatefulWidget {
   final PostDraft postDraft;

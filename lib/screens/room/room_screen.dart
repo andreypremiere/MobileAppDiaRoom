@@ -1,17 +1,17 @@
-import 'package:dia_room/models/auth_response.dart';
-import 'package:dia_room/models/base_room.dart';
-import 'package:dia_room/screens/rooms_list_screen.dart';
+import 'package:dia_room/api/auth_response.dart';
+import 'package:dia_room/models/room/base_room.dart';
+import 'package:dia_room/screens/room/rooms_list_screen.dart';
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import '../api/account_api.dart';
-import '../components/room_screen/category_chip.dart';
-import '../components/room_screen/room_header.dart';
-import '../components/room_screen/section_action_button.dart';
-import '../components/room_screen/statistic_card.dart';
-import '../utils/auth_service.dart';
+import '../../api/account_api.dart';
+import '../../components/room_screen/category_chip.dart';
+import '../../components/room_screen/room_header.dart';
+import '../../components/room_screen/section_action_button.dart';
+import '../../components/room_screen/statistic_card.dart';
+import '../../utils/auth_service.dart';
 
 // RoomScreen отображает детальную информацию о конкретной комнате
 class RoomScreen extends StatefulWidget {

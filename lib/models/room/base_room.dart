@@ -1,6 +1,4 @@
-import 'package:dia_room/models/room.dart';
-
-import 'enums/room_categories.dart';
+import '../enums/room_categories.dart';
 
 class BaseRoom {
   String uniqueRoomId;
@@ -30,7 +28,6 @@ class BaseRoom {
       bio: map['bio'] ?? '',
       avatarUrl: map['avatarPath'] ?? '',
       backgroundUrl: map['backgroundPath'] ?? '',
-      // Конвертируем List<dynamic> (слаги) в List<RoomCategory>
       listCategory: (map['listCategory'] as List<dynamic>?)
           ?.map((slug) => RoomCategory.fromSlug(slug.toString()))
           .whereType<RoomCategory>()

@@ -1,7 +1,9 @@
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
-import '../../models/enums/post_types.dart';
+import '../../models/enums/block_type.dart';
+import '../../models/enums/method_view_photo.dart';
+import '../../models/enums/text_type.dart';
 import '../../models/post_creator/block_photos.dart';
 import '../../models/post_creator/block_post.dart';
 import '../../models/post_creator/block_text.dart';

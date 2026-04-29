@@ -1,4 +1,4 @@
-import 'package:dia_room/models/auth_response.dart';
+import 'package:dia_room/api/auth_response.dart';
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';

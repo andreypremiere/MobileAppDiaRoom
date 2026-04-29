@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../api/post_api.dart';
-import '../../screens/rooms_list_screen.dart';
+import '../../screens/room/rooms_list_screen.dart';
 
 class LikeButton extends StatefulWidget {
   final String postId;

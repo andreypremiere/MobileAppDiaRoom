@@ -9,19 +9,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 
-import '../api/post_api.dart';
-import '../components/showing_post/photos_block_widget.dart';
-import '../components/showing_post/post_footer.dart';
-import '../components/showing_post/showing_canvas.dart';
-import '../components/showing_post/slider_block.dart';
-import '../components/showing_post/video_preview_widget.dart';
-import '../models/auth_response.dart';
-import '../models/content_post/content_post.dart';
-import '../models/enums/post_types.dart';
-import '../models/post_creator/block_photos.dart';
-import '../models/post_creator/block_text.dart';
-import '../models/post_creator/block_video.dart';
-import '../utils/utils.dart';
+import '../../api/post_api.dart';
+import '../../components/showing_post/photos_block_widget.dart';
+import '../../components/showing_post/post_footer.dart';
+import '../../components/showing_post/showing_canvas.dart';
+import '../../components/showing_post/slider_block.dart';
+import '../../components/showing_post/video_preview_widget.dart';
+import '../../api/auth_response.dart';
+import '../../models/content_post/showing_post.dart';
+import '../../models/enums/block_type.dart';
+import '../../models/post_creator/block_photos.dart';
+import '../../models/post_creator/block_text.dart';
+import '../../models/post_creator/block_video.dart';
+import '../../utils/utils.dart';
 
 class ShowingPostScreen extends StatefulWidget {
   final String postId;

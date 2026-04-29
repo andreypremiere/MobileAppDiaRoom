@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 
-import '../models/auth_response.dart';
+import 'auth_response.dart';
 
 // Метод для обработки исключений запросов
 AuthResponse handleDioError(DioException e, String defaultMessage) {

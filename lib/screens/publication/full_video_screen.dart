@@ -6,7 +6,7 @@ import 'package:video_player/video_player.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter/services.dart';
 
-import '../models/enums/file_type.dart';
+import '../../models/enums/file_type.dart';
 
 class FullScreenVideoScreen extends StatefulWidget {
   final String videoUrl;

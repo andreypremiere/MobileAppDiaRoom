@@ -4,7 +4,7 @@
 
 import 'dart:io';
 
-import 'package:dia_room/models/auth_response.dart';
+import 'package:dia_room/api/auth_response.dart';
 import 'package:dia_room/models/post_creator/block_photos.dart';
 import 'package:dia_room/models/post_creator/block_post.dart';
 import 'package:dia_room/models/post_creator/block_text.dart';

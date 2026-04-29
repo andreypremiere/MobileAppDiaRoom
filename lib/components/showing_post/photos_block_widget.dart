@@ -6,7 +6,8 @@ import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../models/enums/file_type.dart';
-import '../../models/enums/post_types.dart';
+import '../../models/enums/block_type.dart';
+import '../../models/enums/method_view_photo.dart';
 import '../../models/post_creator/block_photos.dart';
 import '../../utils/utils.dart';
 

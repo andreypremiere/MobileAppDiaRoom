@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../enums/post_types.dart';
+import '../enums/block_type.dart';
+import '../enums/text_type.dart';
 import 'block_post.dart';
 
 class TextBlockPost extends BlockPost {

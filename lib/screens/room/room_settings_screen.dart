@@ -8,11 +8,12 @@ import 'package:http/http.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
-import '../api/account_api.dart';
-import '../components/info_dialog_component.dart';
-import '../models/base_room.dart';
-import '../models/enums/room_categories.dart';
-import '../utils/utils.dart';
+
+import '../../api/account_api.dart';
+import '../../components/info_dialog_component.dart';
+import '../../models/enums/room_categories.dart';
+import '../../utils/utils.dart';
+
 
 class RoomSettingsScreen extends StatefulWidget {
   const RoomSettingsScreen({super.key});

@@ -4,7 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 import '../contracts/room/requests/save_room_request.dart';
-import '../models/auth_response.dart';
+import 'auth_response.dart';
 import '../models/post_view/author.dart';
 import '../utils/auth_service.dart';
 import '../utils/dio_service.dart';

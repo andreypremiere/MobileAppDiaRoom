@@ -1,6 +1,6 @@
 import 'package:dia_room/models/post_creator/block_post.dart';
 import 'package:flutter/material.dart';
-import '../../models/enums/post_types.dart';
+import '../../models/enums/block_type.dart';
 import '../../models/post_creator/block_photos.dart';
 import '../../models/post_creator/block_text.dart';
 import '../../models/post_creator/block_video.dart';

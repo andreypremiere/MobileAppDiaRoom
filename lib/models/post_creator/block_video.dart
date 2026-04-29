@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:dia_room/models/enums/post_types.dart';
+import 'package:dia_room/models/enums/block_type.dart';
 import 'package:dia_room/models/post_creator/block_post.dart';
 import 'package:get_thumbnail_video/index.dart';
 import 'package:get_thumbnail_video/video_thumbnail.dart';

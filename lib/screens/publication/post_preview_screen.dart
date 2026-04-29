@@ -2,8 +2,8 @@ import 'package:dia_room/components/new_public_post/app_bar_button.dart';
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../components/showing_post/showing_canvas.dart';
-import '../models/post_creator/post_draft.dart';
+import '../../components/showing_post/showing_canvas.dart';
+import '../../models/post_creator/post_draft.dart';
 
 
 class PostPreviewScreen extends StatelessWidget {

@@ -2,7 +2,7 @@ import 'package:dia_room/models/post_creator/block_photos.dart';
 import 'package:dia_room/models/post_creator/block_text.dart';
 import 'package:dia_room/models/post_creator/block_video.dart';
 
-import '../enums/post_types.dart';
+import '../enums/block_type.dart';
 
 abstract class BlockPost {
   final BlockType type;

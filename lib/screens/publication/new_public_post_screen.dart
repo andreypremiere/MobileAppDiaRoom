@@ -4,16 +4,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import '../components/new_public_post/app_bar_button.dart';
-import '../components/info_dialog_component.dart';
-import '../components/new_public_post/block_toolbar.dart';
-import '../components/new_public_post/post_block_widget.dart';
-import '../models/enums/post_types.dart';
-import '../models/post_creator/block_photos.dart';
-import '../models/post_creator/block_post.dart';
-import '../models/post_creator/block_text.dart';
-import '../models/post_creator/post_draft.dart';
-import '../utils/draft_provider.dart';
+import '../../components/new_public_post/app_bar_button.dart';
+import '../../components/info_dialog_component.dart';
+import '../../components/new_public_post/block_toolbar.dart';
+import '../../components/new_public_post/post_block_widget.dart';
+import '../../models/enums/block_type.dart';
+import '../../models/enums/method_view_photo.dart';
+import '../../models/post_creator/block_photos.dart';
+import '../../models/post_creator/block_post.dart';
+import '../../models/post_creator/block_text.dart';
+import '../../models/post_creator/post_draft.dart';
+import '../../utils/draft_provider.dart';
 
 class NewPublicPostScreen extends StatefulWidget {
   const NewPublicPostScreen({super.key});

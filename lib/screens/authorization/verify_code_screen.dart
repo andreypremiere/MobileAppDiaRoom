@@ -7,11 +7,11 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'dart:async';
 
-import '../components/auth_screens/app_text_field.dart';
+import '../../components/auth_screens/app_text_field.dart';
 
-import '../components/auth_screens/auth_button.dart';
-import '../components/auth_screens/auth_form_container.dart';
-import '../utils/auth_service.dart';
+import '../../components/auth_screens/auth_button.dart';
+import '../../components/auth_screens/auth_form_container.dart';
+import '../../utils/auth_service.dart';
 
 class VerifyCode extends StatefulWidget {
   final String userId;
