@@ -58,8 +58,9 @@ class _LoginState extends State<Login> {
         );
       }
     } else {
-      // Если success == false, показываем сообщение об ошибке из бэкенда
-      AppInfoDialog.show(context, response.message ?? "Ошибка входа");
+      if (mounted) {
+        AppInfoDialog.show(context, "${response.message} :(");
+      }
     }
   }
 

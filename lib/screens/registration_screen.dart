@@ -81,7 +81,9 @@ class _RegistrationState extends State<Registration> {
         print("mounted is not true");
       }
     } else {
-      AppInfoDialog.show(context, "${response.message} :(");
+      if (mounted) {
+        AppInfoDialog.show(context, "${response.message} :(");
+      }
     }
   }
 

@@ -14,7 +14,6 @@ import '../components/auth_button.dart';
 import '../components/auth_form_container.dart';
 import '../utils/auth_service.dart';
 
-// VerifyCode — экран подтверждения входа/регистрации через SMS-код
 class VerifyCode extends StatefulWidget {
   final String userId;
   final String email;
@@ -31,7 +30,7 @@ class _VerifyCodeState extends State<VerifyCode> {
   final TextEditingController _codeController = TextEditingController();
 
   Timer? _timer;
-  int _startSeconds = 130;
+  int _startSeconds = 120;
   bool _canResend = false;
 
   @override
@@ -43,7 +42,7 @@ class _VerifyCodeState extends State<VerifyCode> {
   // Запуск обратного отсчета
   void _startTimer() {
     setState(() {
-      _startSeconds = 130;
+      _startSeconds = 120;
       _canResend = false;
     });
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
@@ -74,11 +73,11 @@ class _VerifyCodeState extends State<VerifyCode> {
     super.dispose();
   }
 
-  void _handleResendCode() {
+  Future<void> _handleResendCode() async {
     if (!_canResend) return;
     print("Повторная отправка кода на ${widget.email}");
-    // Здесь вызывай свой метод API для переотправки
-    _startTimer(); // Перезапускаем таймер
+    await requestRepeatCode(widget.userId);
+    _startTimer();
   }
 
   // _handleSendCode отправляет код на проверку и авторизует пользователя

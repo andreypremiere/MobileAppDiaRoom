@@ -15,183 +15,137 @@ import '../models/auth_response.dart';
 import '../utils/auth_service.dart';
 import '../utils/dio_service.dart';
 
+AuthResponse _handleDioError(DioException e, String defaultMessage) {
+  String message = defaultMessage;
+
+  if (e.type == DioExceptionType.connectionTimeout || e.type == DioExceptionType.receiveTimeout) {
+    message = "Сервер не отвечает, попробуйте позже";
+  } else if (e.type == DioExceptionType.connectionError) {
+    message = "Нет соединения с интернетом";
+  } else if (e.response != null) {
+    message = e.response?.data['message'] ?? e.response?.data['error'] ?? "Ошибка сервера";
+  }
+
+  return AuthResponse(
+    success: false,
+    message: message,
+  );
+}
+
+// Вспомогательный метод для системных ошибок
+AuthResponse _handleSystemError(Object e) {
+  return AuthResponse(success: false, message: "Непредвиденная ошибка: $e");
+}
+
 Future<AuthResponse> requestRegistration(String email, String password) async {
   try {
-    final response = await ApiService.post(
-      '/account/newAccount',
-      data: {
-        "email": email,
-        "password": password,
-      },
-    );
-
+    final response = await ApiService.post('/account/newAccount',
+        data: {"email": email, "password": password});
     return AuthResponse(success: true, data: response.data);
-
   } on DioException catch (e) {
-    String errorMessage = "Произошла ошибка";
-
-    if (e.type == DioExceptionType.connectionTimeout || e.type == DioExceptionType.receiveTimeout) {
-      errorMessage = "Сервер не отвечает, попробуйте позже";
-    } else if (e.type == DioExceptionType.connectionError) {
-      errorMessage = "Нет соединения с интернетом";
-    } else if (e.response != null) {
-      errorMessage = e.response?.data['error'] ?? "Неизвестная ошибка сервера";
+    if (e.response?.statusCode == 409) {
+      return AuthResponse(
+          success: false,
+          message: "Этот Email уже занят, попробуйте другой"
+      );
     }
-
-    return AuthResponse(success: false, message: errorMessage);
+    return _handleDioError(e, "Ошибка регистрации");
   } catch (e) {
-    return AuthResponse(success: false, message: "Непредвиденная ошибка: $e");
+    return _handleSystemError(e);
   }
 }
 
 Future<AuthResponse> requestVerifyCode(String userId, String code) async {
   try {
-    final response = await ApiService.post(
-      '/account/verify/$userId',
-      data: {'code': code},
-    );
-
-    return AuthResponse(success: true, data: response.data);
-
+    final res = await ApiService.post('/account/verify/$userId', data: {'code': code});
+    return AuthResponse(success: true, data: res.data);
   } on DioException catch (e) {
-    String errorMessage = "Ошибка верификации";
-
-    if (e.response != null) {
-      errorMessage = e.response?.data['error'] ?? "Неизвестная ошибка";
-    } else {
-      errorMessage = "Проблемы с соединением";
+    if (e.response?.statusCode == 404 && e.response?.data?['error_code'] == "NOT_FOUND") {
+      return AuthResponse(
+          success: false,
+          message: "Истек срок действия кода"
+      );
     }
-
-    return AuthResponse(success: false, message: errorMessage);
+    if (e.response?.statusCode == 400 && e.response?.data?['error_code'] == "INVALID_VERIFICATION_CODE") {
+      return AuthResponse(
+          success: false,
+          message: "Неверный код!!!"
+      );
+    }
+    return _handleDioError(e, "Ошибка верификации");
   } catch (e) {
-    return AuthResponse(success: false, message: "Ошибка: $e");
+    return _handleSystemError(e);
+  }
+}
+
+Future<AuthResponse> requestRepeatCode(String userId) async {
+  try {
+    await ApiService.post('/account/repeatCode/$userId');
+    return AuthResponse(success: true);
+  } on DioException catch (e) {
+    return _handleDioError(e, "Ошибка повторной отправки кода");
+  } catch (e) {
+    return _handleSystemError(e);
   }
 }
 
 Future<AuthResponse> requestLogin(String email, String password) async {
   try {
-    final response = await ApiService.post(
-      '/account/login',
-      data: {'email': email,
-      'password': password},
-    );
-
-    return AuthResponse(
-        success: true,
-        data: response.data
-    );
-
+    final res = await ApiService.post('/account/login', data: {'email': email, 'password': password});
+    return AuthResponse(success: true, data: res.data);
   } on DioException catch (e) {
-    String errorMessage = "Ошибка при поиске пользователя";
-
-    if (e.response != null) {
-      errorMessage = e.response?.data['error'] ?? "Пользователь не найден";
-    } else {
-      errorMessage = "Не удалось связаться с сервером";
+    if (e.response?.statusCode == 404 && e.response?.data?['error_code'] == "NOT_FOUND") {
+      return AuthResponse(
+          success: false,
+          message: "Пользователь не найден"
+      );
     }
-
-    return AuthResponse(success: false, message: errorMessage);
+    if (e.response?.statusCode == 400 && e.response?.data?['error_code'] == "INVALID_PASSWORD") {
+      return AuthResponse(
+          success: false,
+          message: "Неверный пароль"
+      );
+    }
+    return _handleDioError(e, "Ошибка авторизации");
   } catch (e) {
-    return AuthResponse(success: false, message: "Непредвиденная ошибка: $e");
+    return _handleSystemError(e);
   }
 }
 
 Future<AuthResponse> requestGetRoom(String roomId) async {
   try {
-    // В GET запросах данные обычно передаются в самом URL
-    final response = await ApiService.get(
-      '/account/room/$roomId',
-    );
-
-    // Предполагаем, что бэкенд на Go возвращает JSON объект комнаты
-    return AuthResponse(
-      success: true,
-      data: response.data,
-    );
-
+    final res = await ApiService.get('/account/room/$roomId');
+    return AuthResponse(success: true, data: res.data);
   } on DioException catch (e) {
-    String errorMessage = "Не удалось загрузить данные комнаты";
-
-    if (e.type == DioExceptionType.connectionTimeout || e.type == DioExceptionType.receiveTimeout) {
-      errorMessage = "Сервер не отвечает, проверьте соединение";
-    } else if (e.type == DioExceptionType.connectionError) {
-      errorMessage = "Отсутствует подключение к сети";
-    } else if (e.response != null) {
-      // Обработка ошибок от Go (например, если комната не найдена)
-      errorMessage = e.response?.data['error'] ?? "Ошибка сервера при получении комнаты";
-    }
-
-    return AuthResponse(success: false, message: errorMessage + e.toString());
+    return _handleDioError(e, "Комната не найдена");
   } catch (e) {
-    return AuthResponse(success: false, message: "Ошибка инициализации данных: $e");
+    return _handleSystemError(e);
   }
 }
 
-// Внутри твоего класса запросов (например, RoomService)
 Future<AuthResponse> requestUpdateRoom(BuildContext context, SaveRoomRequest room) async {
   try {
-    final response = await ApiService.post(
-      '/account/updateRoom',
-      data: room.toMap(),
-    );
-
-    return AuthResponse(
-      success: true,
-      data: response.data,
-
-    );
-
+    final res = await ApiService.post('/account/updateRoom', data: room.toMap());
+    return AuthResponse(success: true, data: res.data);
   } on DioException catch (e) {
-    // Обработка ошибок бэкенда (например, если ID уже занят)
-    final String error = e.response?.data['error'] ?? "Ошибка при обновлении комнаты :(";
-    return AuthResponse(success: false, message: error);
+    return _handleDioError(e, "Не удалось обновить комнату");
   } catch (e) {
-    return AuthResponse(success: false, message: "Системная ошибка: $e");
+    return _handleSystemError(e);
   }
 }
-
 
 Future<AuthResponse> requestUploadImage(String presignedUrl, File file) async {
   try {
-    print('Загрузка в s3');
-
     final response = await ApiService.uploadImage(presignedUrl, file);
-
     if (response.statusCode == 200 || response.statusCode == 201) {
-      print('Файл успешно загружен в облако');
       return AuthResponse(success: true);
-    } else {
-      return AuthResponse(
-          success: false,
-          message: "Хранилище вернуло ошибку: ${response.statusCode}"
-      );
     }
-
+    return AuthResponse(success: false, message: "S3 Error: ${response.statusCode}");
   } on DioException catch (e) {
-    String errorMessage = "Ошибка при передаче файла в хранилище";
-
-    print('--- [S3 UPLOAD ERROR] ---');
-    if (e.response != null) {
-      print('Status: ${e.response?.statusCode}');
-      print('Data: ${e.response?.data}');
-
-      if (e.response?.statusCode == 403) {
-        errorMessage = "Ошибка доступа: ссылка для загрузки недействительна или истекла";
-      } else if (e.response?.statusCode == 413) {
-        errorMessage = "Файл слишком большой для загрузки";
-      }
-    } else if (e.type == DioExceptionType.connectionTimeout) {
-      errorMessage = "Таймаут загрузки: медленное соединение";
-    } else {
-      errorMessage = "Сетевая ошибка при загрузке: ${e.message}";
-    }
-    print('-------------------------');
-
-    return AuthResponse(success: false, message: errorMessage);
-
+    if (e.response?.statusCode == 403) return AuthResponse(success: false, message: "Ссылка истекла");
+    return _handleDioError(e, "Ошибка загрузки файла");
   } catch (e) {
-    print('Системная ошибка при загрузке: $e');
-    return AuthResponse(success: false, message: "Непредвиденная ошибка: $e");
+    return _handleSystemError(e);
   }
 }
 
@@ -199,160 +153,43 @@ Future<AuthResponse?> requestLogout(BuildContext context) async {
   try {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final String? token = await authProvider.getRefreshToken();
+    if (token == null) return null;
 
-    if (token == null) {
-      return null;
-    }
-
-    // В GET запросах данные обычно передаются в самом URL
-    final response = await ApiService.post(
-      '/account/logout', data: {"refreshToken": token}
-    );
-
-    final responseData = response.data is Map<String, dynamic>
-        ? response.data as Map<String, dynamic>
-        : null;
-
-    // Предполагаем, что бэкенд на Go возвращает JSON объект комнаты
-    return AuthResponse(
-      success: true,
-      data: responseData,
-    );
-
+    final res = await ApiService.post('/account/logout', data: {"refreshToken": token});
+    return AuthResponse(success: true, data: res.data);
   } on DioException catch (e) {
-    String errorMessage = "Не удалось загрузить данные комнаты";
-
-    if (e.type == DioExceptionType.connectionTimeout || e.type == DioExceptionType.receiveTimeout) {
-      errorMessage = "Сервер не отвечает, проверьте соединение";
-    } else if (e.type == DioExceptionType.connectionError) {
-      errorMessage = "Отсутствует подключение к сети";
-    } else if (e.response != null) {
-      // Обработка ошибок от Go (например, если комната не найдена)
-      errorMessage = e.response?.data['error'] ?? "Ошибка сервера при получении комнаты";
-    }
-
-    return AuthResponse(success: false, message: errorMessage + e.toString());
+    return _handleDioError(e, "Ошибка при выходе");
   } catch (e) {
-    print("$e");
-    return AuthResponse(success: false, message: "Ошибка инициализации данных: $e");
+    return _handleSystemError(e);
   }
 }
 
-Future<AuthResponse> requestGetFollowers({
-  required String roomId,
-  required int page,
-  required int limit,
-}) async {
+Future<AuthResponse> _getFollowList(String path, String roomId, int page, int limit) async {
   try {
-    final response = await ApiService.get(
-      '/account/followers/$roomId',
-      queryParameters: {
-        'page': page,
-        'limit': limit,
-      },
-    );
-
-    return AuthResponse(
-      success: true,
-      data: response.data,
-    );
-
+    final res = await ApiService.get('/account/$path/$roomId',
+        queryParameters: {'page': page, 'limit': limit});
+    return AuthResponse(success: true, data: res.data);
   } on DioException catch (e) {
-    String errorMessage = "Не удалось загрузить список подписчиков";
-
-    if (e.type == DioExceptionType.connectionTimeout) {
-      errorMessage = "Превышено время ожидания сервера";
-    } else if (e.type == DioExceptionType.connectionError) {
-      errorMessage = "Проблемы с интернет-соединением";
-    } else if (e.response != null) {
-      // Ошибка от твоего Go-сервиса (например, 404 если комната удалена)
-      errorMessage = e.response?.data['error'] ?? "Ошибка сервера при получении списка";
-    }
-
-    return AuthResponse(
-        success: false,
-        message: "$errorMessage (${e.response?.statusCode ?? '?'})"
-    );
+    return _handleDioError(e, "Ошибка загрузки списка");
   } catch (e) {
-    return AuthResponse(
-        success: false,
-        message: "Произошла непредвиденная ошибка: $e"
-    );
+    return _handleSystemError(e);
   }
 }
 
-Future<AuthResponse> requestGetFollowing({
-  required String roomId,
-  required int page,
-  required int limit,
-}) async {
-  try {
-    final response = await ApiService.get(
-      '/account/following/$roomId',
-      queryParameters: {
-        'page': page,
-        'limit': limit,
-      },
-    );
+Future<AuthResponse> requestGetFollowers({required String roomId, required int page, required int limit})
+=> _getFollowList('followers', roomId, page, limit);
 
-    return AuthResponse(
-      success: true,
-      data: response.data,
-    );
-
-  } on DioException catch (e) {
-    String errorMessage = "Не удалось загрузить список подписок";
-
-    if (e.type == DioExceptionType.connectionTimeout) {
-      errorMessage = "Превышено время ожидания сервера";
-    } else if (e.type == DioExceptionType.connectionError) {
-      errorMessage = "Проблемы с интернет-соединением";
-    } else if (e.response != null) {
-      // Ошибка от твоего Go-сервиса (например, 404 если комната удалена)
-      errorMessage = e.response?.data['error'] ?? "Ошибка сервера при получении списка";
-    }
-
-    return AuthResponse(
-        success: false,
-        message: "$errorMessage (${e.response?.statusCode ?? '?'})"
-    );
-  } catch (e) {
-    return AuthResponse(
-        success: false,
-        message: "Произошла непредвиденная ошибка: $e"
-    );
-  }
-}
+Future<AuthResponse> requestGetFollowing({required String roomId, required int page, required int limit})
+=> _getFollowList('following', roomId, page, limit);
 
 Future<AuthResponse> requestSetConfigured() async {
   try {
-    final response = await ApiService.post(
-      '/account/setConfigured',
-    );
-
-    return AuthResponse(
-      success: true,
-    );
-
+    await ApiService.post('/account/setConfigured');
+    return AuthResponse(success: true);
   } on DioException catch (e) {
-    String errorMessage = "Не удалось обновить статус";
-
-    if (e.type == DioExceptionType.connectionTimeout) {
-      errorMessage = "Превышено время ожидания сервера";
-    } else if (e.type == DioExceptionType.connectionError) {
-      errorMessage = "Проблемы с интернет-соединением";
-    } else if (e.response != null) {
-      errorMessage = e.response?.data['error'] ?? "Ошибка сервера при получении списка";
-    }
-    return AuthResponse(
-        success: false,
-        message: "$errorMessage (${e.response?.statusCode ?? '?'})"
-    );
+    return _handleDioError(e, "Ошибка обновления статуса");
   } catch (e) {
-    return AuthResponse(
-        success: false,
-        message: "Произошла непредвиденная ошибка: $e"
-    );
+    return _handleSystemError(e);
   }
 }
 
