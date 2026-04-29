@@ -360,3 +360,20 @@ Future<AuthResponse> requestGetLikers({
     );
   }
 }
+
+Future<AuthResponse> requestDeletePost(String postId) async {
+  try {
+    final response = await ApiService.delete('/post/deletePost/$postId');
+
+    return AuthResponse(
+        success: true,
+    );
+
+  } on DioException catch (e) {
+    final errorMessage = e.response?.data['message'] ?? "Ошибка во время удаления поста";
+    return AuthResponse(success: false, data: {"error": errorMessage});
+
+  } catch (e) {
+    return AuthResponse(success: false, data: {"error": "Непредвиденная ошибка: $e"});
+  }
+}

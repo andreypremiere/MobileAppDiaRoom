@@ -86,6 +86,21 @@ class _StatePersonalPostsScreen extends State<PersonalPostsScreen> {
     );
   }
 
+  Future<bool?> _showDeleteDialog(BuildContext context) {
+    return showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: context.ui.containerColor,
+        title: Text('Удаление', style: TextStyle(color: context.ui.fontColorPrimary),),
+        content: Text('Вы уверены, что хотите удалить этот пост?', style: TextStyle(color: context.ui.fontColorPrimary),),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: Text('Отмена', style: TextStyle(color: context.ui.fontColorPrimary),)),
+          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Удалить', style: TextStyle(color: Colors.red))),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -206,7 +221,17 @@ class _StatePersonalPostsScreen extends State<PersonalPostsScreen> {
                 final post = posts[index];
 
                 if (isMyRoom) {
-                  return OwnPostComponent(post: post);
+                  return OwnPostComponent(post: post, onDelete: () async {
+                    final bool? confirm = await _showDeleteDialog(context);
+
+                    if (confirm == true) {
+                      final result = await requestDeletePost(post.data.postId);
+
+                      if (result.success) {
+                        _handleRefresh();
+                      }
+                    }
+                  },);
                 } else {
                   return AnotherPostComponent(post: post);
                 }

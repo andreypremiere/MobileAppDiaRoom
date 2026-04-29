@@ -91,7 +91,7 @@ class _SetSettingsForPostState extends State<SetSettingsForPostScreen> {
     print("Публикация разрешена!");
     CreatingPostService service = CreatingPostService(post: widget.postDraft);
     service.startCreating();
-    // context.push('/');
+    context.go('/');
   }
 
   Future<void> _pickAndCropImage() async {

@@ -203,7 +203,9 @@ Widget buildStats(BuildContext context, int views, int likes) {
 
 class OwnPostComponent extends StatelessWidget {
   final PersonalPost post;
-  const OwnPostComponent({super.key, required this.post});
+  final VoidCallback onDelete;
+  const OwnPostComponent({super.key, required this.post, required this.onDelete});
+
 
   Widget _buildTopMenu(BuildContext context) {
     return PopupMenuButton<String>(
@@ -223,7 +225,7 @@ class OwnPostComponent extends StatelessWidget {
         ),
         child: Icon(
           Icons.more_vert_rounded,
-          color: context.ui.fontColorPrimary, // Цвет иконки как у шрифта
+          color: context.ui.fontColorPrimary,
           size: 22,
         ),
       ),
@@ -231,7 +233,7 @@ class OwnPostComponent extends StatelessWidget {
       // Элементы меню
       onSelected: (value) {
         if (value == 'delete') {
-          print('Удаление поста');
+          onDelete.call();
         }
       },
       itemBuilder: (context) => [
