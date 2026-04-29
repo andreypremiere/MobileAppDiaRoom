@@ -1,19 +1,11 @@
-import 'package:dia_room/components/bottom_menu/bottom_menu_component.dart';
-import 'package:dia_room/components/info_dialog_component.dart';
 import 'package:dia_room/models/auth_response.dart';
 import 'package:dia_room/models/base_room.dart';
 import 'package:dia_room/screens/rooms_list_screen.dart';
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:go_router/go_router.dart';
-import 'package:dia_room/models/room.dart';
-import 'package:dia_room/utils/utils.dart';
-import 'package:dia_room/configuration/urls.dart';
 import 'package:provider/provider.dart';
-
-import 'package:dia_room/api/room_api.dart' as api;
 import '../api/account_api.dart';
 import '../components/room_screen/category_chip.dart';
 import '../components/room_screen/room_header.dart';
@@ -49,12 +41,12 @@ class _RoomState extends State<RoomScreen> {
     myRoomId = auth.roomId;
     isMyRoom = (myRoomId == widget.roomId);
 
-    _roomFuture = api.getRoomByRoomId(widget.roomId);
+    _roomFuture = getRoomByRoomId(widget.roomId);
   }
 
   Future<void> _onRefresh() async {
     setState(() {
-      _roomFuture = api.getRoomByRoomId(widget.roomId);
+      _roomFuture = getRoomByRoomId(widget.roomId);
     });
     await _roomFuture;
   }

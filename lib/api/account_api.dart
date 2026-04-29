@@ -1,41 +1,14 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
-
-import 'package:dia_room/configuration/urls.dart';
-import 'package:dia_room/models/user.dart';
-import 'package:dia_room/utils/utils.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
-
 import '../contracts/room/requests/save_room_request.dart';
 import '../models/auth_response.dart';
+import '../models/post_view/author.dart';
 import '../utils/auth_service.dart';
 import '../utils/dio_service.dart';
-
-AuthResponse _handleDioError(DioException e, String defaultMessage) {
-  String message = defaultMessage;
-
-  if (e.type == DioExceptionType.connectionTimeout || e.type == DioExceptionType.receiveTimeout) {
-    message = "Сервер не отвечает, попробуйте позже";
-  } else if (e.type == DioExceptionType.connectionError) {
-    message = "Нет соединения с интернетом";
-  } else if (e.response != null) {
-    message = e.response?.data['message'] ?? e.response?.data['error'] ?? "Ошибка сервера";
-  }
-
-  return AuthResponse(
-    success: false,
-    message: message,
-  );
-}
-
-// Вспомогательный метод для системных ошибок
-AuthResponse _handleSystemError(Object e) {
-  return AuthResponse(success: false, message: "Непредвиденная ошибка: $e");
-}
+import 'exception_handler.dart';
 
 Future<AuthResponse> requestRegistration(String email, String password) async {
   try {
@@ -49,9 +22,9 @@ Future<AuthResponse> requestRegistration(String email, String password) async {
           message: "Этот Email уже занят, попробуйте другой"
       );
     }
-    return _handleDioError(e, "Ошибка регистрации");
+    return handleDioError(e, "Ошибка регистрации");
   } catch (e) {
-    return _handleSystemError(e);
+    return handleSystemError(e);
   }
 }
 
@@ -72,9 +45,9 @@ Future<AuthResponse> requestVerifyCode(String userId, String code) async {
           message: "Неверный код!!!"
       );
     }
-    return _handleDioError(e, "Ошибка верификации");
+    return handleDioError(e, "Ошибка верификации");
   } catch (e) {
-    return _handleSystemError(e);
+    return handleSystemError(e);
   }
 }
 
@@ -83,9 +56,9 @@ Future<AuthResponse> requestRepeatCode(String userId) async {
     await ApiService.post('/account/repeatCode/$userId');
     return AuthResponse(success: true);
   } on DioException catch (e) {
-    return _handleDioError(e, "Ошибка повторной отправки кода");
+    return handleDioError(e, "Ошибка повторной отправки кода");
   } catch (e) {
-    return _handleSystemError(e);
+    return handleSystemError(e);
   }
 }
 
@@ -106,9 +79,9 @@ Future<AuthResponse> requestLogin(String email, String password) async {
           message: "Неверный пароль"
       );
     }
-    return _handleDioError(e, "Ошибка авторизации");
+    return handleDioError(e, "Ошибка авторизации");
   } catch (e) {
-    return _handleSystemError(e);
+    return handleSystemError(e);
   }
 }
 
@@ -117,9 +90,9 @@ Future<AuthResponse> requestGetRoom(String roomId) async {
     final res = await ApiService.get('/account/room/$roomId');
     return AuthResponse(success: true, data: res.data);
   } on DioException catch (e) {
-    return _handleDioError(e, "Комната не найдена");
+    return handleDioError(e, "Комната не найдена");
   } catch (e) {
-    return _handleSystemError(e);
+    return handleSystemError(e);
   }
 }
 
@@ -128,9 +101,9 @@ Future<AuthResponse> requestUpdateRoom(BuildContext context, SaveRoomRequest roo
     final res = await ApiService.post('/account/updateRoom', data: room.toMap());
     return AuthResponse(success: true, data: res.data);
   } on DioException catch (e) {
-    return _handleDioError(e, "Не удалось обновить комнату");
+    return handleDioError(e, "Не удалось обновить комнату");
   } catch (e) {
-    return _handleSystemError(e);
+    return handleSystemError(e);
   }
 }
 
@@ -143,9 +116,9 @@ Future<AuthResponse> requestUploadImage(String presignedUrl, File file) async {
     return AuthResponse(success: false, message: "S3 Error: ${response.statusCode}");
   } on DioException catch (e) {
     if (e.response?.statusCode == 403) return AuthResponse(success: false, message: "Ссылка истекла");
-    return _handleDioError(e, "Ошибка загрузки файла");
+    return handleDioError(e, "Ошибка загрузки файла");
   } catch (e) {
-    return _handleSystemError(e);
+    return handleSystemError(e);
   }
 }
 
@@ -158,9 +131,9 @@ Future<AuthResponse?> requestLogout(BuildContext context) async {
     final res = await ApiService.post('/account/logout', data: {"refreshToken": token});
     return AuthResponse(success: true, data: res.data);
   } on DioException catch (e) {
-    return _handleDioError(e, "Ошибка при выходе");
+    return handleDioError(e, "Ошибка при выходе");
   } catch (e) {
-    return _handleSystemError(e);
+    return handleSystemError(e);
   }
 }
 
@@ -170,9 +143,9 @@ Future<AuthResponse> _getFollowList(String path, String roomId, int page, int li
         queryParameters: {'page': page, 'limit': limit});
     return AuthResponse(success: true, data: res.data);
   } on DioException catch (e) {
-    return _handleDioError(e, "Ошибка загрузки списка");
+    return handleDioError(e, "Ошибка загрузки списка");
   } catch (e) {
-    return _handleSystemError(e);
+    return handleSystemError(e);
   }
 }
 
@@ -187,9 +160,83 @@ Future<AuthResponse> requestSetConfigured() async {
     await ApiService.post('/account/setConfigured');
     return AuthResponse(success: true);
   } on DioException catch (e) {
-    return _handleDioError(e, "Ошибка обновления статуса");
+    return handleDioError(e, "Ошибка обновления статуса");
   } catch (e) {
-    return _handleSystemError(e);
+    return handleSystemError(e);
   }
 }
 
+Future<AuthResponse> getRoomInfoById(String roomId) async {
+  try {
+    final response = await ApiService.get('/account/getRoomInfoById/$roomId');
+    response.data['roomId'] = roomId;
+    final roomInfo = Author.fromMap(response.data);
+
+    return AuthResponse(
+        success: true,
+        data: {"roomInfo": roomInfo}
+    );
+  } on DioException catch (e) {
+    return handleDioError(e, "Ошибка обновления статуса");
+  } catch (e) {
+    return handleSystemError(e);
+  }
+}
+
+Future<AuthResponse> getRoomByRoomId(String roomId) async {
+  try {
+    final res = await ApiService.get('/account/room/$roomId');
+
+    return AuthResponse(
+      success: true,
+      data: res.data,
+    );
+  } on DioException catch (e) {
+    return handleDioError(e, "Ошибка загрузки данных комнаты");
+  } catch (e) {
+    return handleSystemError(e);
+  }
+}
+
+Future<AuthResponse> checkSubscription(String roomId) async {
+  try {
+    final res = await ApiService.get('/account/checkRoomSubscription/$roomId');
+    return AuthResponse(
+      success: true,
+      data: res.data,
+    );
+  } on DioException catch (e) {
+    return handleDioError(e, "Ошибка проверки подписки");
+  } catch (e) {
+    return handleSystemError(e);
+  }
+}
+
+
+Future<AuthResponse> followRoom(String roomId) async {
+  try {
+    await ApiService.post(
+      '/account/followRoom',
+      data: {"following_id": roomId},
+    );
+    return AuthResponse(success: true);
+  } on DioException catch (e) {
+    return handleDioError(e, "Не удалось подписаться");
+  } catch (e) {
+    return handleSystemError(e);
+  }
+}
+
+Future<AuthResponse> unfollowRoom(String roomId) async {
+  try {
+    await ApiService.delete(
+      '/account/unfollowRoom',
+      data: {"following_id": roomId},
+    );
+    return AuthResponse(success: true);
+  } on DioException catch (e) {
+    return handleDioError(e, "Не удалось отписаться");
+  } catch (e) {
+    return handleSystemError(e);
+  }
+}

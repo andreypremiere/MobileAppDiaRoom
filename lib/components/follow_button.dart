@@ -2,7 +2,8 @@ import 'package:dia_room/models/auth_response.dart';
 import 'package:flutter/material.dart';
 import 'package:dia_room/utils/app_theme.dart';
 
-import '../api/room_api.dart';
+import '../api/account_api.dart';
+
 
 class FollowButton extends StatefulWidget {
   final String roomId;
