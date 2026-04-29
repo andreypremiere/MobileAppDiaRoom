@@ -7,8 +7,9 @@ import 'package:provider/provider.dart';
 
 import '../../api/account_api.dart';
 import '../../api/post_api.dart';
-import '../../components/base_post_card.dart';
+import '../../components/post_card/another_card.dart';
 import '../../api/auth_response.dart';
+import '../../components/post_card/own_card.dart';
 import '../../utils/auth_service.dart';
 
 // PersonalPostsScreen отображает список постов конкретной комнаты

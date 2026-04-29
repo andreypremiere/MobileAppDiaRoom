@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import '../api/post_api.dart';
 import '../components/auth_screens/keyboard_dismissible.dart';
-import '../components/base_post_card.dart';
 import '../components/main_page_screen/bottom_menu/bottom_menu_component.dart';
 import '../components/main_page_screen/bottom_menu/bottom_menu_item.dart';
+import '../components/post_card/feed_card.dart';
 import '../models/post_view/feed_post.dart';
 
 
