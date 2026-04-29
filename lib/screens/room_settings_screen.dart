@@ -245,14 +245,8 @@ class _RoomSettingsScreenState extends State<RoomSettingsScreen> {
     final response = await requestUpdateRoom(context, room);
 
     if (!response.success) {
-      // 1. Сохраняем навигатор/роутер в переменную
-      final router = GoRouter.of(context);
-
       // 2. Ждем закрытия диалога
       await AppInfoDialog.show(context, response.message.toString());
-
-      // 3. Используем сохраненную ссылку. Теперь переход сработает 100%
-      router.go('/');
       return;
     }
 
@@ -661,7 +655,7 @@ class _RoomSettingsScreenState extends State<RoomSettingsScreen> {
                   );
                   print("Выполнилось действие пропустить");
 
-                  //Здесь еще нужно выполнять запрос на установление статуса в бд
+                  requestSetConfigured();
 
                   context.read<AuthProvider>().saveStatusConfigure(true);
                   context.go('/');

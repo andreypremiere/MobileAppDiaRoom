@@ -324,3 +324,35 @@ Future<AuthResponse> requestGetFollowing({
   }
 }
 
+Future<AuthResponse> requestSetConfigured() async {
+  try {
+    final response = await ApiService.post(
+      '/account/setConfigured',
+    );
+
+    return AuthResponse(
+      success: true,
+    );
+
+  } on DioException catch (e) {
+    String errorMessage = "Не удалось обновить статус";
+
+    if (e.type == DioExceptionType.connectionTimeout) {
+      errorMessage = "Превышено время ожидания сервера";
+    } else if (e.type == DioExceptionType.connectionError) {
+      errorMessage = "Проблемы с интернет-соединением";
+    } else if (e.response != null) {
+      errorMessage = e.response?.data['error'] ?? "Ошибка сервера при получении списка";
+    }
+    return AuthResponse(
+        success: false,
+        message: "$errorMessage (${e.response?.statusCode ?? '?'})"
+    );
+  } catch (e) {
+    return AuthResponse(
+        success: false,
+        message: "Произошла непредвиденная ошибка: $e"
+    );
+  }
+}
+
