@@ -12,12 +12,11 @@ extension ThemeGetter on BuildContext {
 class AppTheme {
   static const Color primaryColor = Color(0xFF722323);
   static const Color appBarGrey = Color(0xFFB4B4B4);
-  static const Color backgroundBeige = Color(0xFFF3F0ED);
+  static const Color backgroundBeige = Color(0xFFF6F5F4);
 
   static ThemeData buildTheme(Color seedColor, {bool isDark = false}) {
     return ThemeData(
       useMaterial3: true,
-      // brightness: isDark ? Brightness.dark : Brightness.light,
       colorScheme: ColorScheme.fromSeed(
         seedColor: seedColor,
         brightness: isDark ? Brightness.dark : Brightness.light,
@@ -100,7 +99,7 @@ class AppTheme {
     // Размеры (существующие)
     fontSizeHeader: 20,
     fontSizeDefault: 16,
-    // Новые размеры (заполни сам)
+    radiusButtonStandard: 12,
     fontSizeTitle: 24,
     fontSizeButton: 18,
     fontSizeButtonSecondary: 16,
@@ -142,6 +141,7 @@ class AppTheme {
     fontSizeTitle: 22,
     fontSizeButton: 18,
     fontSizeButtonSecondary: 16,
+    radiusButtonStandard: 12,
     // Радиусы и остальное
     borderRadiusBig: 18,
     borderRadiusMedium: 14,
@@ -190,6 +190,8 @@ class UICustom extends ThemeExtension<UICustom> {
   final double borderRadiusSmall;
   final double borderRadiusLittle;
 
+  final double radiusButtonStandard;
+
   // Иконки и аватары
   final double iconSizePanel;
   final double iconSizeCategory;
@@ -225,6 +227,7 @@ class UICustom extends ThemeExtension<UICustom> {
     required this.appBarColor,
     required this.viewingPostColor,
     required this.fontSizeHeader,
+    required this.radiusButtonStandard,
     required this.fontSizeTitle,
     required this.fontSizeButton,
     required this.fontSizeButtonSecondary,
@@ -263,6 +266,7 @@ class UICustom extends ThemeExtension<UICustom> {
     double? fontSizeButton,
     double? fontSizeButtonSecondary,
     double? fontSizeDefault,
+    double? radiusButtonStandard,
     double? borderRadiusBig,
     double? borderRadiusMedium,
     double? borderRadiusSmall,
@@ -296,6 +300,7 @@ class UICustom extends ThemeExtension<UICustom> {
       fontSizeButtonSecondary: fontSizeButtonSecondary ?? this.fontSizeButtonSecondary,
       fontSizeDefault: fontSizeDefault ?? this.fontSizeDefault,
       borderRadiusBig: borderRadiusBig ?? this.borderRadiusBig,
+      radiusButtonStandard: radiusButtonStandard ?? this.radiusButtonStandard,
       borderRadiusMedium: borderRadiusMedium ?? this.borderRadiusMedium,
       borderRadiusSmall: borderRadiusSmall ?? this.borderRadiusSmall,
       borderRadiusLittle: borderRadiusLittle ?? this.borderRadiusLittle,
@@ -335,6 +340,7 @@ class UICustom extends ThemeExtension<UICustom> {
       borderRadiusBig: lerpDouble(borderRadiusBig, other.borderRadiusBig, t)!,
       borderRadiusMedium: lerpDouble(borderRadiusMedium, other.borderRadiusMedium, t)!,
       borderRadiusSmall: lerpDouble(borderRadiusSmall, other.borderRadiusSmall, t)!,
+      radiusButtonStandard: lerpDouble(radiusButtonStandard, other.radiusButtonStandard, t)!,
       borderRadiusLittle: lerpDouble(borderRadiusLittle, other.borderRadiusLittle, t)!,
       iconSizePanel: lerpDouble(iconSizePanel, other.iconSizePanel, t)!,
       iconSizeBottomPanel: lerpDouble(iconSizeBottomPanel, other.iconSizeBottomPanel, t)!,

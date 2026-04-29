@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:dia_room/contracts/room/requests/save_room_request.dart';
+import 'package:dia_room/utils/app_theme.dart';
 import 'package:dia_room/utils/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -291,7 +292,6 @@ class _RoomSettingsScreenState extends State<RoomSettingsScreen> {
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
-        backgroundColor: const Color(0xFFF8F8F8),
         appBar: _buildAppBar(),
         body: Column(
           children: [
@@ -347,14 +347,11 @@ class _RoomSettingsScreenState extends State<RoomSettingsScreen> {
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
-      backgroundColor: const Color(0xFFB4B4B4),
-      surfaceTintColor: const Color(0xFFB4B4B4),
+      backgroundColor: context.ui.appBarColor,
       elevation: 0,
-      centerTitle: true,
       title: const Text(
         'Настройка комнаты',
         style: TextStyle(
-          fontFamily: 'SNPro',
           fontWeight: FontWeight.w600,
           fontSize: 22,
         ),
@@ -661,18 +658,17 @@ class _RoomSettingsScreenState extends State<RoomSettingsScreen> {
                 },
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  side: const BorderSide(color: Color(0xFFB4B4B4), width: 1.5),
+                  side: BorderSide(color: context.ui.primaryColor, width: 1.5),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),
                 ),
-                child: const Text(
+                child: Text(
                   "Пропустить",
                   style: TextStyle(
-                    color: Color(0xFF525252),
+                    color: context.ui.fontColorPrimary,
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    fontFamily: 'SNPro',
                   ),
                 ),
               ),
@@ -685,7 +681,7 @@ class _RoomSettingsScreenState extends State<RoomSettingsScreen> {
                 },
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  backgroundColor: const Color(0xFF525252),
+                  backgroundColor: context.ui.primaryColor,
                   elevation: 0,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
@@ -697,7 +693,6 @@ class _RoomSettingsScreenState extends State<RoomSettingsScreen> {
                     color: Colors.white,
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    fontFamily: 'SNPro',
                   ),
                 ),
               ),

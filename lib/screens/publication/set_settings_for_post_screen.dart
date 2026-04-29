@@ -429,9 +429,9 @@ class _SetSettingsForPostState extends State<SetSettingsForPostScreen> {
           _startPublication();
         },
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF525252),
+          backgroundColor: context.ui.primaryColor,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(context.ui.radiusButtonStandard),
           ),
           elevation: 0,
         ),

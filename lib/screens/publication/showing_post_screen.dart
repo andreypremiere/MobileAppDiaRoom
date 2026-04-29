@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:dia_room/components/general/app_avatar.dart';
 import 'package:dia_room/components/general/app_back_button.dart';
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
@@ -95,27 +95,7 @@ class _ShowingPostScreenState extends State<ShowingPostScreen> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // Аватар автора
-                      CachedNetworkImage(
-                        imageUrl: post.author.avatar,
-                        imageBuilder: (context, imageProvider) => CircleAvatar(
-                          radius: 18,
-                          backgroundImage: imageProvider,
-                        ),
-                        placeholder: (context, url) => CircleAvatar(
-                          radius: 18,
-                          backgroundColor: context.ui.primaryColor,
-                        ),
-                        errorWidget: (context, url, error) => CircleAvatar(
-                          radius: 18,
-                          backgroundColor: context.ui.primaryColor,
-                          child: const Icon(
-                            Icons.person,
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                        ),
-                      ),
+                      AppAvatar(imageUrl: post.author.avatar, radius: 18,),
                       const SizedBox(width: 10),
                       // Никнейм автора
                       Text(

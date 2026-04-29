@@ -2,6 +2,7 @@
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 
+import '../general/app_avatar.dart';
 import 'follow_button.dart';
 
 class RoomHeader extends StatelessWidget {
@@ -72,15 +73,7 @@ class RoomHeader extends StatelessWidget {
                     mainAxisAlignment:
                     MainAxisAlignment.spaceBetween,
                     children: [
-                      CircleAvatar(
-                          radius: 40,
-                          backgroundColor: context.ui.fontColorHint,
-                          backgroundImage:
-                          (avatarUrl.isNotEmpty)
-                              ? NetworkImage(
-                            avatarUrl,
-                          ) : null
-                      ),
+                      AppAvatar(imageUrl: avatarUrl, radius: 40,)
                     ],
                   ),
                 ),

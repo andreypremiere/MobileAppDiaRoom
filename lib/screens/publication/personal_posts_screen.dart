@@ -1,4 +1,4 @@
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:dia_room/components/general/app_avatar.dart';
 import 'package:dia_room/models/post_view/author.dart';
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
@@ -143,18 +143,7 @@ class _StatePersonalPostsScreen extends State<PersonalPostsScreen> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      CachedNetworkImage(
-                        imageUrl: roomInfo.avatar,
-                        imageBuilder: (context, imageProvider) => CircleAvatar(
-                          radius: 18,
-                          backgroundImage: imageProvider,
-                        ),
-                        errorWidget: (context, url, error) => CircleAvatar(
-                          radius: 18,
-                          backgroundColor: context.ui.primaryColor,
-                          child: const Icon(Icons.person, color: Colors.white, size: 20),
-                        ),
-                      ),
+                      AppAvatar(imageUrl: roomInfo.avatar, radius: 18,),
                       const SizedBox(width: 10),
                       Text(
                         roomInfo.roomName,

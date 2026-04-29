@@ -1,10 +1,10 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dia_room/components/post_card/stats_widget.dart';
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../models/post_view/feed_post.dart';
+import '../general/app_avatar.dart';
 import 'base_post_card.dart';
 
 class FeedPostComponent extends StatelessWidget {
@@ -37,18 +37,7 @@ class FeedPostComponent extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        CachedNetworkImage(
-          imageUrl: post.author.avatar,
-          imageBuilder: (context, imageProvider) => CircleAvatar(
-            radius: 12,
-            backgroundImage: imageProvider,
-          ),
-          errorWidget: (context, url, error) => CircleAvatar(
-            radius: 12,
-            backgroundColor: context.ui.primaryColor,
-            child: const Icon(Icons.person, size: 14, color: Colors.white),
-          ),
-        ),
+        AppAvatar(imageUrl: post.author.avatar, radius: 12,),
         const SizedBox(width: 8),
         Text(
           post.author.roomName,

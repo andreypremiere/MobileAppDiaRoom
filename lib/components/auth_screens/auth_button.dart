@@ -22,13 +22,12 @@ class AuthButton extends StatelessWidget {
       style: ElevatedButton.styleFrom(
         backgroundColor: backgroundColor ?? context.ui.primaryColor,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(context.ui.radiusButtonStandard),
         ),
       ),
       child: Text(
         text,
         style: TextStyle(
-          fontFamily: "SNPro",
           fontSize: 20,
           fontWeight: FontWeight.w600,
           color: textColor ?? context.ui.fontColorLight,

@@ -92,7 +92,7 @@ class _FollowButtonState extends State<FollowButton> {
             foregroundColor: textColor,
             side: followed ? BorderSide(color: context.ui.primaryColor) : BorderSide.none,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(context.ui.radiusButtonStandard),
             ),
             padding: const EdgeInsets.symmetric(horizontal: 20),
           ),

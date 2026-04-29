@@ -24,7 +24,7 @@ class AppBarButton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         backgroundColor: backgroundColor ?? context.ui.primaryColor,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(context.ui.radiusButtonStandard),
         ),
       ),
       child: Text(
