@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import '../components/app_bar_button.dart';
+import '../components/new_public_post/app_bar_button.dart';
 import '../components/info_dialog_component.dart';
 import '../components/new_public_post/block_toolbar.dart';
 import '../components/new_public_post/post_block_widget.dart';

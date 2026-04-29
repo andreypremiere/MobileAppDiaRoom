@@ -1,21 +1,5 @@
 // Базовый адрес сервера
 const String baseUrl = 'http://192.168.0.102:8080';
-// const String baseUrl = 'http://10.142.132.227:8080';
 
-
-// Urls для user-microservice
-const String newUserUrl = '$baseUrl/auth/newUser';
-const String verifyUserUrl = '$baseUrl/auth/verifyUser';
-const String findUser = '$baseUrl/auth/login';
+// Адрес хранилища
 const String s3BaseUrl = 'https://storage.yandexcloud.net/';
-
-// Urls для room-microservice
-const String getRoomByRoomId = '$baseUrl/rooms/getRoomByRoomId';
-
-// Urls для post-microservice
-const String getPresignedUrls = '$baseUrl/post/getPresignedUrls';
-
-// Urls для объектного хранилища
-const String objectStoragePath = 'https://storage.yandexcloud.net/avatars-diaroom-1';
-const String defaultAvatarPath = 'avatars/default/default.jpg';
-const String objectStorageMediaPostPath = 'https://storage.yandexcloud.net/media-for-publication';

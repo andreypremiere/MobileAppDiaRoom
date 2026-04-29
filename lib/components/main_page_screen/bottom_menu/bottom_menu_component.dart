@@ -2,11 +2,10 @@ import 'package:dia_room/components/info_dialog_component.dart';
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:dia_room/utils/auth_service.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import '../../api/account_api.dart';
+import '../../../api/account_api.dart';
 import 'bottom_menu_item.dart';
 
 // BottomMenu представляет собой навигационную панель в нижней части экрана

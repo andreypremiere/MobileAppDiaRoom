@@ -1,12 +1,12 @@
-import 'package:dia_room/components/bottom_menu/bottom_menu_item.dart';
-import 'package:dia_room/components/keyboard_dismissible.dart';
 import 'package:dia_room/models/auth_response.dart';
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import '../api/post_api.dart';
+import '../components/auth_screens/keyboard_dismissible.dart';
 import '../components/base_post_card.dart';
-import '../components/bottom_menu/bottom_menu_component.dart';
+import '../components/main_page_screen/bottom_menu/bottom_menu_component.dart';
+import '../components/main_page_screen/bottom_menu/bottom_menu_item.dart';
 import '../models/post_view/feed_post.dart';
 
 

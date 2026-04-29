@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../utils/auth_service.dart';
-import '../follow_button.dart';
+import '../room_screen/follow_button.dart';
 import 'like.dart';
 
 class PostFooter extends StatelessWidget {

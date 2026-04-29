@@ -2,7 +2,7 @@
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 
-import '../follow_button.dart';
+import 'follow_button.dart';
 
 class RoomHeader extends StatelessWidget {
   final bool isMyRoom;
