@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 
 import '../../api/account_api.dart';
 import '../../api/post_api.dart';
+import '../../components/general/app_back_button.dart';
 import '../../components/post_card/another_card.dart';
 import '../../api/auth_response.dart';
 import '../../components/post_card/own_card.dart';
@@ -109,12 +110,7 @@ class _StatePersonalPostsScreen extends State<PersonalPostsScreen> {
           preferredSize: const Size.fromHeight(60),
           child: AppBar(
           backgroundColor: context.ui.appBarColor,
-          leading: IconButton(
-            onPressed: () => context.pop(),
-            icon: Icon(Icons.arrow_back_rounded,
-                size: context.ui.iconSizePanel),
-            color: context.ui.fontColorPrimary,
-          ),
+          leading: AppBackButton(),
           title: isMyRoom
               ? Text(
             'Публикации',

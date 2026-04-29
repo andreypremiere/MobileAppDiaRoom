@@ -1,11 +1,12 @@
 import 'dart:io';
 import 'package:dia_room/models/post_creator/post_draft.dart';
 import 'package:dia_room/services/public_post_creating/creating_post_service.dart';
+import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
+import '../../components/general/app_back_button.dart';
 import '../../components/info_dialog_component.dart';
 import '../../models/enums/post_categories.dart';
 
@@ -229,25 +230,17 @@ class _SetSettingsForPostState extends State<SetSettingsForPostScreen> {
 
   PreferredSizeWidget _buildAppBar(BuildContext context) {
     return AppBar(
-      backgroundColor: const Color(0xFFB4B4B4),
+      backgroundColor: context.ui.appBarColor,
       elevation: 0,
-      leading: IconButton(
-        onPressed: () => context.pop(),
-        icon: SvgPicture.asset(
-          'assets/icons/button_back.svg',
-          width: 32,
-          height: 32,
-        ),
-      ),
+      leading: const AppBackButton(),
       title: const Text(
         'Настройки публикации',
         style: TextStyle(
-          fontFamily: 'SNPro',
           fontWeight: FontWeight.w600,
-          fontSize: 22, // Твой размер
+          fontSize: 22,
         ),
-        maxLines: 1, // Текст строго в одну строку
-        overflow: TextOverflow.ellipsis, // Если не влезает — рисуем "..."
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
       ),
     );
   }

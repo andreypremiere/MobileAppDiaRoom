@@ -1,7 +1,7 @@
 import 'package:dia_room/api/auth_response.dart';
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import '../../components/general/app_back_button.dart';
 import '../../components/room_screen/author_tile.dart';
 import '../../models/post_view/author.dart';
 
@@ -72,11 +72,7 @@ class _RoomListScreenState extends State<RoomListScreen> {
       appBar: AppBar(
         backgroundColor: context.ui.appBarColor,
         elevation: 0,
-        leading: IconButton(
-          onPressed: () => context.pop(),
-          icon: Icon(Icons.arrow_back_rounded, size: context.ui.iconSizePanel),
-          color: context.ui.fontColorPrimary,
-        ),
+        leading: AppBackButton(),
         title: Text(
           widget.title,
           style: TextStyle(

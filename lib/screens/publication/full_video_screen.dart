@@ -3,9 +3,9 @@ import 'dart:io';
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
-import 'package:go_router/go_router.dart';
 import 'package:flutter/services.dart';
 
+import '../../components/general/app_back_button.dart';
 import '../../models/enums/file_type.dart';
 
 class FullScreenVideoScreen extends StatefulWidget {
@@ -144,14 +144,7 @@ class _FullScreenVideoScreenState extends State<FullScreenVideoScreen> {
               Positioned(
                 top: MediaQuery.of(context).padding.top,
                 left: 10,
-                child: IconButton(
-                  onPressed: () => context.pop(),
-                  icon: Icon(
-                    Icons.arrow_back_rounded,
-                    size: context.ui.iconSizePanel,
-                  ),
-                  color: context.ui.elementsVideoPlayerColor,
-                ),
+                child: AppBackButton(color: context.ui.elementsVideoPlayerColor),
               ),
 
               // Затемнение снизу для контроллеров

@@ -3,10 +3,11 @@ import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:dia_room/api/account_api.dart';
-import '../../components/auth_screens/app_text_field.dart';
+import '../../components/general/app_back_button.dart';
+import '../../components/general/app_text_field.dart';
 import '../../components/auth_screens/auth_button.dart';
 import '../../components/auth_screens/auth_form_container.dart';
-import '../../components/auth_screens/keyboard_dismissible.dart';
+import '../../components/general/keyboard_dismissible.dart';
 
 class Registration extends StatefulWidget {
   const Registration({super.key});
@@ -98,12 +99,7 @@ class _RegistrationState extends State<Registration> {
             Positioned(
               top: 10,
               left: 10,
-              child: IconButton(
-                onPressed: () => context.pop(),
-                icon: Icon(Icons.arrow_back_rounded,
-                size: context.ui.iconSizePanel),
-                color: context.ui.fontColorPrimary,
-              ),
+              child: const AppBackButton(),
             ),
 
             // Ссылка на политику конфиденциальности внизу экрана

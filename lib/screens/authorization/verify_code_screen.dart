@@ -7,7 +7,8 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'dart:async';
 
-import '../../components/auth_screens/app_text_field.dart';
+import '../../components/general/app_back_button.dart';
+import '../../components/general/app_text_field.dart';
 
 import '../../components/auth_screens/auth_button.dart';
 import '../../components/auth_screens/auth_form_container.dart';
@@ -125,12 +126,7 @@ class _VerifyCodeState extends State<VerifyCode> {
           Positioned(
           top: 10,
           left: 10,
-          child: IconButton(
-            onPressed: () => context.pop(),
-            icon: Icon(Icons.arrow_back_rounded,
-                size: context.ui.iconSizePanel),
-            color: context.ui.fontColorPrimary,
-          ),
+          child: const AppBackButton(),
         ), Center(
           child: SingleChildScrollView(
             child: Column(

@@ -3,7 +3,7 @@ import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import '../api/post_api.dart';
-import '../components/auth_screens/keyboard_dismissible.dart';
+import '../components/general/keyboard_dismissible.dart';
 import '../components/main_page_screen/bottom_menu/bottom_menu_component.dart';
 import '../components/main_page_screen/bottom_menu/bottom_menu_item.dart';
 import '../components/post_card/feed_card.dart';

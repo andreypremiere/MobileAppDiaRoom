@@ -88,6 +88,7 @@ class AppTheme {
     primaryColor: const Color(0xFF722323),
     // Цвета (существующие)
     fontColorPrimary: const Color(0xFF101010),
+    iconColorPrimary: const Color(0xFF101010),
     fontColorHint: const Color(0xFFA4A4A4),
     fontColorLight: const Color(0xFFF5F5F5),
     sectionButtonColor: const Color(0xFF722323),
@@ -125,6 +126,7 @@ class AppTheme {
     primaryColor: const Color(0xFF9B6D6D),
     // Цвета (существующие)
     fontColorPrimary: const Color(0xFFE1E1E1),
+    iconColorPrimary: const Color(0xFFE1E1E1),
     fontColorHint: const Color(0xFF757575),
     fontColorLight: const Color(0xFF757575),
     // Новые цвета (заполни сам)
@@ -173,6 +175,7 @@ class UICustom extends ThemeExtension<UICustom> {
   final Color sectionButtonColor;
   final Color appBarColor;
   final Color viewingPostColor;
+  final Color iconColorPrimary;
 
   // Размеры и шрифты
   final double fontSizeHeader;
@@ -210,6 +213,7 @@ class UICustom extends ThemeExtension<UICustom> {
 
   const UICustom({
     required this.primaryColor,
+    required this.iconColorPrimary,
     required this.fontColorPrimary,
     required this.fontColorHint,
     required this.fontColorLight,
@@ -244,6 +248,7 @@ class UICustom extends ThemeExtension<UICustom> {
   UICustom copyWith({
     Color? primaryColor,
     Color? fontColorPrimary,
+    Color? iconColorPrimary,
     Color? fontColorHint,
     Color? fontColorLight,
     Color? buttonColorSecondary,
@@ -275,6 +280,7 @@ class UICustom extends ThemeExtension<UICustom> {
     return UICustom(
       primaryColor: primaryColor ?? this.primaryColor,
       fontColorPrimary: fontColorPrimary ?? this.fontColorPrimary,
+      iconColorPrimary: iconColorPrimary ?? this.iconColorPrimary,
       fontColorHint: fontColorHint ?? this.fontColorHint,
       fontColorLight: fontColorLight ?? this.fontColorLight,
       buttonColorSecondary: buttonColorSecondary ?? this.buttonColorSecondary,
@@ -310,6 +316,7 @@ class UICustom extends ThemeExtension<UICustom> {
     if (other is! UICustom) return this;
     return UICustom(
       primaryColor: Color.lerp(primaryColor, other.primaryColor, t)!,
+      iconColorPrimary: Color.lerp(iconColorPrimary, other.iconColorPrimary, t)!,
       fontColorPrimary: Color.lerp(fontColorPrimary, other.fontColorPrimary, t)!,
       fontColorHint: Color.lerp(fontColorHint, other.fontColorHint, t)!,
       fontColorLight: Color.lerp(fontColorLight, other.fontColorLight, t)!,

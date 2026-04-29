@@ -3,6 +3,7 @@ import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import '../../components/general/app_back_button.dart';
 import '../../components/new_public_post/app_bar_button.dart';
 import '../../components/info_dialog_component.dart';
 import '../../components/new_public_post/block_toolbar.dart';
@@ -210,12 +211,7 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
           preferredSize: Size.fromHeight(60),
           child: AppBar(
             backgroundColor: context.ui.appBarColor,
-            leading: IconButton(
-              onPressed: () => context.pop(),
-              icon: Icon(Icons.arrow_back_rounded,
-                  size: context.ui.iconSizePanel),
-              color: context.ui.fontColorPrimary,
-            ),
+            leading: const AppBackButton(),
             title: Text(
               'Создание публикации',
               style: TextStyle(

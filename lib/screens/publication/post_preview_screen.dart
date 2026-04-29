@@ -2,6 +2,7 @@ import 'package:dia_room/components/new_public_post/app_bar_button.dart';
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../../components/general/app_back_button.dart';
 import '../../components/showing_post/showing_canvas.dart';
 import '../../models/post_creator/post_draft.dart';
 
@@ -19,12 +20,7 @@ class PostPreviewScreen extends StatelessWidget {
         preferredSize: const Size.fromHeight(60),
         child: AppBar(
           backgroundColor: context.ui.appBarColor,
-          leading: IconButton(
-            onPressed: () => context.pop(),
-            icon: Icon(Icons.arrow_back_rounded,
-                size: context.ui.iconSizePanel),
-            color: context.ui.fontColorPrimary,
-          ),
+          leading: AppBackButton(),
           title: Text(
             'Предпросмотр',
             style: TextStyle(

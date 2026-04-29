@@ -1,4 +1,5 @@
 import 'package:dia_room/api/auth_response.dart';
+import 'package:dia_room/components/general/app_back_button.dart';
 import 'package:dia_room/models/room/base_room.dart';
 import 'package:dia_room/screens/room/rooms_list_screen.dart';
 import 'package:dia_room/utils/app_theme.dart';
@@ -112,14 +113,7 @@ class _RoomState extends State<RoomScreen> {
               shadowColor: Colors.transparent,
               surfaceTintColor: Colors.transparent,
               forceMaterialTransparency: true,
-              leading: IconButton(
-                onPressed: () => context.pop(),
-                icon: Icon(
-                  Icons.arrow_back_rounded,
-                  size: context.ui.iconSizePanel,
-                ),
-                color: context.ui.fontColorPrimary,
-              ),
+              leading: AppBackButton(),
             ),
             body: SafeArea(
               top: false,

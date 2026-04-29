@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import '../../components/general/app_back_button.dart';
 import '../../models/enums/file_type.dart';
 
 class FullImageScreen extends StatefulWidget {
@@ -71,14 +71,7 @@ class _FullImageScreenState extends State<FullImageScreen> {
           Positioned(
             top: MediaQuery.of(context).padding.top,
             left: 10,
-            child: IconButton(
-              onPressed: () => context.pop(),
-              icon: Icon(
-                Icons.arrow_back_rounded,
-                size: context.ui.iconSizePanel,
-              ),
-              color: context.ui.elementsVideoPlayerColor,
-            ),
+            child: AppBackButton(color: context.ui.elementsVideoPlayerColor),
           ),
 
           // 3. Индикатор

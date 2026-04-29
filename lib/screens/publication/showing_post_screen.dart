@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:dia_room/components/general/app_back_button.dart';
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -77,14 +78,7 @@ class _ShowingPostScreenState extends State<ShowingPostScreen> {
             preferredSize: const Size.fromHeight(60),
             child: AppBar(
               backgroundColor: context.ui.appBarColor,
-              leading: IconButton(
-                onPressed: () => context.pop(),
-                icon: Icon(
-                  Icons.arrow_back_rounded,
-                  size: context.ui.iconSizePanel,
-                ),
-                color: context.ui.fontColorPrimary,
-              ),
+              leading: const AppBackButton(),
               // Кликабельный виджет автора в AppBar
               // Внутри AppBar title:
               title: InkWell(
