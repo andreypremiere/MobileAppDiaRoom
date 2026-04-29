@@ -158,10 +158,10 @@ class _VideoBlockWidgetState extends State<VideoBlockWidget> {
       children: [
         // Имя файла (жирное, с обрезкой)
         Text(
-          widget.block.fileName ?? 'Без названия',
+          widget.block.fileName,
           style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
-          maxLines: 1, // Чтобы имя не ломалось на две строки
-          overflow: TextOverflow.ellipsis, // Три точки, если имя очень длинное
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
         const SizedBox(height: 6),
 

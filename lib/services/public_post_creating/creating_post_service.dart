@@ -13,13 +13,8 @@ import 'package:dia_room/models/post_creator/post_draft.dart';
 import 'package:dia_room/models/post_creator/publication_post.dart';
 import 'package:dia_room/models/post_creator/upload_file_info.dart';
 import 'package:uuid/uuid.dart';
-
-// import 'package:http/http.dart' as http;
-// import 'package:uuid/uuid.dart';
-
 import '../../api/post_api.dart';
-import '../../models/post_creator/upload_task.dart';
-import 'media_upload_planner.dart';
+
 
 class CreatingPostService {
   final PostDraft post;

@@ -1,9 +1,6 @@
 import 'package:dia_room/models/post_creator/block_post.dart';
 
 import '../enums/post_categories.dart';
-import 'block_photos.dart';
-import 'block_text.dart';
-import 'block_video.dart';
 
 class PostDraft {
   List<BlockPost> blocks;

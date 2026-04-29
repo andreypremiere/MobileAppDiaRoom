@@ -1,12 +1,9 @@
 import 'package:dia_room/models/post_creator/block_video.dart';
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
-import '../../models/enums/block_type.dart';
 import '../../models/post_creator/block_post.dart';
 import '../../models/post_creator/block_photos.dart';
 import '../../models/post_creator/block_text.dart';
-
-// Импортируй созданные выше виджеты
 import 'build_text_block.dart';
 import 'build_photos_block.dart';
 import 'build_video_block.dart';

@@ -1,15 +1,11 @@
 import 'dart:io';
-import 'package:dia_room/models/post_view/author.dart';
 import 'package:dia_room/models/post_view/base_post.dart';
 import 'package:dia_room/models/post_view/feed_post.dart';
 import 'package:dia_room/models/post_view/personal_post.dart';
 import 'package:dio/dio.dart';
 import 'auth_response.dart';
 import '../models/content_post/showing_post.dart';
-import '../models/post_creator/block_photos.dart';
-import '../models/post_creator/block_video.dart';
 import '../models/post_creator/upload_file_info.dart';
-import '../models/post_creator/upload_task.dart';
 import '../utils/dio_service.dart';
 import 'exception_handler.dart';
 

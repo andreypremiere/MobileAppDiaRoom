@@ -1,27 +1,14 @@
 import 'dart:async';
-
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:dia_room/components/showing_post/text_block_widget.dart';
-import 'package:dia_room/configuration/urls.dart';
-import 'package:dia_room/models/post_creator/block_post.dart';
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../api/post_api.dart';
-import '../../components/showing_post/photos_block_widget.dart';
 import '../../components/showing_post/post_footer.dart';
 import '../../components/showing_post/showing_canvas.dart';
-import '../../components/showing_post/slider_block.dart';
-import '../../components/showing_post/video_preview_widget.dart';
 import '../../api/auth_response.dart';
 import '../../models/content_post/showing_post.dart';
-import '../../models/enums/block_type.dart';
-import '../../models/post_creator/block_photos.dart';
-import '../../models/post_creator/block_text.dart';
-import '../../models/post_creator/block_video.dart';
-import '../../utils/utils.dart';
 
 class ShowingPostScreen extends StatefulWidget {
   final String postId;

@@ -1,7 +1,4 @@
 import 'dart:io';
-
-import 'package:flutter/cupertino.dart';
-
 import '../enums/block_type.dart';
 import '../enums/method_view_photo.dart';
 import 'block_post.dart';

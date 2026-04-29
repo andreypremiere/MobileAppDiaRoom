@@ -1,7 +1,6 @@
 import 'package:dia_room/models/post_creator/block_video.dart';
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../components/new_public_post/app_bar_button.dart';

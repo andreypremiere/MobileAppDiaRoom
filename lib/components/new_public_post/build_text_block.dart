@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../models/post_creator/block_text.dart';
-import '../../utils/utils.dart';
 
 class TextBlockWidget extends StatelessWidget {
   final BlockTextCreating block;

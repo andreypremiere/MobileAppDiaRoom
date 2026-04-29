@@ -1,7 +1,3 @@
-import 'package:uuid/uuid.dart';
-
-import 'block_post.dart';
-
 class UploadFileInfo {
   final String uploadId;
   final String filename;

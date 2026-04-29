@@ -1,6 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dia_room/models/post_view/author.dart';
-import 'package:dia_room/models/post_view/personal_post.dart';
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -9,10 +8,8 @@ import 'package:provider/provider.dart';
 import '../../api/account_api.dart';
 import '../../api/post_api.dart';
 import '../../components/base_post_card.dart';
-import '../../configuration/urls.dart';
 import '../../api/auth_response.dart';
 import '../../utils/auth_service.dart';
-import '../../utils/utils.dart';
 
 // PersonalPostsScreen отображает список постов конкретной комнаты
 class PersonalPostsScreen extends StatefulWidget {
