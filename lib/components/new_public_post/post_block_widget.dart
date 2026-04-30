@@ -1,11 +1,9 @@
 import 'package:dia_room/models/post_creator/block_video.dart';
+import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
-import '../../models/enums/post_types.dart';
 import '../../models/post_creator/block_post.dart';
 import '../../models/post_creator/block_photos.dart';
 import '../../models/post_creator/block_text.dart';
-
-// Импортируй созданные выше виджеты
 import 'build_text_block.dart';
 import 'build_photos_block.dart';
 import 'build_video_block.dart';
@@ -58,21 +56,21 @@ class PostBlockWrapper extends StatelessWidget {
   }
 
   Widget _buildBlockContent() {
-    if (block is BlockText) {
+    if (block is BlockTextCreating) {
       return TextBlockWidget(
-        block: block as BlockText,
+        block: block as BlockTextCreating,
         onFocus: onFocus,
       );
     }
-    if (block is BlockPhotos) {
+    if (block is BlockPhotosCreating) {
       return PhotosBlockWidget(
-        block: block as BlockPhotos,
+        block: block as BlockPhotosCreating,
         onChanged: onChanged, // Передаем колбэк для обновления фото
       );
     }
-    if (block is BlockVideo) {
+    if (block is BlockVideoCreating) {
       return VideoBlockWidget(
-        block: block as BlockVideo,
+        block: block as BlockVideoCreating,
         onChanged: onChanged,
       );
     }
@@ -95,7 +93,7 @@ class PostBlockWrapper extends StatelessWidget {
               width: double.infinity,
               decoration: BoxDecoration(
                 border: Border.all(
-                  color: isFocused ? Colors.blue : const Color(0xFFC9C9C9),
+                  color: isFocused ? context.ui.fontColorPrimary : context.ui.fontColorHint,
                   width: 1,
                 ),
                 borderRadius: BorderRadius.circular(8),

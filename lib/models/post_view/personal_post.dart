@@ -5,16 +5,19 @@ import 'base_post.dart';
 
 class PersonalPost extends BasePost {
   final String status;
+  final String statusAi;
 
   PersonalPost({
     required this.status,
+    required this.statusAi,
     required super.data,
     required super.stats,
   });
 
   factory PersonalPost.fromMap(Map<String, dynamic> map) {
     return PersonalPost(
-      status: map['status'] ?? 'published',
+      status: map['status'] ?? 'Не удалось получить',
+      statusAi: map['statusAi'] ?? 'Не удалось получить',
       data: PostData.fromMap(map),
       stats: Statistics.fromMap(map),
     );

@@ -1,8 +1,15 @@
 // Функция для создания полного пути из базового url и postfix
 import 'package:flutter/material.dart';
 
+import '../configuration/urls.dart';
+
 String createFullPathAvatar(String prefix, String postfix) {
   return "$prefix/$postfix";
+}
+
+String getFullUrl(String path) {
+  if (path.startsWith('http')) return path;
+  return '$s3BaseUrl$path';
 }
 
 FontWeight getFontWeight(int value) {

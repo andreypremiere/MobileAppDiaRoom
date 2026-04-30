@@ -1,18 +1,15 @@
-import 'package:dia_room/models/auth_response.dart';
+import 'package:dia_room/api/auth_response.dart';
+import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
-import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
-
+import 'package:flutter/rendering.dart';
 import '../api/post_api.dart';
-import '../components/bottom_menu_component.dart';
-import '../components/post_component.dart';
-import '../configuration/urls.dart';
+import '../components/general/keyboard_dismissible.dart';
+import '../components/main_page_screen/bottom_menu/bottom_menu_component.dart';
+import '../components/main_page_screen/bottom_menu/bottom_menu_item.dart';
+import '../components/post_card/feed_card.dart';
 import '../models/post_view/feed_post.dart';
-import '../utils/auth_service.dart';
-import '../utils/utils.dart';
 
-// MainPageScreen — основной экран ленты с поиском и списком постов
+
 class MainPageScreen extends StatefulWidget {
   const MainPageScreen({super.key});
 
@@ -23,35 +20,68 @@ class MainPageScreen extends StatefulWidget {
 }
 
 class _StateMainPageScreen extends State<MainPageScreen> {
-  String? avatarUrl;
-  final TextEditingController _controller = TextEditingController();
-  final FocusNode _focusNode = FocusNode();
-  bool _isFocused = false;
+  // final TextEditingController _controller = TextEditingController();
+  // final FocusNode _focusNode = FocusNode();
+  // bool _isFocused = false;
   late Future<AuthResponse> _response;
+  bool _isBottomMenuVisible = true;
+  final ScrollController _scrollController = ScrollController();
+  bool _showBackToTop = false;
 
   @override
   void initState() {
     super.initState();
+
+    _scrollController.addListener(() {
+      if (_scrollController.offset > 300 && !_showBackToTop && _isBottomMenuVisible) {
+        setState(() => _showBackToTop = true);
+      } else if ((_scrollController.offset <= 300 || !_isBottomMenuVisible) && _showBackToTop) {
+        setState(() => _showBackToTop = false);
+      }
+    });
+
     _loadPosts();
 
-    // Слушаем изменение фокуса, чтобы скрывать/показывать кнопку поиска
-    _focusNode.addListener(() {
-      setState(() {
-        _isFocused = _focusNode.hasFocus;
-      });
-    });
-    // Слушаем ввод текста для обновления состояния (например, для иконки очистки)
-    _controller.addListener(() {
-      setState(() {});
-    });
+    // _focusNode.addListener(() {
+    //   setState(() {
+    //     _isFocused = _focusNode.hasFocus;
+    //   });
+    // });
+    // _controller.addListener(() {
+    //   setState(() {});
+    // });
   }
 
   @override
   void dispose() {
-    // Освобождение ресурсов контроллеров
-    _controller.dispose();
-    _focusNode.dispose();
+    _scrollController.dispose();
+    // _controller.dispose();
+    // _focusNode.dispose();
     super.dispose();
+  }
+
+  void _scrollToTop() {
+    _scrollController.animateTo(
+      0,
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeInOut,
+    );
+  }
+
+  bool _handleScrollNotification(UserScrollNotification notification) {
+    if (notification.direction == ScrollDirection.reverse) {
+      if (_isBottomMenuVisible) {
+        setState(() {
+          _isBottomMenuVisible = false;
+          _showBackToTop = false;
+        });
+      }
+    } else if (notification.direction == ScrollDirection.forward) {
+      if (!_isBottomMenuVisible) {
+        setState(() => _isBottomMenuVisible = true);
+      }
+    }
+    return true;
   }
 
   void _loadPosts() {
@@ -60,142 +90,51 @@ class _StateMainPageScreen extends State<MainPageScreen> {
     });
   }
 
+  Future<void> _onRefresh() async {
+    _loadPosts();
+    await _response;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      // Скрытие клавиатуры при тапе по любому месту экрана
-      onTap: () => FocusScope.of(context).unfocus(),
+    return KeyboardDismissible(
       child: Scaffold(
         extendBody: true,
-        // Позволяет контенту просвечивать под прозрачным BottomMenu
-        body: CustomScrollView(
+        body: RefreshIndicator(
+          color: context.ui.primaryColor,
+          onRefresh: _onRefresh,
+          child: NotificationListener<UserScrollNotification>(
+          onNotification: _handleScrollNotification,
+
+          child: CustomScrollView(
+          controller: _scrollController,
           slivers: [
-            // SliverAppBar реализует эффект "уезжающей" при скролле шапки
-            SliverAppBar(
-              toolbarHeight: 60,
-              backgroundColor: Colors.transparent,
-              surfaceTintColor: Colors.transparent,
-              floating: true,
-              // Появляется сразу при скролле вверх
-              snap: true,
-              // Доводит анимацию до конца при легком движении
-              elevation: 0,
-              titleSpacing: 0,
-              title: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 6),
-                child: Row(
-                  children: [
-                    // Основное поле ввода поиска
-                    Expanded(
-                      child: TextField(
-                        controller: _controller,
-                        focusNode: _focusNode,
-                        style: const TextStyle(
-                          fontFamily: "SNPro",
-                          fontSize: 18,
-                          fontWeight: FontWeight.w400,
-                        ),
-                        decoration: InputDecoration(
-                          hintText: "Поиск",
-                          isDense: true,
-                          contentPadding: const EdgeInsets.symmetric(
-                            vertical: 10,
-                            horizontal: 12,
-                          ),
-                          fillColor: const Color(0xFFFFFFFF),
-                          filled: true,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none,
-                          ),
-                          // Иконка "крестик" появляется только в фокусе
-                          suffixIcon: (_isFocused)
-                              ? IconButton(
-                                  icon: const Icon(
-                                    Icons.close,
-                                    size: 32,
-                                    color: Color(0xFF595959),
-                                  ),
-                                  onPressed: () {
-                                    _controller.clear();
-                                    _focusNode.unfocus();
-                                  },
-                                )
-                              : null,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-
-                    // Анимированная кнопка "Найти", плавно выезжающая справа
-                    AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      width: _isFocused ? 80 : 0,
-                      // Динамическое изменение ширины
-                      child: _isFocused
-                          ? ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 2,
-                                  horizontal: 2,
-                                ),
-                                backgroundColor: const Color(0xFF722323),
-                                elevation: 0,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                              onPressed: () {
-                                print("Ищем: ${_controller.text}");
-                                _focusNode.unfocus();
-                              },
-                              child: const Text(
-                                "Найти",
-                                style: TextStyle(
-                                  fontFamily: "SNPro",
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w400,
-                                  color: Color(0xFFFFFFFF),
-                                ),
-                                maxLines: 1,
-                              ),
-                            )
-                          : const SizedBox.shrink(),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            // Список постов внутри Sliver-структуры
-            // Внутри SliverPadding меняем SliverList на FutureBuilder
-            SliverPadding(
+            // SliverAppBar был тут
+          SliverSafeArea(
+            top: true,
+            bottom: true, sliver: SliverPadding(
               padding: const EdgeInsets.symmetric(vertical: 2),
               sliver: FutureBuilder<AuthResponse>(
                 future: _response,
                 builder: (context, snapshot) {
-                  // 1. СОСТОЯНИЕ ЗАГРУЗКИ
                   if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const SliverFillRemaining(
+                    return SliverFillRemaining(
                       child: Center(
                         child: CircularProgressIndicator(
-                          color: Color(0xFF722323), // Твой фирменный цвет
+                          color: context.ui.primaryColor,
                         ),
                       ),
                     );
                   }
 
-                  // 2. ОБРАБОТКА ОШИБКИ (Network error или сервер упал)
                   if (snapshot.hasError) {
                     return SliverFillRemaining(
                       child: Center(child: Text("Ошибка сети: ${snapshot.error}")),
                     );
                   }
 
-                  // 3. ПОЛУЧЕНИЕ ДАННЫХ
                   final authResponse = snapshot.data;
 
-                  // Проверка на успех в твоем AuthResponse
                   if (authResponse == null || !authResponse.success) {
                     return SliverFillRemaining(
                       child: Center(
@@ -212,42 +151,64 @@ class _StateMainPageScreen extends State<MainPageScreen> {
                     );
                   }
 
-                  // 4. ОТОБРАЖЕНИЕ СПИСКА
                   return SliverList(
                     delegate: SliverChildBuilderDelegate(
                           (context, index) {
-                        if (index == posts.length) {
-                          return SizedBox(height: MediaQuery.of(context).padding.bottom);
-                        }
 
                         final post = posts[index];
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 10),
-                          child: PostComponent(
+                          child: FeedPostComponent(
                             post: post,
-                            // onTap: () {
-                            //   // Здесь переделать просто передавать
-                            //   context.push('/showPost', extra: post);
-                            // },
                           ),
                         );
                       },
-                      childCount: posts.length + 1, // +1 для нижнего отступа
+                      childCount: posts.length,
                     ),
                   );
                 },
               ),
-            ),
+            ),)
           ],
+        ),),),
+
+        // Стрелка вверх
+        floatingActionButton: AnimatedOpacity(
+          duration: const Duration(milliseconds: 300),
+          opacity: _showBackToTop ? 1.0 : 0.0,
+          child: Container(
+              padding: EdgeInsets.all(2),
+              decoration: ShapeDecoration(
+                color: context.ui.containerColor,
+                shape: const StadiumBorder(),
+                shadows: [
+                  BoxShadow(
+                    blurRadius: 8,
+                    color: Colors.black.withAlpha(25),
+                    spreadRadius: 4,
+                  ),
+                ],
+              ),
+              child: BottomMenuItem(icon: Icons.arrow_upward_rounded, onPressed: _scrollToTop)
+            ),
         ),
-        // Фиксированное нижнее меню с учетом безопасных зон (Safe Area)
-        bottomNavigationBar: Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).padding.bottom + 3,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: const [BottomMenu()],
+
+        // Нижнее меню
+        bottomNavigationBar: AnimatedSlide(
+          duration: const Duration(milliseconds: 300),
+          offset: _isBottomMenuVisible ? Offset.zero : const Offset(0, 2),
+          child: AnimatedOpacity(
+            duration: const Duration(milliseconds: 300),
+            opacity: _isBottomMenuVisible ? 1.0 : 0.0,
+            child: Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).padding.bottom + 2,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: const [BottomMenu()],
+              ),
+            ),
           ),
         ),
       ),

@@ -1,8 +1,6 @@
 import 'package:dia_room/models/post_view/post_data.dart';
 import 'package:dia_room/models/post_view/statistics.dart';
 
-import 'author.dart';
-
 class BasePost {
   final PostData data;
   final Statistics stats;

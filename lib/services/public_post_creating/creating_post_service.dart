@@ -4,70 +4,59 @@
 
 import 'dart:io';
 
-import 'package:dia_room/models/auth_response.dart';
+import 'package:dia_room/api/auth_response.dart';
 import 'package:dia_room/models/post_creator/block_photos.dart';
 import 'package:dia_room/models/post_creator/block_post.dart';
 import 'package:dia_room/models/post_creator/block_text.dart';
 import 'package:dia_room/models/post_creator/block_video.dart';
 import 'package:dia_room/models/post_creator/post_draft.dart';
-import 'package:dia_room/models/post_creator/preview_request.dart';
 import 'package:dia_room/models/post_creator/publication_post.dart';
 import 'package:dia_room/models/post_creator/upload_file_info.dart';
-import 'package:dia_room/models/user.dart';
 import 'package:uuid/uuid.dart';
-
-// import 'package:http/http.dart' as http;
-// import 'package:uuid/uuid.dart';
-
 import '../../api/post_api.dart';
-import '../../models/post_creator/upload_task.dart';
-import 'media_upload_planner.dart';
+
 
 class CreatingPostService {
   final PostDraft post;
-  final User user;
   PublicationPost publicationPost;
 
-  CreatingPostService({required this.post, required this.user})
+  CreatingPostService({required this.post})
     : publicationPost = PublicationPost.fromDraft(
         draft: post,
-        roomId: user.roomId,
       );
 
   List<BlockUpload> createUploadFiles(List<BlockPost> blocks) {
     List<BlockUpload> blocksUpload = [];
 
     for (final block in blocks) {
-      if (block is BlockText) {
-        final newMetadata = MetadataText();
-        newMetadata.size = block.metadata.size;
-        newMetadata.weight = block.metadata.weight;
+      if (block is BlockTextCreating) {
         blocksUpload.add(
           BlockTextUpload(
-            text: block.controller.text,
+            text: block.value,
             textType: block.textType,
-            metadata: newMetadata,
           ),
         );
-      } else if (block is BlockPhotos) {
+      } else if (block is BlockPhotosCreating) {
         final photoUpload = BlockPhotoUpload(methodView: block.methodView);
 
-        for (var i = 0; i < block.paths.length; i++) {
+        for (var i = 0; i < block.listPhoto.length; i++) {
           photoUpload.listPhoto.add(
             PhotoInfo(
-              filePath: block.paths[i],
+              filePath: block.listPhoto[i].filePath,
               uploadId: const Uuid().v4(),
-              size: block.photoSizes[i],
+              size: block.listPhoto[i].size,
+              publicUrl: '',
+              presignedUrl: '',
             ),
           );
         }
         blocksUpload.add(photoUpload);
-      } else if (block is BlockVideo) {
+      } else if (block is BlockVideoCreating) {
         final videoUpload = BlockVideoUpload(
-          filePath: block.path!,
-          previewPath: block.previewPath!,
-          fileSize: block.fileSize!,
-          duration: block.duration ?? Duration.zero,
+          filePath: block.localPath,
+          previewPath: block.previewLocalPath,
+          fileSize: block.fileSize,
+          duration: block.duration,
           uploadIdVideo: const Uuid().v4(),
           uploadIdPreview: const Uuid().v4(),
         );
@@ -163,10 +152,10 @@ class CreatingPostService {
       if (block is BlockPhotoUpload) {
         // Загружаем список фотографий в блоке
         for (final photo in block.listPhoto) {
-          if (photo.presignedUrl != null) {
+          if (photo.presignedUrl.isNotEmpty) {
             final success = await uploadSingleMediaFile(
               photo.filePath,
-              photo.presignedUrl!,
+              photo.presignedUrl,
               "image/jpeg",
             );
             if (!success) allSuccess = false;
@@ -174,9 +163,9 @@ class CreatingPostService {
         }
       } else if (block is BlockVideoUpload) {
         // 1. Загружаем само видео
-        if (block.presignedUrlVideo != null) {
+        if (block.presignedUrlVideo != null && block.presignedUrlVideo!.isNotEmpty) {
           final videoSuccess = await uploadSingleMediaFile(
-            block.filePath!,
+            block.filePath,
             block.presignedUrlVideo!,
             'video/mp4', // убедитесь, что это поле есть (обычно video/mp4)
           );
@@ -184,7 +173,7 @@ class CreatingPostService {
         }
 
         // 2. Загружаем превью (обложку) видео
-        if (block.presignedUrlPreview != null) {
+        if (block.presignedUrlPreview != null && block.presignedUrlPreview!.isNotEmpty) {
           final previewSuccess = await uploadSingleMediaFile(
             block.previewPath,
             block.presignedUrlPreview!,
@@ -228,12 +217,10 @@ class CreatingPostService {
     AuthResponse resultCreating;
 
     /// Выполняем запрос на создание поста и получаем сразу ссылки
-    /// на превью (публичную и загрузку
+    /// на превью (публичную и загрузку)
     try {
       final postCreating = {
         "title": publicationPost.title,
-        "postStatus": publicationPost.postStatus.name,
-        "aiStatus": publicationPost.aiCheckStatus.name,
         "categorySlug": publicationPost.categorySlug.id,
         "hashtags": publicationPost.hashtags,
       };
@@ -270,7 +257,6 @@ class CreatingPostService {
     if (!resultUploadPreview) {
       print('Превью не было загружено, продолжаем создание поста');
     }
-    /// ---Конец блока
 
     /// Формируем список для будущего payload поста
     print("🛠️ [ШАГ 3: Payload] Сбор файлов из блоков контента...");
@@ -295,12 +281,8 @@ class CreatingPostService {
       print("✅ [ШАГ 4: S3 Links] Ссылки успешно получены.");
     }
 
-    /// Заполняем ссылками payload
     print("📝 [ШАГ 5: Payload Update] Привязка полученных ссылок к блокам...");
     applyPresignedResponse(publicationPost.payload!, responseUrls.data!['files']);
-
-    final result = await uploadAllMediaFromBlocks(publicationPost.payload!);
-    print('Результат загрузки медиа в хранилище $result');
 
     print("📡 [ШАГ 6: Canvas] Отправка финального холста (Canvas) на сервер...");
     final resultCreatingCanvas = savePostCanvas(
@@ -309,6 +291,12 @@ class CreatingPostService {
     );
 
     print('📊 [ШАГ 6: Canvas] Результат сохранения холста: $resultCreatingCanvas');
+    final result = await uploadAllMediaFromBlocks(publicationPost.payload!);
+    print('Результат загрузки медиа в хранилище $result');
+
+    print("📡 [ШАГ 7: Canvas] Обновление статуса и добавление в очередь на проверку...");
+    final resultStatusUpdating = await updateStatusPost(postId: resultCreating.data!['postId']);
+    print("Результат обновления статуса ${resultStatusUpdating.success}");
 
     print('--- [FINISH] Процесс создания поста завершен успешно ---');
   }

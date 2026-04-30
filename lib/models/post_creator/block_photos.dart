@@ -1,30 +1,48 @@
 import 'dart:io';
-
-import '../enums/post_types.dart';
+import '../enums/block_type.dart';
+import '../enums/method_view_photo.dart';
 import 'block_post.dart';
 
+
+
 class BlockPhotos extends BlockPost {
-  List<String> paths;
+  List<PhotoInfo> listPhoto;
   MethodViewPhoto methodView;
-  List<int> photoSizes;
+
+  BlockPhotos({required this.listPhoto, required this.methodView}) : super(type: BlockType.photos);
+
+  static BlockPhotos fromMap(Map<String, dynamic> map) {
+    final List<dynamic> photosRaw = map['listPhoto'] ?? [];
+    final List<PhotoInfo> photos = photosRaw
+        .map((photoMap) => PhotoInfo.fromMap(photoMap as Map<String, dynamic>))
+        .toList();
+
+    final viewMethod = MethodViewPhoto.fromMap(map);
+
+    return BlockPhotos(
+      listPhoto: photos,
+      methodView: viewMethod,
+    );
+  }
+
+}
+
+class BlockPhotosCreating extends BlockPhotos implements Validatable {
   static const limitPhotos = 10;
 
-  bool get isFull => paths.length >= limitPhotos;
 
-  BlockPhotos({List<String>? paths, List<int>? photoSizes, this.methodView = MethodViewPhoto.tiles})
-      : paths = paths ?? [], photoSizes = photoSizes ?? [],
-        super(type: BlockPostType.photos);
+
+  BlockPhotosCreating({required super.listPhoto, required super.methodView});
+
+  bool get isFull => listPhoto.length >= limitPhotos;
 
   @override
   bool isEmpty() {
-    if (paths.isEmpty) {
-      return true;
-    }
-    return false;
+    return listPhoto.isEmpty;
   }
 
   Future<bool> addPath(String path) async {
-    if (paths.length >= limitPhotos) {
+    if (listPhoto.length >= limitPhotos) {
       return false;
     }
 
@@ -32,8 +50,8 @@ class BlockPhotos extends BlockPost {
       final file = File(path);
       if (await file.exists()) {
         int size = await file.length();
-        paths.add(path);
-        photoSizes.add(size); // Добавляем размер в соответствующий индекс
+        final newPhoto = PhotoInfo(filePath: path, uploadId: '', size: size, publicUrl: '', presignedUrl: '');
+        listPhoto.add(newPhoto);
         return true;
       }
     } catch (e) {
@@ -44,49 +62,54 @@ class BlockPhotos extends BlockPost {
 
   Future<void> deletePhoto(int index) async {
     try {
-      if (await File(paths[index]).exists()) {
-        await File(paths[index]).delete();
+      if (await File(listPhoto[index].filePath).exists()) {
+        await File(listPhoto[index].filePath).delete();
       }
     } catch (e) {
       print("Файл уже удален или недоступен");
     }
 
-    paths.removeAt(index);
-    photoSizes.removeAt(index); // Удаляем размер вместе с путем
+    listPhoto.removeAt(index);
   }
 
   Future<void> deleteAllPhotos() async {
-    for (String path in paths) {
+    for (final item in listPhoto) {
       try {
-        final file = File(path);
+        final file = File(item.filePath);
         if (await file.exists()) await file.delete();
       } catch (e) {
-        print("Ошибка при удалении файла $path: $e");
+        print("Ошибка при удалении файла $item.filePath: $e");
       }
     }
-    paths.clear();
-    photoSizes.clear();
+    listPhoto.clear();
   }
 }
 
 class PhotoInfo {
   String filePath;
   String uploadId;
-  String? publicUrl;
-  String? presignedUrl;
+  String publicUrl;
+  String presignedUrl;
   int size;
 
   PhotoInfo({required this.filePath, required this.uploadId,
-  required this.size});
+  required this.size, required this.publicUrl, required this.presignedUrl});
 
   Map<String, dynamic> toJson() {
     return {
-      'uploadId': uploadId,
       'publicUrl': publicUrl,
-      // filePath и presignedUrl обычно НЕ отправляются в финальный payload для БД,
-      // так как они временные, но если они нужны для кэша — можно оставить.
       'size': size,
     };
+  }
+
+  factory PhotoInfo.fromMap(Map<String, dynamic> map) {
+    return PhotoInfo(
+      filePath: map['filePath'] ?? '',
+      uploadId: map['uploadId'] ?? '',
+      publicUrl: map['publicUrl'] ?? '',
+      presignedUrl: map['presignedUrl'] ?? '',
+      size: (map['size'] as num? ?? 0).toInt(),
+    );
   }
 }
 
@@ -95,14 +118,14 @@ class BlockPhotoUpload extends BlockUpload {
   List<PhotoInfo> listPhoto;
 
   BlockPhotoUpload({required this.methodView}) : listPhoto = <PhotoInfo>[],
-  super(type: BlockPostType.photos);
+  super(type: BlockType.photos);
 
 
   @override
   Map<String, dynamic> toJson() {
     return {
-      'type': type.name, // Используем name из Enum (photos)
-      'methodView': methodView.name, // Предполагаем, что это Enum
+      'blockType': type.slug, // Используем name из Enum (photos)
+      'methodView': methodView.slug, // Предполагаем, что это Enum
       'listPhoto': listPhoto.map((photo) => photo.toJson()).toList(),
     };
   }

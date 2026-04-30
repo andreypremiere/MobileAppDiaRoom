@@ -1,9 +1,5 @@
-import 'package:dia_room/utils/utils.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'dart:convert';
-
-import '../models/user.dart';
 import 'dio_service.dart';
 import 'jwt_manager.dart';
 

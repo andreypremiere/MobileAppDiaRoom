@@ -1,82 +1,77 @@
 import 'package:flutter/material.dart';
 
-import '../enums/post_types.dart';
+import '../enums/block_type.dart';
+import '../enums/text_type.dart';
 import 'block_post.dart';
 
-class MetadataText {
-  int size;
-  int weight;
+class TextBlockPost extends BlockPost {
+  String value;
+  TextType textType;
 
-  MetadataText() : size = 14, weight = 400;
+  TextBlockPost({
+    required this.value,
+    required this.textType,
+  }) : super(type: BlockType.text);
 
-  Map<String, dynamic> toJson() {
-    return {
-      'size': size,
-      'weight': weight,
-    };
+  // Статический метод для создания объекта из Map
+  static TextBlockPost fromMap(Map<String, dynamic> map) {
+    return TextBlockPost(
+      value: map['text'] ?? 'Не удалось извлечь значение текстового блока. Это шаблонный текст.',
+      textType: TextType.fromMap(map),
+    );
   }
 }
 
-class BlockText extends BlockPost {
+
+
+class BlockTextCreating extends TextBlockPost implements Validatable{
   TextEditingController controller;
   final FocusNode focusNode;
-  TextType textType;
-  MetadataText metadata;
 
-  BlockText({
-    required this.controller,
-    MetadataText? metadata,
-    this.textType = TextType.text,
-  }) : focusNode = FocusNode(), metadata = metadata ?? MetadataText(),
-        super(type: BlockPostType.text);
+  BlockTextCreating({
+    TextEditingController? controller,
+    FocusNode? focusNode,
+  })  : controller = controller ?? TextEditingController(),
+        focusNode = focusNode ?? FocusNode(),
+        super(
+        value: controller?.text ?? '',
+        textType: TextType.text,
+      );
+
+  @override
+  String get value => controller.text;
+
+  @override
+  set value(String newValue) {
+    controller.text = newValue;
+  }
 
   void dispose() {
     controller.dispose();
     focusNode.dispose();
   }
 
-  void setTitleType() {
-    // textType = TextType.header;
-    metadata.size = 22;
-    metadata.weight = 800;
-  }
-
-  void setSubtitleType() {
-    // textType = TextType.subtitle;
-    metadata.size = 18;
-    metadata.weight = 600;
-  }
-
-  void setUsualText() {
-    // textType = TextType.text;
-    metadata.size = 16;
-    metadata.weight = 400;
-  }
-
   @override
   bool isEmpty() {
-    return controller.text.isEmpty;
+    return value.isEmpty;
   }
 }
 
 class BlockTextUpload extends BlockUpload {
   String text;
   TextType textType;
-  MetadataText metadata;
 
   BlockTextUpload({
     required this.text,
     required this.textType,
-    required this.metadata
-}) : super(type: BlockPostType.text);
+}) : super(type: BlockType.text);
 
 
   Map<String, dynamic> toJson() {
     return {
-      'type': type.name, // text
+      'blockType': type.slug, // text
       'text': text,
-      'textType': textType.name, // Например: header, paragraph
-      'metadata': metadata.toJson(),
+      'textType': textType.slug, // Например: header, paragraph
     };
   }
 }

@@ -1,25 +1,84 @@
 import 'dart:io';
 
-import 'package:dia_room/models/enums/post_types.dart';
+import 'package:dia_room/models/enums/block_type.dart';
 import 'package:dia_room/models/post_creator/block_post.dart';
 import 'package:get_thumbnail_video/index.dart';
 import 'package:get_thumbnail_video/video_thumbnail.dart';
 import 'package:video_player/video_player.dart';
 import 'package:path_provider/path_provider.dart';
 
-
 class BlockVideo extends BlockPost {
-  String? path;
-  String? fileName;
-  String? previewPath;
-  int? fileSize;
-  Duration? duration;
+  String localPath;
+  String publicUrl;
 
-  BlockVideo() : super(type: BlockPostType.videos);
+  String fileName;
+
+  String previewLocalPath;
+  String previewPublicUrl;
+
+  int fileSize;
+  Duration duration;
+
+  BlockVideo({
+    required this.localPath,
+    required this.publicUrl,
+    required this.previewLocalPath,
+    required this.fileName,
+    required this.previewPublicUrl,
+    required this.fileSize,
+    required this.duration,
+  }) : super(type: BlockType.videos);
+
+  factory BlockVideo.fromMap(Map<String, dynamic> map) {
+    return BlockVideo(
+      localPath: map['localPath'] ?? '',
+      publicUrl: map['publicUrlVideo'] ?? '',
+      fileName: map['fileName'] ?? '',
+      previewLocalPath: map['previewLocalPath'] ?? '',
+      previewPublicUrl: map['publicUrlPreview'] ?? '',
+      fileSize: (map['fileSize'] as num? ?? 0).toInt(),
+      duration: Duration(milliseconds: (map['durationMs'] as num? ?? 0).toInt()),
+    );
+  }
+
+  String getFormattedDuration() {
+    if (duration == Duration.zero) return "-:--";
+
+    String twoDigits(int n) => n.toString().padLeft(2, "0");
+
+    final hours = duration.inHours;
+    final minutes = duration.inMinutes.remainder(60);
+    final seconds = duration.inSeconds.remainder(60);
+
+    if (hours > 0) {
+      // Формат H:MM:SS
+      return "$hours:${twoDigits(minutes)}:${twoDigits(seconds)}";
+    } else {
+      // Формат M:SS
+      return "${duration.inMinutes}:${twoDigits(seconds)}";
+    }
+  }
+}
+
+class BlockVideoCreating extends BlockVideo implements Validatable {
+  String presignedUrl;
+  String previewPresignedUrl;
+
+  BlockVideoCreating({
+    required this.presignedUrl,
+    required this.previewPresignedUrl,
+    required super.localPath,
+    required super.publicUrl,
+    required super.previewLocalPath,
+    required super.fileName,
+    required super.previewPublicUrl,
+    required super.fileSize,
+    super.duration = Duration.zero,
+  });
 
   String getStringFileSize() {
-    if (fileSize != null) {
-      return "${(fileSize! / (1024 * 1024)).toStringAsFixed(2)} MB";
+    if (fileSize != 0) {
+      return "${(fileSize / (1024 * 1024)).toStringAsFixed(2)} MB";
     }
     else {
       return "";
@@ -29,9 +88,8 @@ class BlockVideo extends BlockPost {
   /// Подгружает имя файла, размер файла, длительность файла
   Future<bool> loadMetadata(String videoPath, int length) async {
     try {
-      path = videoPath;
+      localPath = videoPath;
       final file = File(videoPath);
-      // final bytes = await file.length();
 
       fileSize = length;
       fileName = videoPath
@@ -50,48 +108,60 @@ class BlockVideo extends BlockPost {
   }
 
   Future<bool> generatePreview() async {
-    if (path == null) return false;
+    if (localPath.isEmpty) return false;
 
     final uint8list = await VideoThumbnail.thumbnailFile(
-      video: path!,
+      video: localPath,
       thumbnailPath: (await getTemporaryDirectory()).path,
       imageFormat: ImageFormat.JPEG,
       maxHeight: 600,
       quality: 90,
     );
 
-    previewPath = uint8list.path;
-    // print("Превью создано: $previewPath");
+    previewLocalPath = uint8list.path;
     return true;
   }
 
-  String getformattedDuration(Duration? duration) {
-    if (duration == null) return "0:00";
+  String getFormattedDuration() {
+    if (duration == Duration.zero) return "-:--";
+
     String twoDigits(int n) => n.toString().padLeft(2, "0");
-    String minutes = twoDigits(duration.inMinutes.remainder(60));
-    String seconds = twoDigits(duration.inSeconds.remainder(60));
-    return "$minutes:$seconds";
+
+    final hours = duration.inHours;
+    final minutes = duration.inMinutes.remainder(60);
+    final seconds = duration.inSeconds.remainder(60);
+
+    if (hours > 0) {
+      // Формат H:MM:SS
+      return "$hours:${twoDigits(minutes)}:${twoDigits(seconds)}";
+    } else {
+      // Формат M:SS
+      return "${duration.inMinutes}:${twoDigits(seconds)}";
+    }
   }
 
   Future<void> clearBlock() async {
-    if (path != null) {
-      if (await File(path!).exists()) await File(path!).delete();
+    if (localPath.isNotEmpty) {
+      if (await File(localPath).exists()) await File(localPath).delete();
     }
 
-    if (previewPath != null) {
-      if (await File(previewPath!).exists()) await File(previewPath!).delete();
+    if (previewLocalPath.isNotEmpty) {
+      if (await File(previewLocalPath).exists()) await File(previewLocalPath).delete();
     }
 
-    path = null;
-    fileName = null;
-    previewPath = null;
-    fileSize = null;
-    duration = null;
+    localPath = '';
+    publicUrl = '';
+    presignedUrl = '';
+    previewLocalPath = '';
+    previewPublicUrl = '';
+    previewPresignedUrl = '';
+    fileSize = 0;
+    duration = Duration.zero;
   }
 
   @override
   bool isEmpty() {
-    return path?.isEmpty ?? true;
+    return localPath.isEmpty;
   }
 }
 
@@ -117,19 +187,18 @@ class BlockVideoUpload extends BlockUpload {
     required this.duration,
     required this.uploadIdVideo,
     required this.uploadIdPreview
-}) : super(type: BlockPostType.videos);
+}) : super(type: BlockType.videos);
 
   @override
   Map<String, dynamic> toJson() {
     return {
-      'type': type.name, // videos
+      'blockType': type.slug, // videos
       'fileSize': fileSize,
       'durationMs': duration.inMilliseconds, // Длительность лучше хранить в мс
-      'uploadIdVideo': uploadIdVideo,
-      'uploadIdPreview': uploadIdPreview,
+      // 'uploadIdVideo': uploadIdVideo,
+      // 'uploadIdPreview': uploadIdPreview,
       'publicUrlVideo': publicUrlVideo,
       'publicUrlPreview': publicUrlPreview,
-      // Пути к файлам (filePath) обычно на сервер не шлют, только URL из облака
     };
   }
 

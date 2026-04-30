@@ -6,7 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../models/post_creator/block_video.dart';
 
 class VideoBlockWidget extends StatefulWidget {
-  final BlockVideo block;
+  final BlockVideoCreating block;
   final VoidCallback onChanged;
 
   const VideoBlockWidget({super.key, required this.block, required this.onChanged});
@@ -75,7 +75,7 @@ class _VideoBlockWidgetState extends State<VideoBlockWidget> {
   @override
   Widget build(BuildContext context) {
     // Если видео нет и оно не обрабатывается, показываем кнопку добавления
-    if (widget.block.path == null && !_isProcessing) {
+    if (widget.block.localPath.isEmpty && !_isProcessing) {
       return _buildAddButton();
     }
 
@@ -144,7 +144,7 @@ class _VideoBlockWidgetState extends State<VideoBlockWidget> {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(7),
         child: Image.file(
-          File(widget.block.previewPath!),
+          File(widget.block.previewLocalPath),
           fit: BoxFit.cover,
         ),
       ),
@@ -158,10 +158,10 @@ class _VideoBlockWidgetState extends State<VideoBlockWidget> {
       children: [
         // Имя файла (жирное, с обрезкой)
         Text(
-          widget.block.fileName ?? 'Без названия',
+          widget.block.fileName,
           style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
-          maxLines: 1, // Чтобы имя не ломалось на две строки
-          overflow: TextOverflow.ellipsis, // Три точки, если имя очень длинное
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
         const SizedBox(height: 6),
 
@@ -171,7 +171,7 @@ class _VideoBlockWidgetState extends State<VideoBlockWidget> {
             const Icon(Icons.access_time_filled, size: 16, color: Color(0xFF797979)),
             const SizedBox(width: 4),
             Text(
-              widget.block.getformattedDuration(widget.block.duration),
+              widget.block.getFormattedDuration(),
               style: const TextStyle(fontSize: 14, color: Color(0xFF333333)),
             ),
             const SizedBox(width: 12), // Отступ между временем и размером

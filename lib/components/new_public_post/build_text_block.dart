@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../models/post_creator/block_text.dart';
-import '../../utils/utils.dart';
 
 class TextBlockWidget extends StatelessWidget {
-  final BlockText block;
+  final BlockTextCreating block;
   final VoidCallback onFocus;
 
   const TextBlockWidget({
@@ -26,8 +25,8 @@ class TextBlockWidget extends StatelessWidget {
         maxLines: null,
         style: TextStyle(
           fontFamily: 'SNPro',
-          fontSize: block.metadata.size.toDouble() ?? 16,
-          fontWeight: getFontWeight(block.metadata.weight),
+          fontSize: block.textType.size,
+          fontWeight: block.textType.weight,
           color: Colors.black87,
         ),
         decoration: InputDecoration(

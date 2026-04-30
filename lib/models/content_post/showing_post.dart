@@ -1,0 +1,36 @@
+import '../post_creator/block_post.dart';
+import '../post_view/author.dart';
+import '../post_view/statistics.dart';
+
+class ShowingPost {
+  final Author author;
+  final Statistics stats;
+  final String roomId;
+  final List<BlockPost> payload;
+  final String categorySlug;
+  final List<String> hashtags;
+
+  ShowingPost({
+    required this.author,
+    required this.stats,
+    required this.roomId,
+    required this.payload,
+    required this.categorySlug,
+    required this.hashtags,
+  });
+
+  factory ShowingPost.fromMap(Map<String, dynamic> map) {
+    return ShowingPost(
+      author: Author.fromMap(map),
+      stats: Statistics.fromMap(map),
+      roomId: map['roomId'] ?? '',
+      payload: (map['payload'] as List<dynamic>? ?? [])
+          .map((blockMap) => BlockPost.fromMap(blockMap as Map<String, dynamic>))
+          .toList(),
+      categorySlug: map['categorySlug'] ?? '',
+      hashtags: map['hashtags'] != null
+          ? List<String>.from(map['hashtags'])
+          : [],
+    );
+  }
+}

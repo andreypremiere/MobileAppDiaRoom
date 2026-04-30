@@ -1,5 +1,7 @@
+import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
-import '../../models/enums/post_types.dart';
+import '../../models/enums/method_view_photo.dart';
+import '../../models/enums/text_type.dart';
 import '../../models/post_creator/block_photos.dart';
 import '../../models/post_creator/block_post.dart';
 import '../../models/post_creator/block_text.dart';
@@ -22,42 +24,36 @@ class PostToolbar extends StatelessWidget {
       scrollDirection: Axis.horizontal,
       child: Padding(
         padding: const EdgeInsets.all(6),
-        child: _buildContent(),
+        child: _buildContent(context),
       ),
     );
   }
 
   /// Определяет, какой набор инструментов показать в зависимости от типа [block]
-  Widget _buildContent() {
-    if (block is BlockText) {
-      return _buildTextToolbar(block as BlockText);
+  Widget _buildContent(BuildContext context) {
+    if (block is BlockTextCreating) {
+      return _buildTextToolbar(context, block as BlockTextCreating);
     }
-    if (block is BlockPhotos) {
-      return _buildPhotoToolbar(block as BlockPhotos);
+    if (block is BlockPhotosCreating) {
+      return _buildPhotoToolbar(context, block as BlockPhotosCreating);
     }
     return const SizedBox();
   }
 
   /// Собирает инструменты для работы с текстовым блоком (заголовки, подзаголовки)
-  Widget _buildTextToolbar(BlockText textBlock) {
+  Widget _buildTextToolbar(BuildContext context, BlockTextCreating textBlock) {
     return Row(
       children: [
         _buildPopupSelector<TextType>(
+          context: context,
           currentLabel: textBlock.textType.label,
           items: TextType.values,
           onSelected: (value) {
             textBlock.textType = value;
-            if (value == TextType.header) {
-              textBlock.setTitleType();
-            } else if (value == TextType.subtitle) {
-              textBlock.setSubtitleType();
-            } else {
-              textBlock.setUsualText();
-            }
             onChanged();
           },
           itemLabel: (type) => type.label,
-          iconBuilder: (type) => type == TextType.header ? Icons.title : Icons.notes,
+          iconBuilder: (type) => type.icon,
           isSelected: (type) => textBlock.textType == type,
         ),
       ],
@@ -65,10 +61,11 @@ class PostToolbar extends StatelessWidget {
   }
 
   /// Собирает инструменты для работы с блоком фотографий (сетка или карусель)
-  Widget _buildPhotoToolbar(BlockPhotos photoBlock) {
+  Widget _buildPhotoToolbar(BuildContext context, BlockPhotosCreating photoBlock) {
     return Row(
       children: [
         _buildPopupSelector<MethodViewPhoto>(
+          context: context,
           currentLabel: photoBlock.methodView.label,
           items: MethodViewPhoto.values,
           onSelected: (value) {
@@ -85,6 +82,7 @@ class PostToolbar extends StatelessWidget {
 
   /// Универсальный компонент для выбора параметров через выпадающее меню
   Widget _buildPopupSelector<T>({
+    required BuildContext context,
     required String currentLabel,
     required List<T> items,
     required Function(T) onSelected,
@@ -97,15 +95,15 @@ class PostToolbar extends StatelessWidget {
         FocusManager.instance.primaryFocus?.unfocus();
       },
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      color: Colors.white,
+      color: context.ui.containerColor,
       elevation: 5,
       offset: const Offset(0, 45),
       onSelected: onSelected,
       child: Container(
-        width: 120,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        // width: 120,
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
         decoration: BoxDecoration(
-          color: const Color(0xFF525252),
+          color: context.ui.toolbarItemColor,
           borderRadius: BorderRadius.circular(20),
         ),
         child: Center(
@@ -113,7 +111,7 @@ class PostToolbar extends StatelessWidget {
             currentLabel,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontFamily: 'SNPro', fontSize: 14, color: Colors.white),
+            style: TextStyle(fontSize: 14, color: context.ui.fontColorPrimary),
           ),
         ),
       ),
@@ -123,15 +121,14 @@ class PostToolbar extends StatelessWidget {
           value: type,
           child: Row(
             children: [
-              Icon(iconBuilder(type), color: const Color(0xFF797979), size: 18),
+              Icon(iconBuilder(type), color: context.ui.fontColorPrimary, size: 18),
               const SizedBox(width: 8),
               Text(
                 itemLabel(type),
                 style: TextStyle(
                   fontSize: 16,
-                  fontFamily: 'SNPro',
                   fontWeight: isSelected(type) ? FontWeight.w600 : FontWeight.w500,
-                  color: const Color(0xFF333333),
+                  color: context.ui.fontColorPrimary,
                 ),
               ),
             ],
