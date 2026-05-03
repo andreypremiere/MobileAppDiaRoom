@@ -1,5 +1,6 @@
 import 'package:dia_room/api/auth_response.dart';
 import 'package:dia_room/components/workshop/folder_grid_view.dart';
+import 'package:dia_room/models/enums/creating_workshop.dart';
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -7,6 +8,7 @@ import 'package:provider/provider.dart';
 
 import '../../api/workshop_api.dart';
 import '../../components/general/app_back_button.dart';
+import '../../components/workshop/create_folder_dialog_window.dart';
 import '../../components/workshop/rename_dialog_window.dart';
 import '../../contracts/workshop/responses/root.dart';
 import '../../models/enums/folder_actions.dart';
@@ -56,16 +58,66 @@ class _WorkshopScreenState extends State<WorkshopScreen> {
       appBar: AppBar(
         backgroundColor: context.ui.appBarColor,
         leading: const AppBackButton(),
-        title: const Text('Мастерская'),
+        title: Text('Мастерская',  style: TextStyle(color: context.ui.fontColorPrimary),),
         actions: [
           if (isMyRoom)
-            IconButton(
-              onPressed: () => _showCreateDialog(context),
-              icon: Icon(
-                Icons.add_rounded,
-                size: context.ui.iconSizePanel,
-                color: context.ui.iconColorPrimary,
+            PopupMenuButton<CreatingWorkshopAction>(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
               ),
+              color: context.ui.containerColor,
+              elevation: 5,
+              offset: const Offset(0, 50), // Немного опускаем меню вниз
+
+              // Кастомизированный вид кнопки
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Icon(
+                  Icons.add_rounded,
+                  size: context.ui.iconSizePanel,
+                  color: context.ui.iconColorPrimary,
+                ),
+              ),
+
+              // Логика выбора
+              onSelected: (action) {
+                switch (action) {
+                  case CreatingWorkshopAction.folder:
+                    showCreateFolderDialog(
+                      context,
+                      roomId: widget.roomId,
+                      parentId: widget.folderId,
+                      onSuccess: _handleRefresh,
+                    );
+                    break;
+                  case CreatingWorkshopAction.photo:
+                    print("Создание фото");
+                    break;
+                  case CreatingWorkshopAction.video:
+                    print("Создание видео");
+                    break;
+                }
+              },
+
+              // Генерация элементов меню
+              itemBuilder: (context) => CreatingWorkshopAction.values.map((action) => PopupMenuItem<CreatingWorkshopAction>(
+                value: action,
+                height: 44,
+                child: Row(
+                  children: [
+                    Icon(action.icon, color: context.ui.fontColorPrimary, size: 22),
+                    const SizedBox(width: 12),
+                    Text(
+                      action.label,
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                        color: context.ui.fontColorPrimary,
+                      ),
+                    ),
+                  ],
+                ),
+              )).toList(),
             ),
         ],
       ),
@@ -103,7 +155,6 @@ class _WorkshopScreenState extends State<WorkshopScreen> {
                   case FolderAction.rename:
                     final newName = await showRenameDialog(context, folder.name);
 
-                    // Если пользователь нажал "Сохранить" и имя не пустое
                     if (newName != null && newName.isNotEmpty && newName != folder.name) {
                       final result = await renameFolder(folderId: folder.id, newName: newName);
 
@@ -118,7 +169,27 @@ class _WorkshopScreenState extends State<WorkshopScreen> {
                     }
                     break;
                   case FolderAction.move:
-                    print("Логика перемещения для ${folder.id}");
+                    // Открываем экран выбора
+                    final destinationId = await context.push<String?>(
+                        '/select-folder/${widget.roomId}/${folder.id}'
+                    );
+
+                    print('Пришел ответ: $destinationId');
+
+                    // Если пользователь не нажал "Отмена" (назад), а выбрал место
+                    if (destinationId != 'cancel') {
+                      // Запрещаем перемещение в ту же папку, где мы сейчас
+                      if (destinationId == widget.folderId) {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Папка уже находится здесь')));
+                        break;
+                      }
+
+                      final result = await moveFolder(targetId: folder.id, destinationId: destinationId);
+                      if (result.success) {
+                        _handleRefresh();
+                      } else {
+                      }
+                    }
                     break;
                   case FolderAction.delete:
                     print("Логика удаления для ${folder.id}");
@@ -131,9 +202,5 @@ class _WorkshopScreenState extends State<WorkshopScreen> {
         ),
       ),
     );
-  }
-
-  void _showCreateDialog(BuildContext context) {
-    print("Создание новой папки");
   }
 }

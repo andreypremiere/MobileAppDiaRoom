@@ -13,6 +13,7 @@ import 'package:dia_room/screens/room/room_screen.dart';
 import 'package:dia_room/screens/publication/set_settings_for_post_screen.dart';
 import 'package:dia_room/screens/publication/showing_post_screen.dart';
 import 'package:dia_room/screens/authorization/verify_code_screen.dart';
+import 'package:dia_room/screens/workshop/select_folder_screen.dart';
 import 'package:dia_room/screens/workshop/workshop_screen.dart';
 import 'package:dia_room/utils/auth_service.dart';
 import 'package:dia_room/utils/dio_service.dart';
@@ -228,6 +229,24 @@ class App extends StatelessWidget {
                   final String? folderId = state.pathParameters['folderId'];
                   return WorkshopScreen(roomId: roomId, folderId: folderId);
                 },
+              ),
+            ],
+          ),
+          GoRoute(
+            path: '/select-folder/:roomId/:targetId',
+            builder: (context, state) => SelectFolderScreen(
+              roomId: state.pathParameters['roomId']!,
+              targetId: state.pathParameters['targetId']!,
+              currentFolderId: null,
+            ),
+            routes: [
+              GoRoute(
+                path: ':currentFolderId',
+                builder: (context, state) => SelectFolderScreen(
+                  roomId: state.pathParameters['roomId']!,
+                  targetId: state.pathParameters['targetId']!,
+                  currentFolderId: state.pathParameters['currentFolderId'],
+                ),
               ),
             ],
           ),

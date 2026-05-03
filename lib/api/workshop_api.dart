@@ -40,3 +40,33 @@ Future<AuthResponse> getFolder({
     return handleSystemError(e);
   }
 }
+
+Future<AuthResponse> createFolder({
+  String? parentId,
+  required String name,
+}) async {
+  try {
+    await ApiService.post('/workshop/createFolder', data: {
+      'parentId': parentId,
+      'folderName': name,
+    });
+    return AuthResponse(success: true);
+  } on DioException catch (e) {
+    return handleDioError(e, "Ошибка при создании папки");
+  }
+}
+
+Future<AuthResponse> moveFolder({
+  required String targetId,
+  String? destinationId,
+}) async {
+  try {
+    await ApiService.post('/workshop/moveFolder', data: {
+      'targetId': targetId,
+      'destinationId': destinationId,
+    });
+    return AuthResponse(success: true);
+  } on DioException catch (e) {
+    return handleDioError(e, "Ошибка при перемещении");
+  }
+}

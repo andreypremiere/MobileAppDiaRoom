@@ -83,7 +83,7 @@ class FolderItem extends StatelessWidget {
           children: [
             Icon(
               Icons.folder_rounded,
-              size: 48,
+              size: 60,
               color: Colors.grey.shade400,
             ),
             const SizedBox(height: 12),
