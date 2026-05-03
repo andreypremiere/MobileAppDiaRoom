@@ -98,6 +98,10 @@ class ApiService {
     return await _dio.delete(path, data: data, options: options);
   }
 
+  static Future<Response> patch(String path, {dynamic data, Options? options}) async {
+    return await _dio.patch(path, data: data, options: options);
+  }
+
   static Future<Response> get(String path, {Map<String, dynamic>? queryParameters, Options? options}) async {
     return await _dio.get(
       path,
