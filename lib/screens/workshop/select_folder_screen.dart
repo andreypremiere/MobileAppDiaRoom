@@ -68,7 +68,7 @@ class _SelectFolderScreenState extends State<SelectFolderScreen> {
           if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
           if (snapshot.hasError || !snapshot.data!.success) return const Center(child: Text('Ошибка'));
 
-          final Root root = Root.fromMap(snapshot.data!.data);
+          final Content root = Content.fromMap(snapshot.data!.data);
 
           // ВАЖНО: Фильтруем список, чтобы нельзя было переместить папку саму в себя
           final safeFolders = root.folders.where((f) => f.id != widget.targetId).toList();

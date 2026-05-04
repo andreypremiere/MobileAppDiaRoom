@@ -71,3 +71,30 @@ Future<AuthResponse> moveFolder({
     return handleDioError(e, "Ошибка при перемещении");
   }
 }
+
+Future<AuthResponse> getRootContent({
+  required String roomId
+}) async {
+  try {
+    final res = await ApiService.get('/workshop/$roomId');
+    return AuthResponse(success: true, data: res.data);
+  } on DioException catch (e) {
+    return handleDioError(e, "Ошибка при запросе мастерской");
+  } catch (e) {
+    return handleSystemError(e);
+  }
+}
+
+Future<AuthResponse> getContentFolder({
+  required String roomId,
+  required String folderId
+}) async {
+  try {
+    final res = await ApiService.get('/workshop/$roomId/$folderId');
+    return AuthResponse(success: true, data: res.data);
+  } on DioException catch (e) {
+    return handleDioError(e, "Ошибка при запросе папки");
+  } catch (e) {
+    return handleSystemError(e);
+  }
+}

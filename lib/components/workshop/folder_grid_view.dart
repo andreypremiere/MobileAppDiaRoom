@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../models/enums/workshop/folder_actions.dart';
-import '../../models/workshop/Folder.dart';
+import '../../models/workshop/folder.dart';
 import 'folder_widget.dart';
 
 class FolderGridView extends StatelessWidget {

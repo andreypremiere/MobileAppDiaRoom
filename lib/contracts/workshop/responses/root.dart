@@ -1,14 +1,19 @@
-import '../../../models/workshop/Folder.dart';
+import 'package:dia_room/models/workshop/item.dart';
+import '../../../models/workshop/folder.dart';
 
-class Root {
+class Content {
   List<Folder> folders;
+  List<Item> items;
 
-  Root({required this.folders});
+  Content({required this.folders, required this.items});
 
-  factory Root.fromMap(Map<String, dynamic> map) {
-    return Root(
+  factory Content.fromMap(Map<String, dynamic> map) {
+    return Content(
       folders: (map['folders'] as List<dynamic>?)
           ?.map((item) => Folder.fromMap(item as Map<String, dynamic>))
+          .toList() ?? [],
+      items: (map['items'] as List<dynamic>?)
+          ?.map((item) => Item.fromMap(item as Map<String, dynamic>))
           .toList() ?? [],
     );
   }

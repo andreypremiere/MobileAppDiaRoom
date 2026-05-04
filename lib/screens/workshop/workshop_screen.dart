@@ -40,9 +40,9 @@ class _WorkshopScreenState extends State<WorkshopScreen> {
   void _loadData() {
     setState(() {
       if (widget.folderId == null) {
-        _workshopFuture = getRootFolders(roomId: widget.roomId);
+        _workshopFuture = getRootContent(roomId: widget.roomId);
       } else {
-        _workshopFuture = getFolders(
+        _workshopFuture = getContentFolder(
           roomId: widget.roomId,
           folderId: widget.folderId!,
         );
@@ -110,28 +110,28 @@ class _WorkshopScreenState extends State<WorkshopScreen> {
               itemBuilder: (context) => CreatingWorkshopAction.values
                   .map(
                     (action) => PopupMenuItem<CreatingWorkshopAction>(
-                      value: action,
-                      height: 44,
-                      child: Row(
-                        children: [
-                          Icon(
-                            action.icon,
-                            color: context.ui.fontColorPrimary,
-                            size: 22,
-                          ),
-                          const SizedBox(width: 12),
-                          Text(
-                            action.label,
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w500,
-                              color: context.ui.fontColorPrimary,
-                            ),
-                          ),
-                        ],
+                  value: action,
+                  height: 44,
+                  child: Row(
+                    children: [
+                      Icon(
+                        action.icon,
+                        color: context.ui.fontColorPrimary,
+                        size: 22,
                       ),
-                    ),
-                  )
+                      const SizedBox(width: 12),
+                      Text(
+                        action.label,
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w500,
+                          color: context.ui.fontColorPrimary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              )
                   .toList(),
             ),
         ],
@@ -155,7 +155,7 @@ class _WorkshopScreenState extends State<WorkshopScreen> {
               );
             }
 
-            final Root root = Root.fromMap(snapshot.data!.data);
+            final Content root = Content.fromMap(snapshot.data!.data);
 
             if (root.folders.isEmpty) {
               return const Center(child: Text('Тут пока пусто'));
@@ -209,7 +209,7 @@ class _WorkshopScreenState extends State<WorkshopScreen> {
                         }
                         break;
                       case FolderAction.move:
-                        // Открываем экран выбора
+                      // Открываем экран выбора
                         final destinationId = await context.push<String?>(
                           '/select-folder/${widget.roomId}/${folder.id}',
                         );

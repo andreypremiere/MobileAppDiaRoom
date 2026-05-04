@@ -1,3 +1,4 @@
+import 'package:dia_room/models/enums/workshop/item_status.dart';
 import 'package:dia_room/models/enums/workshop/item_type.dart';
 
 abstract class BasePayload {
@@ -53,11 +54,12 @@ class Item {
   final String roomId;
   String? folderId;
   String? title;
+  String? filepath;
   String? previewUrl;
   int? sizeBytes;
   ItemType itemType;
   String? mimeType;
-  String? status;
+  ItemStatus status;
   BasePayload? payload;
 
   Item({
@@ -65,11 +67,12 @@ class Item {
     required this.roomId,
     this.folderId,
     this.title,
+    this.filepath,
     this.previewUrl,
     this.sizeBytes,
     required this.itemType,
     this.mimeType,
-    this.status,
+    required this.status,
     this.payload,
   });
 
@@ -80,11 +83,12 @@ class Item {
       roomId: map['roomId'],
       folderId: map['folderId'],
       title: map['title'],
+      filepath: map['filepath'],
       previewUrl: map['previewUrl'] ?? '',
       sizeBytes: map['sizeBytes'] != null ? int.parse(map['sizeBytes'].toString()) : null,
       itemType: itemType,
       mimeType: map['mimeType'],
-      status: map['status'],
+      status: ItemStatus.fromMap(map),
       payload: BasePayload.fromMap(itemType, map['payload']),
     );
   }
@@ -95,11 +99,12 @@ class Item {
       'roomId': roomId,
       'folderId': folderId,
       'title': title,
+      'filepath': filepath,
       'previewUrl': previewUrl,
       'sizeBytes': sizeBytes,
       'itemType': itemType.slug,
       'mimeType': mimeType,
-      'status': status,
+      'status': status.slug,
       'payload': payload?.toMap(),
     };
   }
