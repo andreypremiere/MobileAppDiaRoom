@@ -33,9 +33,9 @@ class _SelectFolderScreenState extends State<SelectFolderScreen> {
   void initState() {
     super.initState();
     if (widget.currentFolderId == null) {
-      _foldersFuture = getRoomRoot(roomId: widget.roomId);
+      _foldersFuture = getRootFolders(roomId: widget.roomId);
     } else {
-      _foldersFuture = getFolder(folderId: widget.currentFolderId!);
+      _foldersFuture = getFolders(roomId: widget.roomId, folderId: widget.currentFolderId!);
     }
   }
 

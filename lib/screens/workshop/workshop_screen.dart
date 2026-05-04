@@ -1,5 +1,4 @@
 import 'package:dia_room/api/auth_response.dart';
-import 'package:dia_room/components/workshop/folder_grid_view.dart';
 import 'package:dia_room/models/enums/creating_workshop.dart';
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
@@ -9,6 +8,7 @@ import 'package:provider/provider.dart';
 import '../../api/workshop_api.dart';
 import '../../components/general/app_back_button.dart';
 import '../../components/workshop/create_folder_dialog_window.dart';
+import '../../components/workshop/folder_widget.dart';
 import '../../components/workshop/rename_dialog_window.dart';
 import '../../contracts/workshop/responses/root.dart';
 import '../../models/enums/folder_actions.dart';
@@ -40,9 +40,12 @@ class _WorkshopScreenState extends State<WorkshopScreen> {
   void _loadData() {
     setState(() {
       if (widget.folderId == null) {
-        _workshopFuture = getRoomRoot(roomId: widget.roomId);
+        _workshopFuture = getRootFolders(roomId: widget.roomId);
       } else {
-        _workshopFuture = getFolder(folderId: widget.folderId!);
+        _workshopFuture = getFolders(
+          roomId: widget.roomId,
+          folderId: widget.folderId!,
+        );
       }
     });
   }
@@ -58,7 +61,10 @@ class _WorkshopScreenState extends State<WorkshopScreen> {
       appBar: AppBar(
         backgroundColor: context.ui.appBarColor,
         leading: const AppBackButton(),
-        title: Text('Мастерская',  style: TextStyle(color: context.ui.fontColorPrimary),),
+        title: Text(
+          'Мастерская',
+          style: TextStyle(color: context.ui.fontColorPrimary),
+        ),
         actions: [
           if (isMyRoom)
             PopupMenuButton<CreatingWorkshopAction>(
@@ -67,7 +73,8 @@ class _WorkshopScreenState extends State<WorkshopScreen> {
               ),
               color: context.ui.containerColor,
               elevation: 5,
-              offset: const Offset(0, 50), // Немного опускаем меню вниз
+              offset: const Offset(0, 50),
+              // Немного опускаем меню вниз
 
               // Кастомизированный вид кнопки
               child: Padding(
@@ -100,24 +107,32 @@ class _WorkshopScreenState extends State<WorkshopScreen> {
               },
 
               // Генерация элементов меню
-              itemBuilder: (context) => CreatingWorkshopAction.values.map((action) => PopupMenuItem<CreatingWorkshopAction>(
-                value: action,
-                height: 44,
-                child: Row(
-                  children: [
-                    Icon(action.icon, color: context.ui.fontColorPrimary, size: 22),
-                    const SizedBox(width: 12),
-                    Text(
-                      action.label,
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w500,
-                        color: context.ui.fontColorPrimary,
+              itemBuilder: (context) => CreatingWorkshopAction.values
+                  .map(
+                    (action) => PopupMenuItem<CreatingWorkshopAction>(
+                      value: action,
+                      height: 44,
+                      child: Row(
+                        children: [
+                          Icon(
+                            action.icon,
+                            color: context.ui.fontColorPrimary,
+                            size: 22,
+                          ),
+                          const SizedBox(width: 12),
+                          Text(
+                            action.label,
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w500,
+                              color: context.ui.fontColorPrimary,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ],
-                ),
-              )).toList(),
+                  )
+                  .toList(),
             ),
         ],
       ),
@@ -147,56 +162,88 @@ class _WorkshopScreenState extends State<WorkshopScreen> {
             }
 
             // Ленивая загрузка через GridView.builder
-            return FolderGridView(
-              folders: root.folders,
-              onFolderTap: (folder) => context.push('/workshop/${widget.roomId}/${folder.id}'),
-              onActionSelected: (folder, action) async {
-                switch (action) {
-                  case FolderAction.rename:
-                    final newName = await showRenameDialog(context, folder.name);
-
-                    if (newName != null && newName.isNotEmpty && newName != folder.name) {
-                      final result = await renameFolder(folderId: folder.id, newName: newName);
-
-                      if (result.success) {
-                        _handleRefresh();
-                      } else {
-                        // Показываем ошибку
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(result.message ?? "Ошибка при сохранении")),
+            return GridView.builder(
+              padding: const EdgeInsets.all(8),
+              itemCount: root.folders.length,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                mainAxisSpacing: 12,
+                crossAxisSpacing: 12,
+                childAspectRatio: 0.9,
+              ),
+              itemBuilder: (context, index) {
+                final folder = root.folders[index];
+                return FolderItem(
+                  canEdit: isMyRoom,
+                  folder: folder,
+                  onTap: () =>
+                      context.push('/workshop/${widget.roomId}/${folder.id}'),
+                  onActionSelected: (action) async {
+                    switch (action) {
+                      case FolderAction.rename:
+                        final newName = await showRenameDialog(
+                          context,
+                          folder.name,
                         );
-                      }
-                    }
-                    break;
-                  case FolderAction.move:
-                    // Открываем экран выбора
-                    final destinationId = await context.push<String?>(
-                        '/select-folder/${widget.roomId}/${folder.id}'
-                    );
 
-                    print('Пришел ответ: $destinationId');
+                        if (newName != null &&
+                            newName.isNotEmpty &&
+                            newName != folder.name) {
+                          final result = await renameFolder(
+                            folderId: folder.id,
+                            newName: newName,
+                          );
 
-                    // Если пользователь не нажал "Отмена" (назад), а выбрал место
-                    if (destinationId != 'cancel') {
-                      // Запрещаем перемещение в ту же папку, где мы сейчас
-                      if (destinationId == widget.folderId) {
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Папка уже находится здесь')));
+                          if (result.success) {
+                            _handleRefresh();
+                          } else {
+                            // Показываем ошибку
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  result.message ?? "Ошибка при сохранении",
+                                ),
+                              ),
+                            );
+                          }
+                        }
                         break;
-                      }
+                      case FolderAction.move:
+                        // Открываем экран выбора
+                        final destinationId = await context.push<String?>(
+                          '/select-folder/${widget.roomId}/${folder.id}',
+                        );
 
-                      final result = await moveFolder(targetId: folder.id, destinationId: destinationId);
-                      if (result.success) {
-                        _handleRefresh();
-                      } else {
-                      }
+                        print('Пришел ответ: $destinationId');
+
+                        // Если пользователь не нажал "Отмена" (назад), а выбрал место
+                        if (destinationId != 'cancel') {
+                          // Запрещаем перемещение в ту же папку, где мы сейчас
+                          if (destinationId == widget.folderId) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Папка уже находится здесь'),
+                              ),
+                            );
+                            break;
+                          }
+
+                          final result = await moveFolder(
+                            targetId: folder.id,
+                            destinationId: destinationId,
+                          );
+                          if (result.success) {
+                            _handleRefresh();
+                          } else {}
+                        }
+                        break;
+                      case FolderAction.delete:
+                        print("Логика удаления для ${folder.id}");
+                        break;
                     }
-                    break;
-                  case FolderAction.delete:
-                    print("Логика удаления для ${folder.id}");
-                    break;
-                }
+                  },
+                );
               },
-              isMyRoom: isMyRoom,
             );
           },
         ),

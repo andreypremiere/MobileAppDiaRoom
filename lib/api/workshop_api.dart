@@ -4,11 +4,11 @@ import '../utils/dio_service.dart';
 import 'auth_response.dart';
 import 'exception_handler.dart';
 
-Future<AuthResponse> getRoomRoot({
+Future<AuthResponse> getRootFolders({
   required String roomId
 }) async {
   try {
-    final res = await ApiService.get('/workshop/getRoot/$roomId');
+    final res = await ApiService.get('/workshop/folders/$roomId');
     return AuthResponse(success: true, data: res.data);
   } on DioException catch (e) {
     return handleDioError(e, "Ошибка при запросе мастерской");
@@ -28,11 +28,12 @@ Future<AuthResponse> renameFolder({required String folderId, required String new
   }
 }
 
-Future<AuthResponse> getFolder({
+Future<AuthResponse> getFolders({
+  required String roomId,
   required String folderId
 }) async {
   try {
-    final res = await ApiService.get('/workshop/getFolder/$folderId');
+    final res = await ApiService.get('/workshop/folders/$roomId/$folderId');
     return AuthResponse(success: true, data: res.data);
   } on DioException catch (e) {
     return handleDioError(e, "Ошибка при запросе папки");
