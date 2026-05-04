@@ -1,7 +1,7 @@
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 
-import '../../models/enums/folder_actions.dart';
+import '../../models/enums/workshop/folder_actions.dart';
 import '../../models/workshop/Folder.dart';
 
 class FolderItem extends StatelessWidget {

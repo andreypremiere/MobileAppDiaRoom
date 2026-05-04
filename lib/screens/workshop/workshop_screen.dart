@@ -1,5 +1,5 @@
 import 'package:dia_room/api/auth_response.dart';
-import 'package:dia_room/models/enums/creating_workshop.dart';
+import 'package:dia_room/models/enums/workshop/creating_workshop.dart';
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -11,7 +11,7 @@ import '../../components/workshop/create_folder_dialog_window.dart';
 import '../../components/workshop/folder_widget.dart';
 import '../../components/workshop/rename_dialog_window.dart';
 import '../../contracts/workshop/responses/root.dart';
-import '../../models/enums/folder_actions.dart';
+import '../../models/enums/workshop/folder_actions.dart';
 import '../../utils/auth_service.dart';
 
 class WorkshopScreen extends StatefulWidget {

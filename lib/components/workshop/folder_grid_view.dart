@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../models/enums/folder_actions.dart';
+import '../../models/enums/workshop/folder_actions.dart';
 import '../../models/workshop/Folder.dart';
 import 'folder_widget.dart';
 
