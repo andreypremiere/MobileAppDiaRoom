@@ -22,7 +22,7 @@ class CompressImageService {
   }) async {
 
     final dir = await getTemporaryDirectory();
-    final targetPath = "${dir.path}/${DateTime.now().millisecond}$postfix.jpeg";
+    final targetPath = "${dir.path}/${DateTime.now().microsecondsSinceEpoch}$postfix.jpeg";
 
     XFile? result;
     int currentSize = await file.length();

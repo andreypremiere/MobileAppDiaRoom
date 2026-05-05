@@ -70,6 +70,18 @@ class _WorkshopScreenState extends State<WorkshopScreen> {
     }
   }
 
+  Future<List<XFile>> _handleAddVideos() async {
+    final ImagePicker picker = ImagePicker();
+    List<XFile> videos;
+    try {
+      videos = await picker.pickMultiVideo(limit: 5);
+      return videos;
+    } catch (e) {
+      print("Ошибка при выборе нескольких изображений: $e");
+      return [];
+    }
+  }
+
   Future<void> _onFolderActionSelected(FolderAction action, Folder folder) async {
     switch (action) {
       case FolderAction.rename:
@@ -164,15 +176,22 @@ class _WorkshopScreenState extends State<WorkshopScreen> {
                       onSuccess: _handleRefresh,
                     );
                     break;
+
                   case CreatingWorkshopAction.photo:
                     final List<XFile> pathPhotos = await _handleAddPhotos();
+                    final manager = context.read<UploaderManager>();
 
-                    final compressedImages = await UploaderManager.uploadPhotos(files: pathPhotos, folderId: widget.folderId);
-                    print('compressedImages: $compressedImages');
-
+                    final result = await manager.uploadPhotos(files: pathPhotos, folderId: widget.folderId);
+                    _handleRefresh();
+                    print('compressedImages: $result');
                     break;
+
                   case CreatingWorkshopAction.video:
-                    print("Создание видео");
+                    final List<XFile> pathVideos = await _handleAddVideos();
+                    final manager = context.read<UploaderManager>();
+                    final result = await manager.uploadVideos(files: pathVideos, folderId: widget.folderId);
+                    _handleRefresh();
+                    print('compressedImages: $result');
                     break;
                 }
               },
@@ -207,7 +226,30 @@ class _WorkshopScreenState extends State<WorkshopScreen> {
             ),
         ],
       ),
-      body: RefreshIndicator(
+      body: Column(children: [Consumer<UploaderManager>(
+        builder: (context, manager, child) {
+          if (!manager.isUploading) return const SizedBox.shrink();
+
+          return Column(
+            children: [
+              LinearProgressIndicator(
+                value: manager.progress, // <-- передаем наше значение (0.0 - 1.0)
+                color: context.ui.primaryColor,
+                backgroundColor: context.ui.primaryColor.withAlpha(20),
+                minHeight: 4,
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                child: Text(
+                  "Загрузка: ${(manager.progress * 100).toInt()}%",
+                  style: TextStyle(fontSize: 10, color: context.ui.fontColorHint),
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+        Expanded(child: RefreshIndicator(
         onRefresh: _handleRefresh,
         color: context.ui.primaryColor,
         child: FutureBuilder<AuthResponse>(
@@ -260,7 +302,7 @@ class _WorkshopScreenState extends State<WorkshopScreen> {
             );
           },
         ),
-      ),
+      ),)])
     );
   }
 }

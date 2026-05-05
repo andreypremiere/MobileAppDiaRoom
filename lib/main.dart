@@ -15,6 +15,7 @@ import 'package:dia_room/screens/publication/showing_post_screen.dart';
 import 'package:dia_room/screens/authorization/verify_code_screen.dart';
 import 'package:dia_room/screens/workshop/select_folder_screen.dart';
 import 'package:dia_room/screens/workshop/workshop_screen.dart';
+import 'package:dia_room/services/workshop/uploader_manager.dart';
 import 'package:dia_room/utils/auth_service.dart';
 import 'package:dia_room/utils/dio_service.dart';
 import 'package:dia_room/utils/draft_provider.dart';
@@ -45,6 +46,7 @@ void main() async {
         ChangeNotifierProvider.value(value: authProvider),
         ChangeNotifierProvider(create: (_) => DraftProvider()),
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ChangeNotifierProvider(create: (_) => UploaderManager()),
       ],
       child: const App(),
     ),
