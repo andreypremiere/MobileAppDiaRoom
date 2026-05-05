@@ -1,5 +1,9 @@
+import 'dart:io';
+
+import 'package:dia_room/contracts/workshop/requests/updating_item_status.dart';
 import 'package:dio/dio.dart';
 
+import '../contracts/workshop/requests/creating_item_photo.dart';
 import '../utils/dio_service.dart';
 import 'auth_response.dart';
 import 'exception_handler.dart';
@@ -96,5 +100,43 @@ Future<AuthResponse> getContentFolder({
     return handleDioError(e, "Ошибка при запросе папки");
   } catch (e) {
     return handleSystemError(e);
+  }
+}
+
+Future<AuthResponse> createItemImage({
+  required CreatingItemPhoto item
+}) async {
+  try {
+    final res = await ApiService.post('/workshop/createImage', data: item.toMap());
+    return AuthResponse(success: true, data: res.data);
+  } on DioException catch (e) {
+    return handleDioError(e, "Ошибка при создании изображения");
+  } catch (e) {
+    return handleSystemError(e);
+  }
+}
+
+Future<AuthResponse> updateItem({
+  required UpdatingItemStatus item
+}) async {
+  try {
+    await ApiService.post('/workshop/updateItemStatus', data: item.toMap());
+    return AuthResponse(success: true, data: null);
+  } on DioException catch (e) {
+    return handleDioError(e, "Ошибка при обновления значения");
+  } catch (e) {
+    return handleSystemError(e);
+  }
+}
+
+Future<bool> uploadSingleMediaFile(String filePath, String presignedUrl, String contentType) async {
+  try {
+    final file = File(filePath);
+    if (!await file.exists()) return false;
+    final res = await ApiService.putBinaryFile(url: presignedUrl, file: file, contentType: contentType);
+    return res.statusCode == 200 || res.statusCode == 201;
+  } catch (e) {
+    print('Ошибка загрузки: $e');
+    return false;
   }
 }

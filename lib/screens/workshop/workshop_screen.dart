@@ -1,8 +1,11 @@
 import 'package:dia_room/api/auth_response.dart';
 import 'package:dia_room/models/enums/workshop/creating_workshop.dart';
+import 'package:dia_room/models/workshop/folder.dart';
+import 'package:dia_room/services/workshop/uploader_manager.dart';
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 import '../../api/workshop_api.dart';
@@ -55,6 +58,70 @@ class _WorkshopScreenState extends State<WorkshopScreen> {
     await _workshopFuture;
   }
 
+  Future<List<XFile>> _handleAddPhotos() async {
+    final ImagePicker picker = ImagePicker();
+    List<XFile> images;
+    try {
+      images = await picker.pickMultiImage(limit: 20);
+      return images;
+    } catch (e) {
+      print("Ошибка при выборе нескольких изображений: $e");
+      return [];
+    }
+  }
+
+  Future<void> _onFolderActionSelected(FolderAction action, Folder folder) async {
+    switch (action) {
+      case FolderAction.rename:
+        final newName = await showRenameDialog(context, folder.name);
+
+        if (newName != null && newName.isNotEmpty && newName != folder.name) {
+          final result = await renameFolder(
+            folderId: folder.id,
+            newName: newName,
+          );
+
+          if (result.success) {
+            _handleRefresh();
+          } else {
+            if (!mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(result.message ?? "Ошибка при сохранении")),
+            );
+          }
+        }
+        break;
+
+      case FolderAction.move:
+        final destinationId = await context.push<String?>(
+          '/select-folder/${widget.roomId}/${folder.id}',
+        );
+
+        if (destinationId != null && destinationId != 'cancel') {
+          if (destinationId == widget.folderId) {
+            if (!mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Папка уже находится здесь')),
+            );
+            break;
+          }
+
+          final result = await moveFolder(
+            targetId: folder.id,
+            destinationId: destinationId,
+          );
+          if (result.success) {
+            _handleRefresh();
+          }
+        }
+        break;
+
+      case FolderAction.delete:
+        print("Логика удаления для ${folder.id}");
+        break;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -87,7 +154,7 @@ class _WorkshopScreenState extends State<WorkshopScreen> {
               ),
 
               // Логика выбора
-              onSelected: (action) {
+              onSelected: (action) async {
                 switch (action) {
                   case CreatingWorkshopAction.folder:
                     showCreateFolderDialog(
@@ -98,7 +165,11 @@ class _WorkshopScreenState extends State<WorkshopScreen> {
                     );
                     break;
                   case CreatingWorkshopAction.photo:
-                    print("Создание фото");
+                    final List<XFile> pathPhotos = await _handleAddPhotos();
+
+                    final compressedImages = await UploaderManager.uploadPhotos(files: pathPhotos, folderId: widget.folderId);
+                    print('compressedImages: $compressedImages');
+
                     break;
                   case CreatingWorkshopAction.video:
                     print("Создание видео");
@@ -156,8 +227,9 @@ class _WorkshopScreenState extends State<WorkshopScreen> {
             }
 
             final Content root = Content.fromMap(snapshot.data!.data);
+            final allContent = [...root.folders, ...root.items];
 
-            if (root.folders.isEmpty) {
+            if (allContent.isEmpty) {
               return const Center(child: Text('Тут пока пусто'));
             }
 
@@ -172,77 +244,18 @@ class _WorkshopScreenState extends State<WorkshopScreen> {
                 childAspectRatio: 0.9,
               ),
               itemBuilder: (context, index) {
-                final folder = root.folders[index];
-                return FolderItem(
-                  canEdit: isMyRoom,
-                  folder: folder,
-                  onTap: () =>
-                      context.push('/workshop/${widget.roomId}/${folder.id}'),
-                  onActionSelected: (action) async {
-                    switch (action) {
-                      case FolderAction.rename:
-                        final newName = await showRenameDialog(
-                          context,
-                          folder.name,
-                        );
-
-                        if (newName != null &&
-                            newName.isNotEmpty &&
-                            newName != folder.name) {
-                          final result = await renameFolder(
-                            folderId: folder.id,
-                            newName: newName,
-                          );
-
-                          if (result.success) {
-                            _handleRefresh();
-                          } else {
-                            // Показываем ошибку
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  result.message ?? "Ошибка при сохранении",
-                                ),
-                              ),
-                            );
-                          }
-                        }
-                        break;
-                      case FolderAction.move:
-                      // Открываем экран выбора
-                        final destinationId = await context.push<String?>(
-                          '/select-folder/${widget.roomId}/${folder.id}',
-                        );
-
-                        print('Пришел ответ: $destinationId');
-
-                        // Если пользователь не нажал "Отмена" (назад), а выбрал место
-                        if (destinationId != 'cancel') {
-                          // Запрещаем перемещение в ту же папку, где мы сейчас
-                          if (destinationId == widget.folderId) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Папка уже находится здесь'),
-                              ),
-                            );
-                            break;
-                          }
-
-                          final result = await moveFolder(
-                            targetId: folder.id,
-                            destinationId: destinationId,
-                          );
-                          if (result.success) {
-                            _handleRefresh();
-                          } else {}
-                        }
-                        break;
-                      case FolderAction.delete:
-                        print("Логика удаления для ${folder.id}");
-                        break;
-                    }
-                  },
-                );
+                final item = allContent[index];
+                if (item is Folder) {
+                  final folder = item;
+                  return FolderItem(
+                    canEdit: isMyRoom,
+                    folder: folder,
+                    onTap: () =>
+                        context.push('/workshop/${widget.roomId}/${folder.id}'),
+                    onActionSelected: (action) => _onFolderActionSelected(action, folder),
+                  );
+                }
+                return SizedBox.shrink();
               },
             );
           },
