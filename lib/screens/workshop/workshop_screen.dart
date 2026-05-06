@@ -2,8 +2,10 @@ import 'package:dia_room/api/auth_response.dart';
 import 'package:dia_room/models/enums/workshop/creating_workshop.dart';
 import 'package:dia_room/models/workshop/folder.dart';
 import 'package:dia_room/models/workshop/item.dart';
+import 'package:dia_room/screens/publication/full_video_screen.dart';
 import 'package:dia_room/services/workshop/uploader_manager.dart';
 import 'package:dia_room/utils/app_theme.dart';
+import 'package:dia_room/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
@@ -16,9 +18,12 @@ import '../../components/workshop/folder_widget.dart';
 import '../../components/workshop/item_widget.dart';
 import '../../components/workshop/rename_dialog_window.dart';
 import '../../contracts/workshop/responses/content.dart';
+import '../../models/enums/file_type.dart';
 import '../../models/enums/workshop/folder_actions.dart';
 import '../../models/enums/workshop/item_actions.dart';
+import '../../models/enums/workshop/item_type.dart';
 import '../../utils/auth_service.dart';
+import '../publication/full_image_screen.dart';
 
 class WorkshopScreen extends StatefulWidget {
   final String roomId;
@@ -334,7 +339,11 @@ class _WorkshopScreenState extends State<WorkshopScreen> {
             }
 
             final Content root = Content.fromMap(snapshot.data!.data);
-              final allContent = [...root.folders, ...root.items];
+            final folders = root.folders;
+            final videos = root.items.where((i) => i.itemType == ItemType.video).toList();
+            final photos = root.items.where((i) => i.itemType == ItemType.photo).toList();
+
+            final allContent = [...folders, ...videos, ...photos];
 
             if (allContent.isEmpty) {
               return const Center(child: Text('Тут пока пусто'));
@@ -363,7 +372,43 @@ class _WorkshopScreenState extends State<WorkshopScreen> {
                   );
                 }
                 if (item is Item) {
-                  return FileItem(canEdit: isMyRoom, item: item, onTap: () { print("Нажатие"); }, onActionSelected: (action) => _onItemActionSelected(action, item),
+                  return FileItem(canEdit: isMyRoom, item: item, onTap: () {
+                    switch (item.itemType) {
+                      case ItemType.photo:
+                        final int photoIndex = photos.indexOf(item);
+                        final photoUrls = photos
+                            .where((i) => i.payload is PhotoPayload)
+                            .map((i) => getFullUrl((i.payload as PhotoPayload).publicUrl ?? ''))
+                            .toList();
+
+                        if (photoIndex != -1) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => FullImageScreen(
+                                imageUrls: photoUrls,
+                                initialIndex: photoIndex,
+                                type: FileType.network,
+                              ),
+                            ),
+                          );
+                        }
+                        break;
+
+                      case ItemType.video:
+                        final payload = item.payload as VideoPayload;
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => FullScreenVideoScreen(
+                              videoUrl: getFullUrl(payload.publicUrl ?? ""),
+                              type: FileType.network,
+                            ),
+                          ),
+                        );
+                        break;
+                    }
+                  }, onActionSelected: (action) => _onItemActionSelected(action, item),
 
                   );
                 }

@@ -10,8 +10,8 @@ abstract class BasePayload {
     switch (itemType) {
       case ItemType.photo:
         return PhotoPayload.fromMap(map);
-      default:
-        return null;
+      case ItemType.video:
+        return VideoPayload.fromMap(map);
     }
   }
 }
@@ -43,6 +43,35 @@ class PhotoPayload extends BasePayload {
     return {
       'width': width,
       'height': height,
+      'publicUrl': publicUrl,
+      'presignedUrl': presignedUrl
+    };
+  }
+}
+
+class VideoPayload extends BasePayload {
+  Duration duration;
+  String? publicUrl;
+  String? presignedUrl;
+
+  VideoPayload({
+    required this.duration,
+    this.publicUrl,
+    this.presignedUrl
+  });
+
+  factory VideoPayload.fromMap(Map<String, dynamic> map) {
+    return VideoPayload(
+        duration: Duration(milliseconds: map['duration']),
+        publicUrl: map['publicUrl'],
+        presignedUrl: map['presignedUrl']
+    );
+  }
+
+  @override
+  Map<String, dynamic> toMap() {
+    return {
+      'duration': duration.inMilliseconds,
       'publicUrl': publicUrl,
       'presignedUrl': presignedUrl
     };

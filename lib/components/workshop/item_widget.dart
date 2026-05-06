@@ -34,6 +34,8 @@ class FileItem extends StatelessWidget {
           // 2. Иконка типа
           Positioned(top: 8, left: 8, child: _buildTypeBadge(context)),
 
+          item.itemType == ItemType.video ? Positioned(bottom: 8, right: 8,child: _buildDuration(context),) : SizedBox.shrink(),
+
           // 3. Статус
           if (item.status == ItemStatus.uploading)
             const Center(child: CircularProgressIndicator(strokeWidth: 2)),
@@ -95,6 +97,21 @@ class FileItem extends StatelessWidget {
         color: Colors.white,
         size: 16,
       ),
+    );
+  }
+
+  Widget _buildDuration(BuildContext context) {
+    final bool isVideo = item.itemType == ItemType.video;
+
+    final VideoPayload? payload = isVideo ? item.payload as VideoPayload : null;
+
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: Colors.black.withOpacity(0.4),
+        borderRadius: BorderRadius.circular(100)
+      ),
+      child: Text(formatDuration(payload?.duration ?? Duration.zero), style: TextStyle(fontSize: 12, color: Colors.white),)
     );
   }
 
