@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:dia_room/contracts/workshop/requests/creating_item_video.dart';
 import 'package:dia_room/contracts/workshop/requests/updating_item_status.dart';
 import 'package:dio/dio.dart';
 
@@ -111,6 +112,19 @@ Future<AuthResponse> createItemImage({
     return AuthResponse(success: true, data: res.data);
   } on DioException catch (e) {
     return handleDioError(e, "Ошибка при создании изображения");
+  } catch (e) {
+    return handleSystemError(e);
+  }
+}
+
+Future<AuthResponse> createItemVideo({
+  required CreatingItemVideo item
+}) async {
+  try {
+    final res = await ApiService.post('/workshop/createVideo', data: item.toMap());
+    return AuthResponse(success: true, data: res.data);
+  } on DioException catch (e) {
+    return handleDioError(e, "Ошибка при создании видео");
   } catch (e) {
     return handleSystemError(e);
   }
