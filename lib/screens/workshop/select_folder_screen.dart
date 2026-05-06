@@ -8,7 +8,7 @@ import '../../api/workshop_api.dart';
 import '../../components/general/app_back_button.dart';
 import '../../components/general/full_width_button.dart';
 import '../../components/workshop/folder_grid_view.dart';
-import '../../contracts/workshop/responses/root.dart';
+import '../../contracts/workshop/responses/content.dart';
 
 class SelectFolderScreen extends StatefulWidget {
   final String roomId;

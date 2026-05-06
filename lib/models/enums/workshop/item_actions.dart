@@ -1,0 +1,1 @@
+enum ItemAction { move, delete }

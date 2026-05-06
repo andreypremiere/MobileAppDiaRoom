@@ -1,6 +1,7 @@
 import 'package:dia_room/api/auth_response.dart';
 import 'package:dia_room/models/enums/workshop/creating_workshop.dart';
 import 'package:dia_room/models/workshop/folder.dart';
+import 'package:dia_room/models/workshop/item.dart';
 import 'package:dia_room/services/workshop/uploader_manager.dart';
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
@@ -12,9 +13,11 @@ import '../../api/workshop_api.dart';
 import '../../components/general/app_back_button.dart';
 import '../../components/workshop/create_folder_dialog_window.dart';
 import '../../components/workshop/folder_widget.dart';
+import '../../components/workshop/item_widget.dart';
 import '../../components/workshop/rename_dialog_window.dart';
-import '../../contracts/workshop/responses/root.dart';
+import '../../contracts/workshop/responses/content.dart';
 import '../../models/enums/workshop/folder_actions.dart';
+import '../../models/enums/workshop/item_actions.dart';
 import '../../utils/auth_service.dart';
 
 class WorkshopScreen extends StatefulWidget {
@@ -134,6 +137,69 @@ class _WorkshopScreenState extends State<WorkshopScreen> {
     }
   }
 
+  Future<void> _onItemActionSelected(ItemAction action, Item item) async {
+    switch (action) {
+      case ItemAction.move:
+        final destinationId = await context.push<String?>(
+          '/select-folder/${widget.roomId}/${item.id}',
+        );
+
+        if (destinationId != null && destinationId != 'cancel') {
+          if (destinationId == widget.folderId) {
+            if (!mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Файл уже находится в этой папке')),
+            );
+            break;
+          }
+
+          // final result = await moveItem(
+          //   targetId: item.id,
+          //   destinationId: destinationId == 'root' ? null : destinationId,
+          // );
+          //
+          // if (result.success) {
+          //   _handleRefresh();
+          // } else {
+          //   if (!mounted) return;
+          //   ScaffoldMessenger.of(context).showSnackBar(
+          //     SnackBar(content: Text(result.message ?? "Ошибка при перемещении")),
+          //   );
+          // }
+        }
+        break;
+
+      case ItemAction.delete:
+        // final confirm = await showDialog<bool>(
+        //   context: context,
+        //   builder: (context) => AlertDialog(
+        //     title: const Text('Удалить файл?'),
+        //     content: Text('Вы уверены, что хотите удалить «${item.itemData.title}»?'),
+        //     actions: [
+        //       TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Отмена')),
+        //       TextButton(
+        //         onPressed: () => Navigator.pop(context, true),
+        //         child: const Text('Удалить', style: TextStyle(color: Colors.red)),
+        //       ),
+        //     ],
+        //   ),
+        // );
+        //
+        // if (confirm == true) {
+        //   final result = await deleteItem(itemId: item.itemData.id);
+        //   if (result.success) {
+        //     _handleRefresh();
+        //   } else {
+        //     if (!mounted) return;
+        //     ScaffoldMessenger.of(context).showSnackBar(
+        //       SnackBar(content: Text(result.message ?? "Ошибка при удалении")),
+        //     );
+        //   }
+        // }
+        break;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -229,7 +295,6 @@ class _WorkshopScreenState extends State<WorkshopScreen> {
       body: Column(children: [Consumer<UploaderManager>(
         builder: (context, manager, child) {
           if (!manager.isUploading) return const SizedBox.shrink();
-
           return Column(
             children: [
               LinearProgressIndicator(
@@ -269,7 +334,7 @@ class _WorkshopScreenState extends State<WorkshopScreen> {
             }
 
             final Content root = Content.fromMap(snapshot.data!.data);
-            final allContent = [...root.folders, ...root.items];
+              final allContent = [...root.folders, ...root.items];
 
             if (allContent.isEmpty) {
               return const Center(child: Text('Тут пока пусто'));
@@ -277,13 +342,13 @@ class _WorkshopScreenState extends State<WorkshopScreen> {
 
             // Ленивая загрузка через GridView.builder
             return GridView.builder(
-              padding: const EdgeInsets.all(8),
-              itemCount: root.folders.length,
+              padding: EdgeInsets.only(top: 8, left: 8, right: 8, bottom: MediaQuery.of(context).padding.bottom + 8),
+              itemCount: allContent.length,
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
                 mainAxisSpacing: 12,
                 crossAxisSpacing: 12,
-                childAspectRatio: 0.9,
+                childAspectRatio: 1,
               ),
               itemBuilder: (context, index) {
                 final item = allContent[index];
@@ -295,6 +360,11 @@ class _WorkshopScreenState extends State<WorkshopScreen> {
                     onTap: () =>
                         context.push('/workshop/${widget.roomId}/${folder.id}'),
                     onActionSelected: (action) => _onFolderActionSelected(action, folder),
+                  );
+                }
+                if (item is Item) {
+                  return FileItem(canEdit: isMyRoom, item: item, onTap: () { print("Нажатие"); }, onActionSelected: (action) => _onItemActionSelected(action, item),
+
                   );
                 }
                 return SizedBox.shrink();
