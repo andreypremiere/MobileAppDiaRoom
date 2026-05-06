@@ -154,3 +154,29 @@ Future<bool> uploadSingleMediaFile(String filePath, String presignedUrl, String 
     return false;
   }
 }
+
+Future<AuthResponse> moveItem({
+  required String targetId,
+  String? destinationId,
+}) async {
+  try {
+    await ApiService.post('/workshop/moveItem', data: {
+      'targetId': targetId,
+      'destinationId': destinationId,
+    });
+    return AuthResponse(success: true);
+  } on DioException catch (e) {
+    return handleDioError(e, "Ошибка при перемещении");
+  }
+}
+
+Future<AuthResponse> deleteItem({
+  required String itemId
+}) async {
+  try {
+    await ApiService.delete('/workshop/deleteItem/$itemId');
+    return AuthResponse(success: true);
+  } on DioException catch (e) {
+    return handleDioError(e, "Ошибка при перемещении");
+  }
+}

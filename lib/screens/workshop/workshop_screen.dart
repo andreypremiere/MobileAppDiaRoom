@@ -117,7 +117,7 @@ class _WorkshopScreenState extends State<WorkshopScreen> {
           '/select-folder/${widget.roomId}/${folder.id}',
         );
 
-        if (destinationId != null && destinationId != 'cancel') {
+        if (destinationId != 'cancel') {
           if (destinationId == widget.folderId) {
             if (!mounted) return;
             ScaffoldMessenger.of(context).showSnackBar(
@@ -149,58 +149,52 @@ class _WorkshopScreenState extends State<WorkshopScreen> {
           '/select-folder/${widget.roomId}/${item.id}',
         );
 
-        if (destinationId != null && destinationId != 'cancel') {
+        if (destinationId != 'cancel') {
           if (destinationId == widget.folderId) {
             if (!mounted) return;
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Файл уже находится в этой папке')),
+              const SnackBar(content: Text('Папка уже находится здесь')),
             );
             break;
           }
 
-          // final result = await moveItem(
-          //   targetId: item.id,
-          //   destinationId: destinationId == 'root' ? null : destinationId,
-          // );
-          //
-          // if (result.success) {
-          //   _handleRefresh();
-          // } else {
-          //   if (!mounted) return;
-          //   ScaffoldMessenger.of(context).showSnackBar(
-          //     SnackBar(content: Text(result.message ?? "Ошибка при перемещении")),
-          //   );
-          // }
+          final result = await moveItem(
+            targetId: item.id!,
+            destinationId: destinationId,
+          );
+          if (result.success) {
+            _handleRefresh();
+          }
         }
         break;
 
       case ItemAction.delete:
-        // final confirm = await showDialog<bool>(
-        //   context: context,
-        //   builder: (context) => AlertDialog(
-        //     title: const Text('Удалить файл?'),
-        //     content: Text('Вы уверены, что хотите удалить «${item.itemData.title}»?'),
-        //     actions: [
-        //       TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Отмена')),
-        //       TextButton(
-        //         onPressed: () => Navigator.pop(context, true),
-        //         child: const Text('Удалить', style: TextStyle(color: Colors.red)),
-        //       ),
-        //     ],
-        //   ),
-        // );
-        //
-        // if (confirm == true) {
-        //   final result = await deleteItem(itemId: item.itemData.id);
-        //   if (result.success) {
-        //     _handleRefresh();
-        //   } else {
-        //     if (!mounted) return;
-        //     ScaffoldMessenger.of(context).showSnackBar(
-        //       SnackBar(content: Text(result.message ?? "Ошибка при удалении")),
-        //     );
-        //   }
-        // }
+        final confirm = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            backgroundColor: Color(0xFFFFFFFF),
+            content: Text('Вы уверены, что хотите удалить файл?'),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Отмена', style: TextStyle(color: Colors.black),)),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('Удалить', style: TextStyle(color: Colors.red)),
+              ),
+            ],
+          ),
+        );
+
+        if (confirm == true) {
+          final result = await deleteItem(itemId: item.id!);
+          if (result.success) {
+            _handleRefresh();
+          } else {
+            if (!mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text("Ошибка при удалении")),
+            );
+          }
+        }
         break;
     }
   }
