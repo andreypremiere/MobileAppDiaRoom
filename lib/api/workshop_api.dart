@@ -180,3 +180,14 @@ Future<AuthResponse> deleteItem({
     return handleDioError(e, "Ошибка при перемещении");
   }
 }
+
+Future<AuthResponse> deleteFolder({
+  required String folderId
+}) async {
+  try {
+    await ApiService.delete('/workshop/deleteFolder/$folderId');
+    return AuthResponse(success: true);
+  } on DioException catch (e) {
+    return handleDioError(e, "Ошибка при перемещении");
+  }
+}

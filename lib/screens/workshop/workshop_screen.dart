@@ -137,7 +137,32 @@ class _WorkshopScreenState extends State<WorkshopScreen> {
         break;
 
       case FolderAction.delete:
-        print("Логика удаления для ${folder.id}");
+        final confirm = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            backgroundColor: Color(0xFFFFFFFF),
+            content: Text('Вы уверены, что хотите удалить папку? Все вложенные папки и элементы будут удалены!'),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Отмена', style: TextStyle(color: Colors.black),)),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('Удалить', style: TextStyle(color: Colors.red)),
+              ),
+            ],
+          ),
+        );
+
+        if (confirm == true) {
+          final result = await deleteFolder(folderId: folder.id);
+          if (result.success) {
+            _handleRefresh();
+          } else {
+            if (!mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text("Ошибка при удалении")),
+            );
+          }
+        }
         break;
     }
   }
