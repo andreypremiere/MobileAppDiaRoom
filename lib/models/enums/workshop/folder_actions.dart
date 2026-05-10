@@ -1,0 +1,1 @@
+enum FolderAction { rename, move, delete }

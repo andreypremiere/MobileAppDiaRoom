@@ -12,6 +12,24 @@ String getFullUrl(String path) {
   return '$s3BaseUrl$path';
 }
 
+String formatDuration(Duration duration) {
+  if (duration == Duration.zero) return "-:--";
+
+  String twoDigits(int n) => n.toString().padLeft(2, "0");
+
+  final hours = duration.inHours;
+  final minutes = duration.inMinutes.remainder(60);
+  final seconds = duration.inSeconds.remainder(60);
+
+  if (hours > 0) {
+    // Формат H:MM:SS
+    return "$hours:${twoDigits(minutes)}:${twoDigits(seconds)}";
+  } else {
+    // Формат M:SS
+    return "${duration.inMinutes}:${twoDigits(seconds)}";
+  }
+}
+
 FontWeight getFontWeight(int value) {
   switch (value) {
     case 400: return FontWeight.w400;

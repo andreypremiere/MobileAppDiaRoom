@@ -13,6 +13,9 @@ import 'package:dia_room/screens/room/room_screen.dart';
 import 'package:dia_room/screens/publication/set_settings_for_post_screen.dart';
 import 'package:dia_room/screens/publication/showing_post_screen.dart';
 import 'package:dia_room/screens/authorization/verify_code_screen.dart';
+import 'package:dia_room/screens/workshop/select_folder_screen.dart';
+import 'package:dia_room/screens/workshop/workshop_screen.dart';
+import 'package:dia_room/services/workshop/uploader_manager.dart';
 import 'package:dia_room/utils/auth_service.dart';
 import 'package:dia_room/utils/dio_service.dart';
 import 'package:dia_room/utils/draft_provider.dart';
@@ -43,6 +46,7 @@ void main() async {
         ChangeNotifierProvider.value(value: authProvider),
         ChangeNotifierProvider(create: (_) => DraftProvider()),
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ChangeNotifierProvider(create: (_) => UploaderManager()),
       ],
       child: const App(),
     ),
@@ -80,34 +84,34 @@ class App extends StatelessWidget {
       routerConfig: GoRouter(
         refreshListenable: auth,
         initialLocation: '/',
-        redirect: (context, state) {
-          final bool loggedIn = auth.isAuthenticated;
-          final location = state.uri.path;
-          final publicRoutes = ['/login', '/registration', '/verifyCode'];
-
-          final bool isPublicPage = publicRoutes.any((route) => location.startsWith(route));
-
-          print('Текущий location: $location, Публичная: $isPublicPage, Авторизован: $loggedIn');
-
-          if (!loggedIn && !isPublicPage) {
-            return '/login';
-          }
-
-          if (loggedIn && !auth.isConfigured) {
-            return '/configureRoom';
-          }
-
-          if (loggedIn && isPublicPage) {
-            return '/';
-          }
-
-          return null;
-        },
+        // redirect: (context, state) {
+        //   final bool loggedIn = auth.isAuthenticated;
+        //   final location = state.uri.path;
+        //   final publicRoutes = ['/login', '/registration', '/verifyCode'];
+        //
+        //   final bool isPublicPage = publicRoutes.any((route) => location.startsWith(route));
+        //
+        //   print('Текущий location: $location, Публичная: $isPublicPage, Авторизован: $loggedIn');
+        //
+        //   if (!loggedIn && !isPublicPage) {
+        //     return '/login';
+        //   }
+        //
+        //   if (loggedIn && !auth.isConfigured) {
+        //     return '/configureRoom';
+        //   }
+        //
+        //   if (loggedIn && isPublicPage) {
+        //     return '/';
+        //   }
+        //
+        //   return null;
+        // },
         routes: [
           // Главный экран ленты
           GoRoute(
             path: '/',
-            builder: (context, state) => MainPageScreen(),
+            builder: (context, state) => WorkshopScreen(roomId: "64a13030-7175-463f-9f7e-5a7b80382017"),
           ),
 
           GoRoute(
@@ -212,6 +216,41 @@ class App extends StatelessWidget {
 
               return FullScreenVideoScreen(videoUrl: videoUrl, type: type,);
             },
+          ),
+          GoRoute(
+            path: '/workshop/:roomId',
+            builder: (context, state) {
+              final String roomId = state.pathParameters['roomId']!;
+              return WorkshopScreen(roomId: roomId, folderId: null);
+            },
+            routes: [
+              GoRoute(
+                path: ':folderId', // Дочерний маршрут: /workshop/:roomId/:folderId
+                builder: (context, state) {
+                  final String roomId = state.pathParameters['roomId']!;
+                  final String? folderId = state.pathParameters['folderId'];
+                  return WorkshopScreen(roomId: roomId, folderId: folderId);
+                },
+              ),
+            ],
+          ),
+          GoRoute(
+            path: '/select-folder/:roomId/:targetId',
+            builder: (context, state) => SelectFolderScreen(
+              roomId: state.pathParameters['roomId']!,
+              targetId: state.pathParameters['targetId']!,
+              currentFolderId: null,
+            ),
+            routes: [
+              GoRoute(
+                path: ':currentFolderId',
+                builder: (context, state) => SelectFolderScreen(
+                  roomId: state.pathParameters['roomId']!,
+                  targetId: state.pathParameters['targetId']!,
+                  currentFolderId: state.pathParameters['currentFolderId'],
+                ),
+              ),
+            ],
           ),
         ],
       ),

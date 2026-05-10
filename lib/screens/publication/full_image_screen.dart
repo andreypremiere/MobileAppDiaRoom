@@ -8,7 +8,7 @@ import '../../models/enums/file_type.dart';
 class FullImageScreen extends StatefulWidget {
   final List<String> imageUrls;
   final int initialIndex;
-  final FileType type; // Добавляем тип контента
+  final FileType type;
 
   const FullImageScreen({
     super.key,

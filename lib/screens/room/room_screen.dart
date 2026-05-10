@@ -358,7 +358,7 @@ class _RoomState extends State<RoomScreen> {
                                       const SizedBox(height: 10),
                                       RoomActionButton(
                                         title: 'Мастерская',
-                                        onPressed: () {},
+                                        onPressed: () {context.push('/workshop/${widget.roomId}');},
                                       ),
                                       const SizedBox(height: 10),
                                     ],
