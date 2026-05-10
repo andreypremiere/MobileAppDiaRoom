@@ -1,0 +1,358 @@
+import 'package:dia_room/utils/app_theme.dart';
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+
+import '../../api/account_api.dart';
+import '../../api/auth_response.dart';
+import '../../components/diary/message_card.dart';
+import '../../components/general/app_avatar.dart';
+import '../../components/general/app_back_button.dart';
+import '../../models/diary/attachment.dart';
+import '../../models/diary/message.dart';
+import '../../models/enums/diary/attachment_type.dart';
+import '../../models/enums/diary/creating_actions.dart';
+import '../../models/enums/diary/message_type.dart';
+import '../../models/post_view/author.dart';
+import '../../utils/auth_service.dart';
+
+class DiaryScreen extends StatefulWidget {
+  final String roomId;
+
+  const DiaryScreen({super.key, required this.roomId});
+
+  @override
+  State<DiaryScreen> createState() => _DiaryScreenState();
+}
+
+class _DiaryScreenState extends State<DiaryScreen> {
+  final ScrollController _scrollController = ScrollController();
+  final TextEditingController _messageController = TextEditingController();
+
+  // Состояние
+  List<Message> _messages = []; // Здесь будут твои модели Message
+  bool _isLoading = false;
+  bool _hasMore = true;
+  int _currentPage = 0;
+  final int _limit = 20;
+  bool isMyRoom = false;
+
+  late Future<AuthResponse> _roomInfoFuture;
+
+  @override
+  void initState() {
+    super.initState();
+
+    final myId = context.read<AuthProvider>().roomId;
+    isMyRoom = widget.roomId == myId;
+    print('Пользователь авторизован? $myId');
+
+    _roomInfoFuture = getRoomInfoById(widget.roomId);
+
+    _loadMessages();
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadMessages() async {
+    if (_isLoading || !_hasMore) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      // Имитация запроса к твоему Go серверу
+      // final newMessages = await ApiService.getMessages(widget.roomId, offset: _currentPage * _limit, limit: _limit);
+
+      await Future.delayed(const Duration(seconds: 1)); // Имитация сети
+      List<Message> newMessages = List.generate(20, (index) {
+        final globalIndex = index + (_currentPage * _limit);
+        final now = DateTime.now();
+
+        // Генерируем разное количество вложений (от 0 до 7)
+        int attachmentsCount = (globalIndex % 8); // 0, 1, 2, 3, 4, 5, 6, 7
+
+        List<Attachment> fakeAttachments = List.generate(attachmentsCount, (i) {
+          // Делаем каждое второе вложение видео
+          bool isVideo = i % 2 != 0;
+
+          return Attachment(
+            id: "att_$globalIndex-$i",
+            messageId: "msg_$globalIndex",
+            attType: isVideo ? AttachmentType.video : AttachmentType.photo,
+            s3Key: "sample_image_${i + 1}.jpg", // Путь для cached_network_image
+            fileSizeBytes: 1024 * 1024 * 2, // 2MB
+            duration: isVideo ? 15 : null,
+            createdAt: now,
+          );
+        });
+
+        return Message(
+          id: "msg_$globalIndex",
+          roomId: widget.roomId,
+          msgType: MessageType.standard,
+          content: globalIndex % 5 == 0
+              ? "Это очень длинное сообщение под номером $globalIndex, чтобы проверить, как текст переносится на новые строки и как карточка расширяется по высоте."
+              : "Запись в дневнике #$globalIndex",
+          // Имитируем ссылки на объекты (например, в каждом 7-м сообщении)
+          attachedObjectWorkshopId: globalIndex % 7 == 0 ? "workshop-uuid-123" : null,
+          attachedObjectPostId: globalIndex % 9 == 0 ? "post-uuid-456" : null,
+          createdAt: now.subtract(Duration(hours: globalIndex)),
+          updatedAt: now,
+          attachments: fakeAttachments,
+        );
+      });
+
+      setState(() {
+        _currentPage++;
+        _messages.addAll(newMessages);
+        // Если пришло меньше чем лимит, значит данных больше нет
+        if (newMessages.length < _limit) _hasMore = false;
+      });
+    } catch (e) {
+      // Обработка ошибок
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  void _onScroll() {
+    // Если долистали до конца (осталось 200 пикселей до низа)
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      _loadMessages();
+    }
+  }
+
+  Widget _buildSkeletonItem({
+    required double width,
+    required double height,
+    double radius = 8,
+  }) {
+    return Container(
+      width: width,
+      height: height,
+      decoration: BoxDecoration(
+        color: Colors.grey.withAlpha(20),
+        borderRadius: BorderRadius.circular(radius),
+      ),
+    );
+  }
+
+  Widget _buildShimmerTitle() {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Скелет для аватара
+        _buildSkeletonItem(width: 36, height: 36, radius: 18),
+        const SizedBox(width: 10),
+        // Скелет для имени
+        _buildSkeletonItem(width: 100, height: 20, radius: 4),
+      ],
+    );
+  }
+
+  Widget _buildMessageInput() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+      decoration: BoxDecoration(
+        color: context.ui.containerColor,
+        borderRadius: BorderRadius.circular(32),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(5),
+            blurRadius: 10,
+            offset: const Offset(0, 0),
+          ),
+        ],
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          // Левая кнопка: Плюс с PopupMenu
+          PopupMenuButton<CreatingDiaryAction>(
+            tooltip: '',
+            // Убираем всплывающую подсказку, если не нужна
+            padding: EdgeInsets.zero,
+            // Убираем лишние отступы самой кнопки
+            constraints: const BoxConstraints(),
+            // Снимаем стандартные ограничения размера
+
+            // Кастомизация самой кнопки (вместо child)
+            icon: Icon(
+              Icons.add_rounded,
+              size: 34, // Увеличил, как ты и хотел
+              color: context.ui.iconColorPrimary,
+            ),
+
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            color: context.ui.containerColor,
+            elevation: 5,
+            offset: const Offset(0, -140),
+
+            onSelected: (action) {
+              FocusScope.of(context).unfocus(); // Снимаем фокус
+              print("Selected: ${action.label}");
+            },
+            itemBuilder: (context) => CreatingDiaryAction.values
+                .map(
+                  (action) => PopupMenuItem<CreatingDiaryAction>(
+                    value: action,
+                    height: 44,
+                    child: Row(
+                      children: [
+                        Icon(
+                          action.icon,
+                          color: context.ui.fontColorPrimary,
+                          size: 22,
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          action.label,
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500,
+                            color: context.ui.fontColorPrimary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+                .toList(),
+          ),
+
+          // Поле ввода
+          Expanded(
+            child: TextField(
+              controller: _messageController,
+              maxLines: 5,
+              minLines: 1,
+              style: TextStyle(color: context.ui.fontColorPrimary),
+              decoration: InputDecoration(
+                hintText: "Сообщение...",
+                hintStyle: TextStyle(color: context.ui.inputIconColor),
+                filled: false,
+                border: InputBorder.none,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 10,
+                ),
+              ),
+            ),
+          ),
+
+          // Правая кнопка: Отправить
+          IconButton(
+            onPressed: () {
+              if (_messageController.text.trim().isNotEmpty) {
+                // Метод отправки
+                _messageController.clear();
+              }
+            },
+            icon: Icon(
+              Icons.send_rounded,
+              color: context.ui.iconColorPrimary,
+              size: 24,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      // Этот метод снимает фокус и скрывает клавиатуру
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: Scaffold(
+        appBar: AppBar(
+          backgroundColor: context.ui.appBarColor,
+          leading: const AppBackButton(),
+          centerTitle: false,
+          title: FutureBuilder<AuthResponse>(
+            future: _roomInfoFuture,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return _buildShimmerTitle();
+              }
+
+              if (snapshot.hasError ||
+                  !snapshot.hasData ||
+                  !snapshot.data!.success) {
+                return const SizedBox.shrink();
+              }
+
+              // Данные загружены
+              final roomInfo = snapshot.data!.data!['roomInfo'] as Author;
+
+              return InkWell(
+                onTap: () {},
+                borderRadius: BorderRadius.circular(12),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 4,
+                    vertical: 4,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      AppAvatar(imageUrl: roomInfo.avatar, radius: 18),
+                      const SizedBox(width: 10),
+                      Text(
+                        roomInfo.roomName,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: context.ui.fontColorPrimary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        body: SafeArea(
+          child: Column(
+            children: [
+              Expanded(
+                child: ListView.builder(
+                  reverse: true,
+                  controller: _scrollController,
+                  padding: const EdgeInsets.all(6),
+                  itemCount: _messages.length + (_hasMore ? 1 : 0),
+                  itemBuilder: (context, index) {
+                    if (index == _messages.length) {
+                      return const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(8.0),
+                          child: CircularProgressIndicator(),
+                        ),
+                      );
+                    }
+
+                    // Здесь будет твой виджет сообщения (DiaryMessageCard)
+                    return DiaryMessageCard(
+                      message: _messages[index],
+                    );
+                  },
+                ),
+              ),
+              isMyRoom ? _buildMessageInput() : SizedBox.shrink(),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

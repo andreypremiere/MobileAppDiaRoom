@@ -1,6 +1,7 @@
 import 'package:dia_room/models/enums/file_type.dart';
 import 'package:dia_room/models/post_creator/post_draft.dart';
 import 'package:dia_room/screens/authorization/registration_screen.dart';
+import 'package:dia_room/screens/diary/diary_screen.dart';
 import 'package:dia_room/screens/room/room_settings_screen.dart';
 import 'package:dia_room/screens/publication/full_image_screen.dart';
 import 'package:dia_room/screens/publication/full_video_screen.dart';
@@ -84,7 +85,7 @@ class App extends StatelessWidget {
       routerConfig: GoRouter(
         refreshListenable: auth,
         initialLocation: '/',
-        // redirect: (context, state) {
+        redirect: (context, state) {
         //   final bool loggedIn = auth.isAuthenticated;
         //   final location = state.uri.path;
         //   final publicRoutes = ['/login', '/registration', '/verifyCode'];
@@ -106,12 +107,20 @@ class App extends StatelessWidget {
         //   }
         //
         //   return null;
-        // },
+        },
         routes: [
           // Главный экран ленты
           GoRoute(
             path: '/',
-            builder: (context, state) => WorkshopScreen(roomId: "64a13030-7175-463f-9f7e-5a7b80382017"),
+            builder: (context, state) => DiaryScreen(roomId: "64a13030-7175-463f-9f7e-5a7b80382017"),
+          ),
+
+          GoRoute(
+            path: '/diary/:roomId',
+            builder: (context, state) {
+              final roomId = state.pathParameters['roomId']!;
+              return DiaryScreen(roomId: roomId);
+            },
           ),
 
           GoRoute(

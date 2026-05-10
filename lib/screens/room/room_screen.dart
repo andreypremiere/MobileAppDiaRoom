@@ -346,7 +346,9 @@ class _RoomState extends State<RoomScreen> {
                                       const SizedBox(height: 10),
                                       RoomActionButton(
                                         title: 'Дневник',
-                                        onPressed: () {},
+                                        onPressed: () => context.push(
+                                          '/diary/${widget.roomId}',
+                                        ),
                                       ),
                                       const SizedBox(height: 10),
                                       RoomActionButton(
