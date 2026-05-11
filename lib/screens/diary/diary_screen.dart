@@ -1,6 +1,9 @@
+import 'dart:io';
+
+import 'package:dia_room/models/enums/diary/message_status.dart';
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 import '../../api/account_api.dart';
@@ -10,10 +13,13 @@ import '../../components/general/app_avatar.dart';
 import '../../components/general/app_back_button.dart';
 import '../../models/diary/attachment.dart';
 import '../../models/diary/message.dart';
+import '../../models/diary/selected_media.dart';
 import '../../models/enums/diary/attachment_type.dart';
 import '../../models/enums/diary/creating_actions.dart';
 import '../../models/enums/diary/message_type.dart';
 import '../../models/post_view/author.dart';
+import '../../services/diary/diary_utils.dart';
+import '../../services/diary/upload_manager.dart';
 import '../../utils/auth_service.dart';
 
 class DiaryScreen extends StatefulWidget {
@@ -31,6 +37,11 @@ class _DiaryScreenState extends State<DiaryScreen> {
 
   // Состояние
   List<Message> _messages = []; // Здесь будут твои модели Message
+
+  List<SelectedMedia> _selectedMedia = [];
+  final int _maxPhotos = 5;
+  final int _maxVideos = 2;
+
   bool _isLoading = false;
   bool _hasMore = true;
   int _currentPage = 0;
@@ -43,7 +54,9 @@ class _DiaryScreenState extends State<DiaryScreen> {
   void initState() {
     super.initState();
 
-    final myId = context.read<AuthProvider>().roomId;
+    final myId = context
+        .read<AuthProvider>()
+        .roomId;
     isMyRoom = widget.roomId == myId;
     print('Пользователь авторизован? $myId');
 
@@ -84,10 +97,13 @@ class _DiaryScreenState extends State<DiaryScreen> {
             id: "att_$globalIndex-$i",
             messageId: "msg_$globalIndex",
             attType: isVideo ? AttachmentType.video : AttachmentType.photo,
-            s3Key: "sample_image_${i + 1}.jpg", // Путь для cached_network_image
-            fileSizeBytes: 1024 * 1024 * 2, // 2MB
+            s3Key: "sample_image_${i + 1}.jpg",
+            // Путь для cached_network_image
+            fileSizeBytes: 1024 * 1024 * 2,
+            // 2MB
             duration: isVideo ? 15 : null,
             createdAt: now,
+            roomId: widget.roomId,
           );
         });
 
@@ -99,11 +115,14 @@ class _DiaryScreenState extends State<DiaryScreen> {
               ? "Это очень длинное сообщение под номером $globalIndex, чтобы проверить, как текст переносится на новые строки и как карточка расширяется по высоте."
               : "Запись в дневнике #$globalIndex",
           // Имитируем ссылки на объекты (например, в каждом 7-м сообщении)
-          attachedObjectWorkshopId: globalIndex % 7 == 0 ? "workshop-uuid-123" : null,
+          attachedObjectWorkshopId: globalIndex % 7 == 0
+              ? "workshop-uuid-123"
+              : null,
           attachedObjectPostId: globalIndex % 9 == 0 ? "post-uuid-456" : null,
           createdAt: now.subtract(Duration(hours: globalIndex)),
           updatedAt: now,
           attachments: fakeAttachments,
+          status: MessageStatus.sent,
         );
       });
 
@@ -125,6 +144,36 @@ class _DiaryScreenState extends State<DiaryScreen> {
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 200) {
       _loadMessages();
+    }
+  }
+
+  Future<void> _sendStandardMessage() async {
+    final UploadManager uploader = UploadManager();
+    await uploader.addMessage(type: MessageType.standard, messageText: _messageController.text.trim(),
+    media: _selectedMedia);
+   }
+
+  Future<List<XFile>> _handlePickPhoto() async {
+    final ImagePicker picker = ImagePicker();
+    List<XFile> photo;
+    try {
+      photo = await picker.pickMultiImage(limit: 5);
+      return photo;
+    } catch (e) {
+      print("Ошибка при выборе нескольких изображений: $e");
+      return [];
+    }
+  }
+
+  Future<List<XFile>> _handlePickVideo() async {
+    final ImagePicker picker = ImagePicker();
+    List<XFile> video;
+    try {
+      video = await picker.pickMultiVideo(limit: 2);
+      return video;
+    } catch (e) {
+      print("Ошибка при выборе нескольких изображений: $e");
+      return [];
     }
   }
 
@@ -157,114 +206,124 @@ class _DiaryScreenState extends State<DiaryScreen> {
   }
 
   Widget _buildMessageInput() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-      decoration: BoxDecoration(
-        color: context.ui.containerColor,
-        borderRadius: BorderRadius.circular(32),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha(5),
-            blurRadius: 10,
-            offset: const Offset(0, 0),
-          ),
-        ],
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          // Левая кнопка: Плюс с PopupMenu
-          PopupMenuButton<CreatingDiaryAction>(
-            tooltip: '',
-            // Убираем всплывающую подсказку, если не нужна
-            padding: EdgeInsets.zero,
-            // Убираем лишние отступы самой кнопки
-            constraints: const BoxConstraints(),
-            // Снимаем стандартные ограничения размера
-
-            // Кастомизация самой кнопки (вместо child)
-            icon: Icon(
-              Icons.add_rounded,
-              size: 34, // Увеличил, как ты и хотел
-              color: context.ui.iconColorPrimary,
-            ),
-
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            color: context.ui.containerColor,
-            elevation: 5,
-            offset: const Offset(0, -140),
-
-            onSelected: (action) {
-              FocusScope.of(context).unfocus(); // Снимаем фокус
-              print("Selected: ${action.label}");
-            },
-            itemBuilder: (context) => CreatingDiaryAction.values
-                .map(
-                  (action) => PopupMenuItem<CreatingDiaryAction>(
-                    value: action,
-                    height: 44,
-                    child: Row(
-                      children: [
-                        Icon(
-                          action.icon,
-                          color: context.ui.fontColorPrimary,
-                          size: 22,
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // --- Строка с выбранными медиа ---
+        if (_selectedMedia.isNotEmpty)
+          Container(
+            height: 80,
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: _selectedMedia.length,
+              itemBuilder: (context, index) {
+                final media = _selectedMedia[index];
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: Stack(
+                    children: [
+                      // Квадратик превью
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Container(
+                          width: 70,
+                          height: 70,
+                          color: context.ui.containerColor,
+                          child: media.type == AttachmentType.video
+                              ? (media.thumbnail != null
+                              ? Image.file(
+                              File(media.thumbnail!), fit: BoxFit.cover)
+                              : const Center(
+                              child: CircularProgressIndicator(strokeWidth: 2)))
+                              : Image.file(media.file, fit: BoxFit.cover),
                         ),
-                        const SizedBox(width: 12),
-                        Text(
-                          action.label,
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w500,
-                            color: context.ui.fontColorPrimary,
+                      ),
+                      // Иконка видео поверх
+                      if (media.type == AttachmentType.video)
+                        const Positioned.fill(
+                          child: Icon(
+                              Icons.play_circle_outline, color: Colors.white,
+                              size: 30),
+                        ),
+                      // Кнопка удаления
+                      Positioned(
+                        top: 2,
+                        right: 2,
+                        child: GestureDetector(
+                          onTap: () =>
+                              setState(() => _selectedMedia.removeAt(index)),
+                          child: Container(
+                            decoration: const BoxDecoration(
+                                color: Colors.black54, shape: BoxShape.circle),
+                            child: const Icon(
+                                Icons.close, size: 16, color: Colors.white),
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                )
-                .toList(),
+                );
+              },
+            ),
           ),
 
-          // Поле ввода
-          Expanded(
-            child: TextField(
-              controller: _messageController,
-              maxLines: 5,
-              minLines: 1,
-              style: TextStyle(color: context.ui.fontColorPrimary),
-              decoration: InputDecoration(
-                hintText: "Сообщение...",
-                hintStyle: TextStyle(color: context.ui.inputIconColor),
-                filled: false,
-                border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 10,
+        // --- Твоя основная панель ввода ---
+        Container(
+          margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+          decoration: BoxDecoration(
+            color: context.ui.containerColor,
+            borderRadius: BorderRadius.circular(32),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withAlpha(5),
+                blurRadius: 10,
+                offset: const Offset(0, 0),
+              ),
+            ],
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              // Твой PopupMenuButton
+              _buildAddMenu(),
+
+              Expanded(
+                child: TextField(
+                  controller: _messageController,
+                  maxLines: 5,
+                  minLines: 1,
+                  style: TextStyle(color: context.ui.fontColorPrimary),
+                  decoration: const InputDecoration(
+                    filled: false,
+                    hintText: "Сообщение...",
+                    border: InputBorder.none,
+                    contentPadding: EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 10),
+                  ),
                 ),
               ),
-            ),
-          ),
 
-          // Правая кнопка: Отправить
-          IconButton(
-            onPressed: () {
-              if (_messageController.text.trim().isNotEmpty) {
-                // Метод отправки
-                _messageController.clear();
-              }
-            },
-            icon: Icon(
-              Icons.send_rounded,
-              color: context.ui.iconColorPrimary,
-              size: 24,
-            ),
+              IconButton(
+                onPressed: () async {
+                  await _sendStandardMessage();
+                  print("Сообщение отправлено");
+                }, // Вызываем метод отправки
+                icon: Icon(
+                  Icons.send_rounded,
+                  color: (_messageController.text.isNotEmpty ||
+                      _selectedMedia.isNotEmpty)
+                      ? context.ui
+                      .primaryColor // Красим кнопку, если есть контент
+                      : context.ui.iconColorPrimary,
+                  size: 24,
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -353,6 +412,127 @@ class _DiaryScreenState extends State<DiaryScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  void _showLimitWarning(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message, style: TextStyle(color: Color(0xFF262626)),),
+        backgroundColor: Color(0xFFE5E5E5),
+        behavior: SnackBarBehavior.floating, // Делает его "парящим" над нижней панелью
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        action: SnackBarAction(
+          label: 'ОК',
+          textColor: Color(0xFF262626),
+          onPressed: () {
+            // Действие при нажатии на кнопку в SnackBar
+          },
+        ),
+      ),
+    );
+  }
+
+  Future<void> _addMedia(String path) async {
+    final type = DiaryUtils.getAttachmentType(path);
+    if (type == null) {
+      print("Не поддерживаемый тип файла");
+      // Snackbar
+      return;
+    }
+
+    final currentPhotos = _selectedMedia.where((m) => m.type == AttachmentType.photo).length;
+    final currentVideos = _selectedMedia.where((m) => m.type == AttachmentType.video).length;
+
+    if (type == AttachmentType.video && currentVideos >= _maxVideos) {
+      _showLimitWarning("Можно прикрепить только 2 видео");
+      return;
+    }
+    if (type == AttachmentType.photo && currentPhotos >= _maxPhotos) {
+      _showLimitWarning("Можно прикрепить только 5 фото");
+      return;
+    }
+
+    String? thumb;
+    if (type == AttachmentType.video) {
+      thumb = await DiaryUtils.generatePreview(path);
+
+      if (thumb == null) {
+        // SnackBar: "Не удалось сгенерировать превью"
+        return;
+      }
+    }
+
+    setState(() {
+      _selectedMedia.add(SelectedMedia(
+        file: File(path),
+        thumbnail: thumb, type: type,
+      ));
+    });
+  }
+
+  Widget _buildAddMenu() {
+    return PopupMenuButton<CreatingDiaryAction>(
+      tooltip: '',
+      // Убираем всплывающую подсказку, если не нужна
+      padding: EdgeInsets.zero,
+      // Убираем лишние отступы самой кнопки
+      constraints: const BoxConstraints(),
+      // Снимаем стандартные ограничения размера
+      // Кастомизация самой кнопки (вместо child)
+      icon: Icon(
+        Icons.add_rounded,
+        size: 34, // Увеличил, как ты и хотел
+        color: context.ui.iconColorPrimary,
+      ),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      color: context.ui.containerColor,
+      elevation: 5,
+      offset: const Offset(0, -140),
+      onSelected: (action) async {
+        FocusScope.of(context).unfocus();
+        if (action == CreatingDiaryAction.photo) {
+          final media = await _handlePickPhoto();
+          for (int i = 0; i < media.length; i++) {
+            await _addMedia(media[i].path);
+          }
+        }
+        if (action == CreatingDiaryAction.video) {
+          final media = await _handlePickVideo();
+          for (int i = 0; i < media.length; i++) {
+            await _addMedia(media[i].path);
+          }
+        }
+      },
+      itemBuilder: (context) =>
+          CreatingDiaryAction.values
+              .map(
+                (action) =>
+                PopupMenuItem<CreatingDiaryAction>(
+                  value: action,
+                  height: 44,
+                  child: Row(
+                    children: [
+                      Icon(
+                        action.icon,
+                        color: context.ui.fontColorPrimary,
+                        size: 22,
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        action.label,
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w500,
+                          color: context.ui.fontColorPrimary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+          ).toList(),
     );
   }
 }

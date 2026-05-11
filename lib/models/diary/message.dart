@@ -1,3 +1,5 @@
+import 'package:dia_room/models/enums/diary/message_status.dart';
+
 import '../enums/diary/message_type.dart';
 import 'attachment.dart';
 
@@ -5,6 +7,7 @@ class Message {
   final String id;
   final String roomId;
   final MessageType msgType;
+  final MessageStatus status;
   final String? content;
   final String? attachedObjectWorkshopId;
   final String? attachedObjectPostId;
@@ -18,6 +21,7 @@ class Message {
     required this.roomId,
     required this.msgType,
     this.content,
+    required this.status,
     this.attachedObjectWorkshopId,
     this.attachedObjectPostId,
     required this.createdAt,
@@ -31,6 +35,7 @@ class Message {
       'id': id,
       'roomId': roomId,
       'msgType': msgType.toJson(),
+      'status': status.toJson(),
       'content': content,
       'attachedObjectWorkshopId': attachedObjectWorkshopId,
       'attachedObjectPostId': attachedObjectPostId,
@@ -46,6 +51,7 @@ class Message {
       id: map['id'] ?? '',
       roomId: map['roomId'] ?? '',
       msgType: MessageType.fromJson(map['msgType'] ?? ''),
+      status: MessageStatus.fromJson(map['status'] ?? ''),
       content: map['content'],
       attachedObjectWorkshopId: map['attachedObjectWorkshopId'],
       attachedObjectPostId: map['attachedObjectPostId'],

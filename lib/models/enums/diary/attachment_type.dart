@@ -5,6 +5,7 @@ enum AttachmentType {
   videoNote;
 
   String toJson() => nameValue[this]!;
+
   static AttachmentType fromJson(String value) =>
       valueMap[value] ?? AttachmentType.photo;
 

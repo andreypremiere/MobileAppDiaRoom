@@ -3,6 +3,7 @@ import '../enums/diary/attachment_type.dart';
 class Attachment {
   final String id;
   final String messageId;
+  final String roomId;
   final AttachmentType attType;
   final String s3Key;
   final String? previewS3Key;
@@ -13,6 +14,7 @@ class Attachment {
   Attachment({
     required this.id,
     required this.messageId,
+    required this.roomId,
     required this.attType,
     required this.s3Key,
     this.previewS3Key,
@@ -25,6 +27,7 @@ class Attachment {
     return {
       'id': id,
       'messageId': messageId,
+      'roomId': roomId,
       'attType': attType.toJson(),
       's3Key': s3Key,
       'previewS3Key': previewS3Key,
@@ -38,6 +41,7 @@ class Attachment {
     return Attachment(
       id: map['id'] ?? '',
       messageId: map['messageId'] ?? '',
+      roomId: map['roomId'] ?? '',
       attType: AttachmentType.fromJson(map['attType'] ?? ''),
       s3Key: map['s3Key'] ?? '',
       previewS3Key: map['previewS3Key'],
