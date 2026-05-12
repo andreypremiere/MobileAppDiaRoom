@@ -44,3 +44,17 @@ Future<bool> uploadSingleMediaFile(String filePath, String presignedUrl, String 
     return false;
   }
 }
+
+Future<AuthResponse> getMessages({
+  required String roomId,
+  required int page,
+  required int limit,
+}) async {
+  try {
+    final response = await ApiService.get('/diary/messages/$roomId', queryParameters: {"page": page, "limit": limit});
+
+    return AuthResponse(success: true, data: response.data);
+  } on DioException catch (e) {
+    return handleDioError(e, "Ошибка при создании сообщения");
+  }
+}

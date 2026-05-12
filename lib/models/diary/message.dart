@@ -1,7 +1,6 @@
 import 'package:dia_room/models/enums/diary/message_status.dart';
 
 import '../enums/diary/message_type.dart';
-import 'attachment.dart';
 
 class Message {
   final String id;
@@ -14,7 +13,6 @@ class Message {
   final DateTime createdAt;
   final DateTime updatedAt;
   final DateTime? deletedAt;
-  final List<Attachment> attachments;
 
   Message({
     required this.id,
@@ -27,7 +25,6 @@ class Message {
     required this.createdAt,
     required this.updatedAt,
     this.deletedAt,
-    this.attachments = const [],
   });
 
   Map<String, dynamic> toMap() {
@@ -42,7 +39,6 @@ class Message {
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
       'deletedAt': deletedAt?.toIso8601String(),
-      'attachments': attachments.map((x) => x.toMap()).toList(),
     };
   }
 
@@ -64,10 +60,6 @@ class Message {
       deletedAt: map['deletedAt'] != null
           ? DateTime.parse(map['deletedAt'])
           : null,
-      attachments: map['attachments'] != null
-          ? List<Attachment>.from(
-          (map['attachments'] as List).map((x) => Attachment.fromMap(x)))
-          : [],
     );
   }
 }

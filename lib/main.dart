@@ -86,27 +86,27 @@ class App extends StatelessWidget {
         refreshListenable: auth,
         initialLocation: '/',
         redirect: (context, state) {
-        //   final bool loggedIn = auth.isAuthenticated;
-        //   final location = state.uri.path;
-        //   final publicRoutes = ['/login', '/registration', '/verifyCode'];
-        //
-        //   final bool isPublicPage = publicRoutes.any((route) => location.startsWith(route));
-        //
-        //   print('Текущий location: $location, Публичная: $isPublicPage, Авторизован: $loggedIn');
-        //
-        //   if (!loggedIn && !isPublicPage) {
-        //     return '/login';
-        //   }
-        //
-        //   if (loggedIn && !auth.isConfigured) {
-        //     return '/configureRoom';
-        //   }
-        //
-        //   if (loggedIn && isPublicPage) {
-        //     return '/';
-        //   }
-        //
-        //   return null;
+          final bool loggedIn = auth.isAuthenticated;
+          final location = state.uri.path;
+          final publicRoutes = ['/login', '/registration', '/verifyCode'];
+
+          final bool isPublicPage = publicRoutes.any((route) => location.startsWith(route));
+
+          print('Текущий location: $location, Публичная: $isPublicPage, Авторизован: $loggedIn');
+
+          if (!loggedIn && !isPublicPage) {
+            return '/login';
+          }
+
+          if (loggedIn && !auth.isConfigured) {
+            return '/configureRoom';
+          }
+
+          if (loggedIn && isPublicPage) {
+            return '/';
+          }
+
+          return null;
         },
         routes: [
           // Главный экран ленты

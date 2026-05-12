@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:dia_room/contracts/diary/response/getting_messages.dart';
 import 'package:dia_room/models/enums/diary/message_status.dart';
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
@@ -8,6 +9,7 @@ import 'package:provider/provider.dart';
 
 import '../../api/account_api.dart';
 import '../../api/auth_response.dart';
+import '../../api/diary_api.dart';
 import '../../components/diary/message_card.dart';
 import '../../components/general/app_avatar.dart';
 import '../../components/general/app_back_button.dart';
@@ -36,7 +38,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
   final TextEditingController _messageController = TextEditingController();
 
   // Состояние
-  List<Message> _messages = []; // Здесь будут твои модели Message
+  List<MessagePresentation> _messages = []; // Здесь будут твои модели Message
 
   List<SelectedMedia> _selectedMedia = [];
   final int _maxPhotos = 5;
@@ -78,62 +80,23 @@ class _DiaryScreenState extends State<DiaryScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // Имитация запроса к твоему Go серверу
-      // final newMessages = await ApiService.getMessages(widget.roomId, offset: _currentPage * _limit, limit: _limit);
+      final response = await getMessages(roomId: widget.roomId, page: _currentPage, limit: _limit);
+      if (!response.success) {
+        print('Не удалось загрузить сообщения');
+        return;
+      }
 
-      await Future.delayed(const Duration(seconds: 1)); // Имитация сети
-      List<Message> newMessages = List.generate(20, (index) {
-        final globalIndex = index + (_currentPage * _limit);
-        final now = DateTime.now();
-
-        // Генерируем разное количество вложений (от 0 до 7)
-        int attachmentsCount = (globalIndex % 8); // 0, 1, 2, 3, 4, 5, 6, 7
-
-        List<Attachment> fakeAttachments = List.generate(attachmentsCount, (i) {
-          // Делаем каждое второе вложение видео
-          bool isVideo = i % 2 != 0;
-
-          return Attachment(
-            id: "att_$globalIndex-$i",
-            messageId: "msg_$globalIndex",
-            attType: isVideo ? AttachmentType.video : AttachmentType.photo,
-            s3Key: "sample_image_${i + 1}.jpg",
-            // Путь для cached_network_image
-            fileSizeBytes: 1024 * 1024 * 2,
-            // 2MB
-            duration: isVideo ? 15 : null,
-            createdAt: now,
-            roomId: widget.roomId,
-          );
-        });
-
-        return Message(
-          id: "msg_$globalIndex",
-          roomId: widget.roomId,
-          msgType: MessageType.standard,
-          content: globalIndex % 5 == 0
-              ? "Это очень длинное сообщение под номером $globalIndex, чтобы проверить, как текст переносится на новые строки и как карточка расширяется по высоте."
-              : "Запись в дневнике #$globalIndex",
-          // Имитируем ссылки на объекты (например, в каждом 7-м сообщении)
-          attachedObjectWorkshopId: globalIndex % 7 == 0
-              ? "workshop-uuid-123"
-              : null,
-          attachedObjectPostId: globalIndex % 9 == 0 ? "post-uuid-456" : null,
-          createdAt: now.subtract(Duration(hours: globalIndex)),
-          updatedAt: now,
-          attachments: fakeAttachments,
-          status: MessageStatus.sent,
-        );
-      });
+      print(response.data);
+      final GettingMessages gotMessages = GettingMessages.fromMap(response.data);
 
       setState(() {
         _currentPage++;
-        _messages.addAll(newMessages);
+        _messages.addAll(gotMessages.messages);
         // Если пришло меньше чем лимит, значит данных больше нет
-        if (newMessages.length < _limit) _hasMore = false;
+        if (gotMessages.messages.length < _limit) _hasMore = false;
       });
     } catch (e) {
-      // Обработка ошибок
+      print('Возникла непредвиденная ошибка в парсинге $e');
     } finally {
       setState(() => _isLoading = false);
     }

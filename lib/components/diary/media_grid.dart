@@ -126,7 +126,7 @@ class MediaGrid extends StatelessWidget {
       alignment: Alignment.center,
       children: [
         CachedNetworkImage(
-          imageUrl: "https://i.pinimg.com/736x/e6/7f/d8/e67fd8804d9dbc16efedcdaa848cc3e8.jpg",
+          imageUrl: att.previewS3Key ?? "",
           height: height,
           width: double.infinity,
           fit: BoxFit.cover,

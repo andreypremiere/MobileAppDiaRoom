@@ -1,3 +1,4 @@
+import 'package:dia_room/contracts/diary/response/getting_messages.dart';
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -6,7 +7,7 @@ import '../../models/diary/message.dart';
 import 'media_grid.dart';
 
 class DiaryMessageCard extends StatelessWidget {
-  final Message message;
+  final MessagePresentation message;
 
   const DiaryMessageCard({super.key, required this.message});
 
@@ -46,11 +47,11 @@ class DiaryMessageCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // 1. Текст сообщения
-          if (message.content != null && message.content!.isNotEmpty)
+          if (message.message.content != null && message.message.content!.isNotEmpty)
             Padding(
               padding: const EdgeInsets.all(6),
               child: Text(
-                message.content!,
+                message.message.content!,
                 style: TextStyle(
                   fontSize: 15,
                   color: context.ui.fontColorPrimary,
@@ -63,7 +64,7 @@ class DiaryMessageCard extends StatelessWidget {
             MediaGrid(attachments: message.attachments),
 
           // 3. Кнопки ссылок (Объекты мастерской/посты)
-          if (message.attachedObjectWorkshopId != null || message.attachedObjectPostId != null)
+          if (message.message.attachedObjectWorkshopId != null || message.message.attachedObjectPostId != null)
             _buildLinkButtons(context),
 
           // 4. Футер: Время и Дата
@@ -72,7 +73,7 @@ class DiaryMessageCard extends StatelessWidget {
             child: Align(
               alignment: Alignment.bottomRight,
               child: Text(
-                formatSmartDate(message.createdAt),
+                formatSmartDate(message.message.createdAt),
                 style: TextStyle(
                   fontSize: 11,
                   color: context.ui.fontColorPrimary.withAlpha(120),
@@ -91,19 +92,19 @@ class DiaryMessageCard extends StatelessWidget {
       child: Column(
         spacing: 4,
         children: [
-          if (message.attachedObjectWorkshopId != null)
+          if (message.message.attachedObjectWorkshopId != null)
             _linkButton(
               context,
               icon: Icons.burst_mode_outlined,
               label: "Перейти в мастерскую",
-              onTap: () => print("Open Workshop: ${message.attachedObjectWorkshopId}"),
+              onTap: () => print("Open Workshop: ${message.message.attachedObjectWorkshopId}"),
             ),
-          if (message.attachedObjectPostId != null)
+          if (message.message.attachedObjectPostId != null)
             _linkButton(
               context,
               icon: Icons.article_outlined,
               label: "Перейти к публикации",
-              onTap: () => print("Open Post: ${message.attachedObjectPostId}"),
+              onTap: () => print("Open Post: ${message.message.attachedObjectPostId}"),
             ),
         ],
       ),
