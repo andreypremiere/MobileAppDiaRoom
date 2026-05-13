@@ -208,9 +208,20 @@ class UploadManager extends ChangeNotifier {
           return;
         }
         updateProgress(0.95);
-        updateStatus(updatingMessage: UpdatingMessage(messageId: decodedResponse.messageId, status: MessageStatus.sent));
+        final responseStatus = await updateStatus(updatingMessage: UpdatingMessage(messageId: decodedResponse.messageId, status: MessageStatus.sent));
+        if (!responseStatus.success) {
+          print('Не удалось обновить статус сообщения');
+        }
+        final UpdatingStatus newMessage = UpdatingStatus.fromMap(responseStatus.data);
+        if (newMessage.messagePresentation == null) {
+          return;
+        }
+
         updateProgress(0.99);
-        onSuccess != null ? onSuccess() : null;
+        if (addMessageCallback != null) {
+          addMessageCallback(newMessage.messagePresentation!);
+        }
+
       }
       if (type == MessageType.voiceNote) {
         const mimeType = 'audio/m4a';
@@ -220,6 +231,7 @@ class UploadManager extends ChangeNotifier {
         deletingFiles.add(audioNote.path);
         // Получаем размер
         final fileSize = await DiaryUtils.getFileSize(audioNote.path);
+        updateProgress(0.2);
 
         // Формируем запрос
         final AttachmentCreating attachmentCreating = AttachmentCreating(
@@ -234,6 +246,7 @@ class UploadManager extends ChangeNotifier {
         );
 
         print("${creatingMessage.toMap()}");
+        updateProgress(0.4);
 
         // // Выполняем запрос
         final response = await createMessage(message: creatingMessage);
@@ -242,6 +255,7 @@ class UploadManager extends ChangeNotifier {
           print('Ответ пришел отрицательный при создании');
           return;
         }
+        updateProgress(0.6);
 
         final MessageCreateResponse data = MessageCreateResponse.fromMap(response.data);
 
@@ -255,8 +269,10 @@ class UploadManager extends ChangeNotifier {
         final responseAttach = await uploadSingleMediaFile(audioNote.path, audioUrls.presignedUrl, mimeType);
         if (!responseAttach) {
           print('Не удалось загрузить файл в хранилище');
+          updateStatus(updatingMessage: UpdatingMessage(messageId: data.messageId, status: MessageStatus.failed));
           return;
         }
+        updateProgress(0.8);
 
         // Обновляем статус
         final responseStatus = await updateStatus(updatingMessage: UpdatingMessage(messageId: data.messageId, status: MessageStatus.sent));
@@ -282,6 +298,7 @@ class UploadManager extends ChangeNotifier {
       print("Ошибка фоновой загрузки: $e");
     } finally {
       _deleteFiles(files: deletingFiles);
+      print('Файлы медиа удалены');
       _isUploading = false;
       notifyListeners();
     }

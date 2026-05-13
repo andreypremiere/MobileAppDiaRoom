@@ -54,9 +54,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
   void initState() {
     super.initState();
 
-    final myId = context
-        .read<AuthProvider>()
-        .roomId;
+    final myId = context.read<AuthProvider>().roomId;
     isMyRoom = widget.roomId == myId;
     print('Пользователь авторизован? $myId');
 
@@ -78,14 +76,20 @@ class _DiaryScreenState extends State<DiaryScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final response = await getMessages(roomId: widget.roomId, page: _currentPage, limit: _limit);
+      final response = await getMessages(
+        roomId: widget.roomId,
+        page: _currentPage,
+        limit: _limit,
+      );
       if (!response.success) {
         print('Не удалось загрузить сообщения');
         return;
       }
 
       print(response.data);
-      final GettingMessages gotMessages = GettingMessages.fromMap(response.data);
+      final GettingMessages gotMessages = GettingMessages.fromMap(
+        response.data,
+      );
 
       setState(() {
         _currentPage++;
@@ -156,15 +160,19 @@ class _DiaryScreenState extends State<DiaryScreen> {
     });
     FocusScope.of(context).unfocus();
 
-    uploader.addMessage(type: MessageType.standard, messageText: text,
-    media: media, onSuccess: () {
-          if (mounted) {
-            _currentPage = 0;
-            _messages.clear();
-            _hasMore = true;
-            _loadMessages();
-          }});
-   }
+    uploader.addMessage(
+      type: MessageType.standard,
+      messageText: text,
+      media: media,
+      addMessageCallback: (newMessage) {
+        if (mounted) {
+          setState(() {
+            _messages.insert(0, newMessage);
+          });
+        }
+      },
+    );
+  }
 
   Future<List<XFile>> _handlePickPhoto() async {
     final ImagePicker picker = ImagePicker();
@@ -233,26 +241,31 @@ class _DiaryScreenState extends State<DiaryScreen> {
           decoration: const BoxDecoration(),
           child: isUploading
               ? OverflowBox(
-            alignment: Alignment.topCenter,
-            minHeight: 0,
-            maxHeight: 30,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                LinearProgressIndicator(
-                  value: progress,
-                  minHeight: 4,
-                  backgroundColor: context.ui.containerColor,
-                  valueColor: AlwaysStoppedAnimation<Color>(context.ui.primaryColor),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  "${(progress * 100).toInt()}%",
-                  style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-          )
+                  alignment: Alignment.topCenter,
+                  minHeight: 0,
+                  maxHeight: 30,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      LinearProgressIndicator(
+                        value: progress,
+                        minHeight: 4,
+                        backgroundColor: context.ui.containerColor,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          context.ui.primaryColor,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        "${(progress * 100).toInt()}%",
+                        style: const TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                )
               : const SizedBox.shrink(),
         ),
         // --- Строка с выбранными медиа ---
@@ -278,10 +291,15 @@ class _DiaryScreenState extends State<DiaryScreen> {
                           color: context.ui.containerColor,
                           child: media.type == AttachmentType.video
                               ? (media.thumbnail != null
-                              ? Image.file(
-                              File(media.thumbnail!), fit: BoxFit.cover)
-                              : const Center(
-                              child: CircularProgressIndicator(strokeWidth: 2)))
+                                    ? Image.file(
+                                        File(media.thumbnail!),
+                                        fit: BoxFit.cover,
+                                      )
+                                    : const Center(
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                        ),
+                                      ))
                               : Image.file(media.file, fit: BoxFit.cover),
                         ),
                       ),
@@ -289,8 +307,10 @@ class _DiaryScreenState extends State<DiaryScreen> {
                       if (media.type == AttachmentType.video)
                         const Positioned.fill(
                           child: Icon(
-                              Icons.play_circle_outline, color: Colors.white,
-                              size: 30),
+                            Icons.play_circle_outline,
+                            color: Colors.white,
+                            size: 30,
+                          ),
                         ),
                       // Кнопка удаления
                       Positioned(
@@ -301,9 +321,14 @@ class _DiaryScreenState extends State<DiaryScreen> {
                               setState(() => _selectedMedia.removeAt(index)),
                           child: Container(
                             decoration: const BoxDecoration(
-                                color: Colors.black54, shape: BoxShape.circle),
+                              color: Colors.black54,
+                              shape: BoxShape.circle,
+                            ),
                             child: const Icon(
-                                Icons.close, size: 16, color: Colors.white),
+                              Icons.close,
+                              size: 16,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
                       ),
@@ -349,7 +374,9 @@ class _DiaryScreenState extends State<DiaryScreen> {
                     hintText: "Сообщение...",
                     border: InputBorder.none,
                     contentPadding: EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 10),
+                      horizontal: 8,
+                      vertical: 10,
+                    ),
                   ),
                 ),
               ),
@@ -358,10 +385,13 @@ class _DiaryScreenState extends State<DiaryScreen> {
                 onPressed: isUploading ? null : () => _sendStandardMessage(),
                 icon: Icon(
                   Icons.send_rounded,
-                  color: (_messageController.text.trim().isNotEmpty ||
-                      _selectedMedia.isNotEmpty) && (!isUploading)
-                      ? context.ui
-                      .primaryColor // Красим кнопку, если есть контент
+                  color:
+                      (_messageController.text.trim().isNotEmpty ||
+                              _selectedMedia.isNotEmpty) &&
+                          (!isUploading)
+                      ? context
+                            .ui
+                            .primaryColor // Красим кнопку, если есть контент
                       : context.ui.iconColorPrimary,
                   size: 24,
                 ),
@@ -447,9 +477,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
                     }
 
                     // Здесь будет твой виджет сообщения (DiaryMessageCard)
-                    return DiaryMessageCard(
-                      message: _messages[index],
-                    );
+                    return DiaryMessageCard(message: _messages[index]);
                   },
                 ),
               ),
@@ -464,9 +492,10 @@ class _DiaryScreenState extends State<DiaryScreen> {
   void _showLimitWarning(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message, style: TextStyle(color: Color(0xFF262626)),),
+        content: Text(message, style: TextStyle(color: Color(0xFF262626))),
         backgroundColor: Color(0xFFE5E5E5),
-        behavior: SnackBarBehavior.floating, // Делает его "парящим" над нижней панелью
+        behavior: SnackBarBehavior.floating,
+        // Делает его "парящим" над нижней панелью
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         action: SnackBarAction(
           label: 'ОК',
@@ -487,8 +516,12 @@ class _DiaryScreenState extends State<DiaryScreen> {
       return;
     }
 
-    final currentPhotos = _selectedMedia.where((m) => m.type == AttachmentType.photo).length;
-    final currentVideos = _selectedMedia.where((m) => m.type == AttachmentType.video).length;
+    final currentPhotos = _selectedMedia
+        .where((m) => m.type == AttachmentType.photo)
+        .length;
+    final currentVideos = _selectedMedia
+        .where((m) => m.type == AttachmentType.video)
+        .length;
 
     if (type == AttachmentType.video && currentVideos >= _maxVideos) {
       _showLimitWarning("Можно прикрепить только 2 видео");
@@ -510,10 +543,9 @@ class _DiaryScreenState extends State<DiaryScreen> {
     }
 
     setState(() {
-      _selectedMedia.add(SelectedMedia(
-        file: File(path),
-        thumbnail: thumb, type: type,
-      ));
+      _selectedMedia.add(
+        SelectedMedia(file: File(path), thumbnail: thumb, type: type),
+      );
     });
   }
 
@@ -531,9 +563,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
         size: 34, // Увеличил, как ты и хотел
         color: context.ui.iconColorPrimary,
       ),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       color: context.ui.containerColor,
       elevation: 5,
       offset: const Offset(0, -140),
@@ -555,33 +585,32 @@ class _DiaryScreenState extends State<DiaryScreen> {
           _handleCreateVoiceNote();
         }
       },
-      itemBuilder: (context) =>
-          CreatingDiaryAction.values
-              .map(
-                (action) =>
-                PopupMenuItem<CreatingDiaryAction>(
-                  value: action,
-                  height: 44,
-                  child: Row(
-                    children: [
-                      Icon(
-                        action.icon,
-                        color: context.ui.fontColorPrimary,
-                        size: 22,
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        action.label,
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w500,
-                          color: context.ui.fontColorPrimary,
-                        ),
-                      ),
-                    ],
+      itemBuilder: (context) => CreatingDiaryAction.values
+          .map(
+            (action) => PopupMenuItem<CreatingDiaryAction>(
+              value: action,
+              height: 44,
+              child: Row(
+                children: [
+                  Icon(
+                    action.icon,
+                    color: context.ui.fontColorPrimary,
+                    size: 22,
                   ),
-                ),
-          ).toList(),
+                  const SizedBox(width: 12),
+                  Text(
+                    action.label,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                      color: context.ui.fontColorPrimary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          )
+          .toList(),
     );
   }
 }
