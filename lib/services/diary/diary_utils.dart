@@ -17,6 +17,8 @@ class DiaryUtils {
     '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.heic', '.heif'
   ];
 
+  static const audioExtensions = ['.m4a'];
+
   /// Возвращает mimeType только если расширение файла входит в список разрешенных.
   /// В противном случае возвращает null.
   static String? getSupportedMimeType(String filePath) {
@@ -37,6 +39,7 @@ class DiaryUtils {
     // 3. Фолбэк (запасной вариант), если lookupMimeType вернул null, но расширение в нашем списке
     if (videoExtensions.contains(ext)) return 'video/mp4';
     if (photoExtensions.contains(ext)) return 'image/jpeg';
+    if (audioExtensions.contains(ext)) return 'audio/m4a';
 
     return null;
   }

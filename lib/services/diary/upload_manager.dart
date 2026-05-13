@@ -12,9 +12,22 @@ import 'package:flutter_image_compress/flutter_image_compress.dart';
 
 import '../../api/diary_api.dart';
 import '../../contracts/diary/response/creating_message_response.dart';
+import '../../contracts/diary/response/getting_messages.dart';
+import '../../contracts/diary/response/updating_status.dart';
+import '../../screens/diary/audio_record_screen.dart';
 import '../../utils/compress_image_service.dart';
 
-class UploadManager {
+class UploadManager extends ChangeNotifier {
+  bool _isUploading = false;
+  bool get isUploading => _isUploading;
+
+  double _progress = 0;
+  double get progress => _progress;
+
+  void updateProgress(double value) {
+    _progress = value;
+    notifyListeners();
+  }
 
   Future<void> _deleteFiles({required List<String?> files}) async {
     try {
@@ -35,157 +48,246 @@ class UploadManager {
     String? messageText,
     List<SelectedMedia>? media,
     String? videoNotePath,
-    String? audioNotePath,
+    VoiceRecordResult? audioNote,
+    VoidCallback? onSuccess,
+    void Function(MessagePresentation)? addMessageCallback,
   }) async {
-    // Создание обычного сообщения с медиа
-    if (type == MessageType.standard) {
-      List<AttachmentCreating> attachments = [];
-      List<String?> deletingFiles = [];
-      List<Map<String, dynamic>> mappedAttach = [];
-      String? originalPath;
-      String? previewPath;
+    if (_isUploading) return;
 
-      // Обработка медиафайлов
-      if (media != null && media.isNotEmpty) {
-        for (int i = 0; i < media.length; i++) {
-          try {
-            AttachmentCreating? attachmentCreating;
-            final SelectedMedia mediaFile = media[i];
-            deletingFiles.add(mediaFile.file.path);
-            // Обработка фото
-            if (mediaFile.type == AttachmentType.photo) {
-              // Сжатие оригинала
-              originalPath = await CompressImageService.compressForOriginal(
-                XFile(mediaFile.file.path),
-              );
-              if (originalPath == null) {
-                print('Не удалось сжать изображение');
-                continue;
-              }
-              deletingFiles.add(originalPath);
-              // Получение превью
-              previewPath = await CompressImageService.compressForPreview(
-                XFile(originalPath),
-              );
-              if (previewPath == null) {
-                print('Не удалось создать превью изображения');
-                continue;
-              }
-              deletingFiles.add(previewPath);
-              // Получение размера и mimeType изображения
-              final sizePhoto = await DiaryUtils.getFileSize(originalPath);
-              final mimeType = DiaryUtils.getSupportedMimeType(originalPath);
-              if (mimeType == null) {
-                print('Не получить mimeType изображения');
-                continue;
-              }
-              attachmentCreating = AttachmentCreating(
-                attachmentType: mediaFile.type,
-                fileSize: sizePhoto,
-                mimeType: mimeType,
-              );
-            }
+    _isUploading = true;
+    updateProgress(0);
 
-            // Обработка видео
-            if (mediaFile.type == AttachmentType.video) {
-              originalPath = mediaFile.file.path;
-              // Сжимает превью
-              previewPath = await CompressImageService.compressForPreview(
-                XFile(mediaFile.thumbnail!),
-              );
-              if (previewPath == null) {
-                print('Не удалось сжать превью видео');
-                continue;
-              }
-              deletingFiles.add(previewPath);
-              // Получаем длительность
-              final duration = await DiaryUtils.getVideoDuration(
-                mediaFile.file.path,
-              );
-              // Получаем размер файла
-              final size = await DiaryUtils.getFileSize(mediaFile.file.path);
-              // Получаем mimeType
-              final mimeType = DiaryUtils.getSupportedMimeType(
-                mediaFile.file.path,
-              );
-              if (mimeType == null) {
-                print('Не удалось получить mimetype video $i');
-                continue;
-              }
-              attachmentCreating = AttachmentCreating(
-                attachmentType: mediaFile.type,
-                fileSize: size,
-                mimeType: mimeType,
-                duration: duration,
-              );
-            }
+    List<String?> deletingFiles = [];
 
-            if (attachmentCreating != null) {
-              attachments.add(attachmentCreating);
-              mappedAttach.add({
-                "originalPath": originalPath,
-                "previewPath": previewPath,
-                "mimeType": attachmentCreating.mimeType,
-              });
+    try {
+      // Создание обычного сообщения с медиа
+      if (type == MessageType.standard) {
+        List<AttachmentCreating> attachments = [];
+        List<Map<String, dynamic>> mappedAttach = [];
+        String? originalPath;
+        String? previewPath;
+
+        // Обработка медиафайлов
+        if (media != null && media.isNotEmpty) {
+          updateProgress(0.1);
+          for (int i = 0; i < media.length; i++) {
+            try {
+              double stepProgress = 0.1 + (i / media.length) * 0.3;
+              updateProgress(stepProgress);
+              AttachmentCreating? attachmentCreating;
+              final SelectedMedia mediaFile = media[i];
+              deletingFiles.add(mediaFile.file.path);
+              // Обработка фото
+              if (mediaFile.type == AttachmentType.photo) {
+                // Сжатие оригинала
+                originalPath = await CompressImageService.compressForOriginal(
+                  XFile(mediaFile.file.path),
+                );
+                if (originalPath == null) {
+                  print('Не удалось сжать изображение');
+                  continue;
+                }
+                deletingFiles.add(originalPath);
+                // Получение превью
+                previewPath = await CompressImageService.compressForPreview(
+                  XFile(originalPath),
+                );
+                if (previewPath == null) {
+                  print('Не удалось создать превью изображения');
+                  continue;
+                }
+                deletingFiles.add(previewPath);
+                // Получение размера и mimeType изображения
+                final sizePhoto = await DiaryUtils.getFileSize(originalPath);
+                final mimeType = DiaryUtils.getSupportedMimeType(originalPath);
+                if (mimeType == null) {
+                  print('Не получить mimeType изображения');
+                  continue;
+                }
+                attachmentCreating = AttachmentCreating(
+                  attachmentType: mediaFile.type,
+                  fileSize: sizePhoto,
+                  mimeType: mimeType,
+                );
+              }
+
+              // Обработка видео
+              if (mediaFile.type == AttachmentType.video) {
+                originalPath = mediaFile.file.path;
+                // Сжимает превью
+                previewPath = await CompressImageService.compressForPreview(
+                  XFile(mediaFile.thumbnail!),
+                );
+                if (previewPath == null) {
+                  print('Не удалось сжать превью видео');
+                  continue;
+                }
+                deletingFiles.add(previewPath);
+                // Получаем длительность
+                final duration = await DiaryUtils.getVideoDuration(
+                  mediaFile.file.path,
+                );
+                // Получаем размер файла
+                final size = await DiaryUtils.getFileSize(mediaFile.file.path);
+                // Получаем mimeType
+                final mimeType = DiaryUtils.getSupportedMimeType(
+                  mediaFile.file.path,
+                );
+                if (mimeType == null) {
+                  print('Не удалось получить mimetype video $i');
+                  continue;
+                }
+                attachmentCreating = AttachmentCreating(
+                  attachmentType: mediaFile.type,
+                  fileSize: size,
+                  mimeType: mimeType,
+                  duration: duration,
+                );
+              }
+
+              if (attachmentCreating != null) {
+                attachments.add(attachmentCreating);
+                mappedAttach.add({
+                  "originalPath": originalPath,
+                  "previewPath": previewPath,
+                  "mimeType": attachmentCreating.mimeType,
+                });
+              }
+            } catch (e) {
+              print('Ошибка во время обработки медиафайла $i');
             }
-          } catch (e) {
-            print('Ошибка во время обработки медиафайла $i');
           }
         }
-      }
-      if ((messageText == null || messageText.isEmpty) && attachments.isEmpty) {
-        print(
-          'Сообщение не создано, т.к. текст null или пустая строка, а список вложений пустой',
-        );
-        return;
-      }
-      // Когда прошли по списку для стандартного сообщения
-      final CreatingMessage creatingMessage = CreatingMessage(
-        type: type,
-        text: messageText,
-        attachments: attachments,
-      );
-
-      // Отправка запроса
-      final response = await createMessage(message: creatingMessage);
-      if (!response.success) {
-        print('Не удалось создать сообщение');
-        _deleteFiles(files: deletingFiles);
-        return;
-      }
-
-      final MessageCreateResponse decodedResponse = MessageCreateResponse.fromMap(response.data);
-
-      final gotUrls = decodedResponse.uploadItems;
-
-      if (gotUrls.length != mappedAttach.length) {
-        print('Не совпадает длина списков медиафайлов');
-        _deleteFiles(files: deletingFiles);
-        updateStatus(updatingMessage: UpdatingMessage(messageId: decodedResponse.messageId, status: MessageStatus.failed));
-        return;
-      }
-
-      try {
-        for (int i=0; i<gotUrls.length; i++) {
-          final urls = gotUrls[i];
-          // Для превью
-          await uploadSingleMediaFile(mappedAttach[i]["previewPath"], urls.presignedPreviewUrl!, "image/jpeg");
-          // Для файла
-          await uploadSingleMediaFile(mappedAttach[i]["originalPath"], urls.presignedUrl, mappedAttach[i]["mimeType"]);
+        updateProgress(0.5);
+        if ((messageText == null || messageText.isEmpty) && attachments.isEmpty) {
+          print(
+            'Сообщение не создано, т.к. текст null или пустая строка, а список вложений пустой',
+          );
+          return;
         }
-        print("Все медиафайлы успешно загружены");
-      } catch (e) {
-        print("Возникла ошибка во время загрузки медиа $e");
-        updateStatus(updatingMessage: UpdatingMessage(messageId: decodedResponse.messageId, status: MessageStatus.failed));
-        return;
-      } finally {
-        _deleteFiles(files: deletingFiles);
-      }
+        // Когда прошли по списку для стандартного сообщения
+        final CreatingMessage creatingMessage = CreatingMessage(
+          type: type,
+          text: messageText,
+          attachments: attachments,
+        );
 
-      updateStatus(updatingMessage: UpdatingMessage(messageId: decodedResponse.messageId, status: MessageStatus.sent));
+        updateProgress(0.6);
+        // Отправка запроса
+        final response = await createMessage(message: creatingMessage);
+        if (!response.success) {
+          print('Не удалось создать сообщение');
+          return;
+        }
+
+        final MessageCreateResponse decodedResponse = MessageCreateResponse.fromMap(response.data);
+
+        final gotUrls = decodedResponse.uploadItems;
+
+        if (gotUrls.length != mappedAttach.length) {
+          print('Не совпадает длина списков медиафайлов');
+          updateStatus(updatingMessage: UpdatingMessage(messageId: decodedResponse.messageId, status: MessageStatus.failed));
+          return;
+        }
+        updateProgress(0.65);
+
+        try {
+          for (int i=0; i<gotUrls.length; i++) {
+            final step = 0.65 + (i/gotUrls.length) * 0.25;
+            updateProgress(step);
+            final urls = gotUrls[i];
+            // Для превью
+            await uploadSingleMediaFile(mappedAttach[i]["previewPath"], urls.presignedPreviewUrl!, "image/jpeg");
+            // Для файла
+            await uploadSingleMediaFile(mappedAttach[i]["originalPath"], urls.presignedUrl, mappedAttach[i]["mimeType"]);
+          }
+          print("Все медиафайлы успешно загружены");
+        } catch (e) {
+          print("Возникла ошибка во время загрузки медиа $e");
+          updateStatus(updatingMessage: UpdatingMessage(messageId: decodedResponse.messageId, status: MessageStatus.failed));
+          return;
+        }
+        updateProgress(0.95);
+        updateStatus(updatingMessage: UpdatingMessage(messageId: decodedResponse.messageId, status: MessageStatus.sent));
+        updateProgress(0.99);
+        onSuccess != null ? onSuccess() : null;
+      }
+      if (type == MessageType.voiceNote) {
+        const mimeType = 'audio/m4a';
+        if (audioNote == null) {
+          return;
+        }
+        deletingFiles.add(audioNote.path);
+        // Получаем размер
+        final fileSize = await DiaryUtils.getFileSize(audioNote.path);
+
+        // Формируем запрос
+        final AttachmentCreating attachmentCreating = AttachmentCreating(
+            attachmentType: AttachmentType.voiceNote,
+            duration: audioNote.duration,
+            fileSize: fileSize,
+            mimeType: mimeType);
+
+        final CreatingMessage creatingMessage = CreatingMessage(
+          type: type,
+          attachments: [attachmentCreating],
+        );
+
+        print("${creatingMessage.toMap()}");
+
+        // // Выполняем запрос
+        final response = await createMessage(message: creatingMessage);
+
+        if (!response.success) {
+          print('Ответ пришел отрицательный при создании');
+          return;
+        }
+
+        final MessageCreateResponse data = MessageCreateResponse.fromMap(response.data);
+
+        if (data.uploadItems.isEmpty || data.uploadItems.length != 1) {
+          print('Ошибка при получении аттача');
+          return;
+        }
+        final AttachmentUploadItem audioUrls = data.uploadItems[0];
+
+        // Загружаем в хранилище
+        final responseAttach = await uploadSingleMediaFile(audioNote.path, audioUrls.presignedUrl, mimeType);
+        if (!responseAttach) {
+          print('Не удалось загрузить файл в хранилище');
+          return;
+        }
+
+        // Обновляем статус
+        final responseStatus = await updateStatus(updatingMessage: UpdatingMessage(messageId: data.messageId, status: MessageStatus.sent));
+        if (!responseStatus.success) {
+          print('Не удалось обновить статус сообщения');
+        }
+
+        if (responseStatus.data == null) {
+          print('Пришло пустое тело на обновление статуса');
+          return;
+        }
+        final newMessage = UpdatingStatus.fromMap(responseStatus.data);
+
+        // Если все прошло хорошо, добавляем в список результат
+        if (addMessageCallback != null && newMessage.messagePresentation != null) {
+          addMessageCallback(newMessage.messagePresentation!);
+        }
+
+        print('Аудиосообщение создано и добавлено');
+
+      }
+    } catch (e) {
+      print("Ошибка фоновой загрузки: $e");
+    } finally {
+      _deleteFiles(files: deletingFiles);
+      _isUploading = false;
+      notifyListeners();
     }
-    return;
+
   }
 }
+
 
 

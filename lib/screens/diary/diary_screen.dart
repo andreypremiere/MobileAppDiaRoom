@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:dia_room/contracts/diary/response/getting_messages.dart';
-import 'package:dia_room/models/enums/diary/message_status.dart';
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -13,8 +12,6 @@ import '../../api/diary_api.dart';
 import '../../components/diary/message_card.dart';
 import '../../components/general/app_avatar.dart';
 import '../../components/general/app_back_button.dart';
-import '../../models/diary/attachment.dart';
-import '../../models/diary/message.dart';
 import '../../models/diary/selected_media.dart';
 import '../../models/enums/diary/attachment_type.dart';
 import '../../models/enums/diary/creating_actions.dart';
@@ -23,6 +20,7 @@ import '../../models/post_view/author.dart';
 import '../../services/diary/diary_utils.dart';
 import '../../services/diary/upload_manager.dart';
 import '../../utils/auth_service.dart';
+import 'audio_record_screen.dart';
 
 class DiaryScreen extends StatefulWidget {
   final String roomId;
@@ -110,10 +108,62 @@ class _DiaryScreenState extends State<DiaryScreen> {
     }
   }
 
+  void _handleCreateVoiceNote() async {
+    final VoiceRecordResult? audio = (await Navigator.push<VoiceRecordResult?>(
+      context,
+      MaterialPageRoute(builder: (context) => const AudioRecordScreen()),
+    ));
+
+    print('Путь к аудиосообщению: $audio');
+
+    if (audio != null && mounted) {
+      final uploadProvider = context.read<UploadManager>();
+      print("Путь: ${audio.path}");
+      print("Длительность: ${audio.duration.inSeconds} сек");
+
+      // Снимаем фокус с клавиатуры, если он был
+      FocusScope.of(context).unfocus();
+
+      uploadProvider.addMessage(
+        type: MessageType.voiceNote,
+        messageText: null,
+        media: null,
+        videoNotePath: null,
+        audioNote: audio,
+        addMessageCallback: (newMessage) {
+          if (mounted) {
+            setState(() {
+              _messages.insert(0, newMessage);
+            });
+          }
+        },
+      );
+    }
+  }
+
   Future<void> _sendStandardMessage() async {
-    final UploadManager uploader = UploadManager();
-    await uploader.addMessage(type: MessageType.standard, messageText: _messageController.text.trim(),
-    media: _selectedMedia);
+    final uploader = context.read<UploadManager>();
+    if (uploader.isUploading) return;
+
+    final text = _messageController.text.trim();
+    final media = List<SelectedMedia>.from(_selectedMedia);
+
+    if (text.isEmpty && media.isEmpty) return;
+
+    _messageController.clear();
+    setState(() {
+      _selectedMedia.clear();
+    });
+    FocusScope.of(context).unfocus();
+
+    uploader.addMessage(type: MessageType.standard, messageText: text,
+    media: media, onSuccess: () {
+          if (mounted) {
+            _currentPage = 0;
+            _messages.clear();
+            _hasMore = true;
+            _loadMessages();
+          }});
    }
 
   Future<List<XFile>> _handlePickPhoto() async {
@@ -169,9 +219,42 @@ class _DiaryScreenState extends State<DiaryScreen> {
   }
 
   Widget _buildMessageInput() {
+    final uploadProvider = context.watch<UploadManager>();
+    final isUploading = uploadProvider.isUploading;
+    final progress = uploadProvider.progress;
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          height: isUploading ? 30 : 0,
+          clipBehavior: Clip.hardEdge,
+          decoration: const BoxDecoration(),
+          child: isUploading
+              ? OverflowBox(
+            alignment: Alignment.topCenter,
+            minHeight: 0,
+            maxHeight: 30,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                LinearProgressIndicator(
+                  value: progress,
+                  minHeight: 4,
+                  backgroundColor: context.ui.containerColor,
+                  valueColor: AlwaysStoppedAnimation<Color>(context.ui.primaryColor),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  "${(progress * 100).toInt()}%",
+                  style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+          )
+              : const SizedBox.shrink(),
+        ),
         // --- Строка с выбранными медиа ---
         if (_selectedMedia.isNotEmpty)
           Container(
@@ -254,6 +337,9 @@ class _DiaryScreenState extends State<DiaryScreen> {
 
               Expanded(
                 child: TextField(
+                  onChanged: (text) {
+                    setState(() {});
+                  },
                   controller: _messageController,
                   maxLines: 5,
                   minLines: 1,
@@ -269,14 +355,11 @@ class _DiaryScreenState extends State<DiaryScreen> {
               ),
 
               IconButton(
-                onPressed: () async {
-                  await _sendStandardMessage();
-                  print("Сообщение отправлено");
-                }, // Вызываем метод отправки
+                onPressed: isUploading ? null : () => _sendStandardMessage(),
                 icon: Icon(
                   Icons.send_rounded,
-                  color: (_messageController.text.isNotEmpty ||
-                      _selectedMedia.isNotEmpty)
+                  color: (_messageController.text.trim().isNotEmpty ||
+                      _selectedMedia.isNotEmpty) && (!isUploading)
                       ? context.ui
                       .primaryColor // Красим кнопку, если есть контент
                       : context.ui.iconColorPrimary,
@@ -467,6 +550,9 @@ class _DiaryScreenState extends State<DiaryScreen> {
           for (int i = 0; i < media.length; i++) {
             await _addMedia(media[i].path);
           }
+        }
+        if (action == CreatingDiaryAction.audioNote) {
+          _handleCreateVoiceNote();
         }
       },
       itemBuilder: (context) =>

@@ -25,9 +25,9 @@ Future<AuthResponse> updateStatus({
   required UpdatingMessage updatingMessage,
 }) async {
   try {
-    await ApiService.post('/diary/updateStatusMessage', data: updatingMessage.toMap());
+    final response = await ApiService.post('/diary/updateStatusMessage', data: updatingMessage.toMap());
 
-    return AuthResponse(success: true);
+    return AuthResponse(success: true, data: response.data);
   } on DioException catch (e) {
     return handleDioError(e, "Ошибка при обновлении статуса сообщения");
   }

@@ -1,9 +1,11 @@
+import 'package:dia_room/contracts/diary/response/getting_messages.dart';
 import 'package:dia_room/models/enums/diary/message_status.dart';
 
 class MessageCreateResponse {
   final String messageId;
   final MessageStatus status;
   final List<AttachmentUploadItem> uploadItems;
+
 
   MessageCreateResponse({
     required this.messageId,

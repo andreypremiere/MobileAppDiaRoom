@@ -6,7 +6,7 @@ class Message {
   final String id;
   final String roomId;
   final MessageType msgType;
-  final MessageStatus status;
+  MessageStatus status;
   final String? content;
   final String? attachedObjectWorkshopId;
   final String? attachedObjectPostId;

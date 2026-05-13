@@ -1,4 +1,6 @@
+import 'package:dia_room/components/diary/voice_card.dart';
 import 'package:dia_room/contracts/diary/response/getting_messages.dart';
+import 'package:dia_room/models/enums/diary/message_type.dart';
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -26,8 +28,48 @@ class DiaryMessageCard extends StatelessWidget {
     }
   }
 
+  Widget _buildStandardMessage(MessagePresentation message, BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min, // Чтобы колонка не занимала весь экран
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // 1. Текст сообщения
+        if (message.message.content != null && message.message.content!.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.all(6),
+            child: Text(
+              message.message.content!,
+              style: TextStyle(
+                fontSize: 15,
+                color: context.ui.fontColorPrimary,
+              ),
+            ),
+          ),
+
+        // 2. Вложения (Media Grid)
+        if (message.attachments.isNotEmpty)
+          MediaGrid(attachments: message.attachments),
+
+        // 3. Кнопки ссылок (Объекты мастерской/посты)
+        if (message.message.attachedObjectWorkshopId != null ||
+            message.message.attachedObjectPostId != null)
+          _buildLinkButtons(context),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    Widget messageContent;
+    if (message.message.msgType == MessageType.standard) {
+      messageContent = _buildStandardMessage(message, context);
+    } else if (message.message.msgType == MessageType.voiceNote) {
+      messageContent = VoiceMessageBubble(message: message);
+    }
+    else {
+      return SizedBox.shrink();
+    }
+
     return Container(
       padding: const EdgeInsets.all(4),
       margin: const EdgeInsets.only(bottom: 12),
@@ -46,30 +88,11 @@ class DiaryMessageCard extends StatelessWidget {
         spacing: 4,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 1. Текст сообщения
-          if (message.message.content != null && message.message.content!.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.all(6),
-              child: Text(
-                message.message.content!,
-                style: TextStyle(
-                  fontSize: 15,
-                  color: context.ui.fontColorPrimary,
-                ),
-              ),
-            ),
+          messageContent,
 
-          // 2. Вложения (Media Grid)
-          if (message.attachments.isNotEmpty)
-            MediaGrid(attachments: message.attachments),
-
-          // 3. Кнопки ссылок (Объекты мастерской/посты)
-          if (message.message.attachedObjectWorkshopId != null || message.message.attachedObjectPostId != null)
-            _buildLinkButtons(context),
-
-          // 4. Футер: Время и Дата
+          // Общий футер с датой
           Padding(
-            padding: const EdgeInsets.only(bottom: 6, right: 6, top: 6),
+            padding: const EdgeInsets.only(bottom: 6, right: 10, top: 2),
             child: Align(
               alignment: Alignment.bottomRight,
               child: Text(
@@ -84,6 +107,7 @@ class DiaryMessageCard extends StatelessWidget {
         ],
       ),
     );
+
   }
 
   Widget _buildLinkButtons(BuildContext context) {
