@@ -19,6 +19,7 @@ import '../../models/enums/diary/message_type.dart';
 import '../../models/post_view/author.dart';
 import '../../services/diary/diary_utils.dart';
 import '../../services/diary/upload_manager.dart';
+import '../../services/diary/video_record_screen.dart';
 import '../../utils/auth_service.dart';
 import 'audio_record_screen.dart';
 
@@ -143,6 +144,41 @@ class _DiaryScreenState extends State<DiaryScreen> {
         },
       );
     }
+  }
+
+  void _handleCreateVideoNote() async {
+    // final VoiceRecordResult? audio = (await Navigator.push<VoiceRecordResult?>(
+    //   context,
+    //   MaterialPageRoute(builder: (context) => const AudioRecordScreen()),
+    // ));
+
+    await Navigator.push<VideoRecordResult?>(
+        context,
+        MaterialPageRoute(builder: (context) => const VideoRecordScreen()));
+
+    // if (audio != null && mounted) {
+    //   final uploadProvider = context.read<UploadManager>();
+    //   print("Путь: ${audio.path}");
+    //   print("Длительность: ${audio.duration.inSeconds} сек");
+    //
+    //   // Снимаем фокус с клавиатуры, если он был
+    //   FocusScope.of(context).unfocus();
+    //
+    //   uploadProvider.addMessage(
+    //     type: MessageType.voiceNote,
+    //     messageText: null,
+    //     media: null,
+    //     videoNotePath: null,
+    //     audioNote: audio,
+    //     addMessageCallback: (newMessage) {
+    //       if (mounted) {
+    //         setState(() {
+    //           _messages.insert(0, newMessage);
+    //         });
+    //       }
+    //     },
+    //   );
+    // }
   }
 
   Future<void> _sendStandardMessage() async {
@@ -583,6 +619,9 @@ class _DiaryScreenState extends State<DiaryScreen> {
         }
         if (action == CreatingDiaryAction.audioNote) {
           _handleCreateVoiceNote();
+        }
+        if (action == CreatingDiaryAction.videoNote) {
+          _handleCreateVideoNote();
         }
       },
       itemBuilder: (context) => CreatingDiaryAction.values
