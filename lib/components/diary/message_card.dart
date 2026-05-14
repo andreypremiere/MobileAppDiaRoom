@@ -47,8 +47,12 @@ class DiaryMessageCard extends StatelessWidget {
     context.push(path);
   }
 
-  void _handleOnTapPost() {
+  void _handleOnTapPost(BuildContext context) {
     print('Там по посту');
+    final postId = message.message.attachedObjectPostId;
+    if (postId == null) return;
+    final String path = "/showPost/$postId";
+    context.push(path);
   }
 
 
@@ -82,7 +86,7 @@ class DiaryMessageCard extends StatelessWidget {
               postLink: message.message.attachedObjectPostId,
               labelWorkshop: 'Ссылка в мастерской', labelPost: 'Ссылка в публикациях',
               onTapWorkshop: () => _handleOnTapWorkshop(context),
-              onTapPost: _handleOnTapPost,),
+              onTapPost: () => _handleOnTapPost(context)),
 
       ],
     );

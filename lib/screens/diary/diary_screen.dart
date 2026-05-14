@@ -221,6 +221,16 @@ class _DiaryScreenState extends State<DiaryScreen> {
           break;
         case LinkAction.linkPost:
           print("Выбрана публикация");
+          final postId = await context.push<String?>(
+            '/select_post_diary',
+          );
+
+          if (postId != null) {
+            print("Выбранный пост: $postId");
+            setState(() {
+              _linkPost = postId;
+            });
+          }
           break;
       }
     }
@@ -233,12 +243,14 @@ class _DiaryScreenState extends State<DiaryScreen> {
     final text = _messageController.text.trim();
     final media = List<SelectedMedia>.from(_selectedMedia);
     final linkWorkshop = _linkWorkshop;
+    final linkPost = _linkPost;
 
     if (text.isEmpty && media.isEmpty) return;
 
     _messageController.clear();
     setState(() {
       _linkWorkshop = null;
+      _linkPost = null;
       _selectedMedia.clear();
     });
     FocusScope.of(context).unfocus();
@@ -248,6 +260,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
       messageText: text,
       media: media,
       linkWorkshop: linkWorkshop,
+      linkPost: linkPost,
       addMessageCallback: (newMessage) {
         if (mounted) {
           setState(() {

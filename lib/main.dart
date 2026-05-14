@@ -3,6 +3,7 @@ import 'package:dia_room/models/post_creator/post_draft.dart';
 import 'package:dia_room/screens/authorization/registration_screen.dart';
 import 'package:dia_room/screens/diary/diary_screen.dart';
 import 'package:dia_room/screens/diary/select_folder_diary.dart';
+import 'package:dia_room/screens/diary/select_post_diary.dart';
 import 'package:dia_room/screens/room/room_settings_screen.dart';
 import 'package:dia_room/screens/publication/full_image_screen.dart';
 import 'package:dia_room/screens/publication/full_video_screen.dart';
@@ -227,6 +228,11 @@ class App extends StatelessWidget {
               final FileType type = extra['type'] as FileType;
 
               return FullScreenVideoScreen(videoUrl: videoUrl, type: type,);
+            },
+          ),
+          GoRoute(path: '/select_post_diary',
+            builder: (context, state) {
+              return SelectPostDiary();
             },
           ),
           GoRoute(
