@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:camera/camera.dart';
+import 'package:dia_room/services/diary/diary_utils.dart';
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:video_player/video_player.dart';
 import '../../components/general/app_back_button.dart';
 
@@ -28,6 +30,7 @@ class _VideoRecordScreenState extends State<VideoRecordScreen> with WidgetsBindi
 
   bool _isRecording = false;
   bool _isPreviewMode = false;
+  bool _isPaused = false;
   int _cameraIndex = 1;
   String? _videoPath;
 
@@ -76,9 +79,9 @@ class _VideoRecordScreenState extends State<VideoRecordScreen> with WidgetsBindi
     // 2. Создаем новый контроллер
     final CameraController cameraController = CameraController(
       description,
-      ResolutionPreset.high,
-      fps: 30,
-      videoBitrate: 2500000,
+      ResolutionPreset.low,
+      fps: 24,
+      videoBitrate: 1000000,
       enableAudio: true,
     );
 
@@ -112,21 +115,46 @@ class _VideoRecordScreenState extends State<VideoRecordScreen> with WidgetsBindi
       await _controller!.startVideoRecording();
       setState(() {
         _isRecording = true;
+        _isPaused = false;
         _recordDuration = 0;
       });
-      _timer = Timer.periodic(const Duration(seconds: 1), (t) => setState(() => _recordDuration++));
+      _startTimer();
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+  }
+
+  Future<void> _pauseRecording() async {
+    if (_controller == null || !_controller!.value.isRecordingVideo) return;
+    try {
+      await _controller!.pauseVideoRecording();
+      _stopTimer();
+      setState(() => _isPaused = true);
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+  }
+
+  Future<void> _resumeRecording() async {
+    if (_controller == null || !_controller!.value.isRecordingPaused) return;
+    try {
+      await _controller!.resumeVideoRecording();
+      _startTimer();
+      setState(() => _isPaused = false);
     } catch (e) {
       debugPrint(e.toString());
     }
   }
 
   Future<void> _stopRecording() async {
-    _timer?.cancel();
+    _stopTimer();
     try {
       final file = await _controller!.stopVideoRecording();
+
       await _controller!.pausePreview();
       setState(() {
         _isRecording = false;
+        _isPaused = false;
         _videoPath = file.path;
         _isPreviewMode = true;
       });
@@ -134,6 +162,15 @@ class _VideoRecordScreenState extends State<VideoRecordScreen> with WidgetsBindi
     } catch (e) {
       debugPrint(e.toString());
     }
+  }
+
+  void _startTimer() {
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 1), (t) => setState(() => _recordDuration++));
+  }
+
+  void _stopTimer() {
+    _timer?.cancel();
   }
 
   // --- Управление плеером ---
@@ -159,6 +196,7 @@ class _VideoRecordScreenState extends State<VideoRecordScreen> with WidgetsBindi
   void _reset() {
     _videoPlayerController?.dispose();
     _videoPlayerController = null;
+    DiaryUtils.deleteFile(_videoPath);
     setState(() {
       _isPreviewMode = false;
       _videoPath = null;
@@ -176,13 +214,16 @@ class _VideoRecordScreenState extends State<VideoRecordScreen> with WidgetsBindi
     return Scaffold(
       appBar: AppBar(
         backgroundColor: context.ui.appBarColor,
-        leading: const AppBackButton(),
+        leading: AppBackButton(onPressed: () {context.pop(); DiaryUtils.deleteFile(_videoPath);},),
         title: Text('Видеосообщение', style: TextStyle(color: context.ui.fontColorPrimary)),
       ),
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           // 1. Контейнер с видео (теперь тут только видео)
+          SizedBox(
+            height: size,
+          child:
           Center(
             child: Container(
               width: size,
@@ -194,7 +235,7 @@ class _VideoRecordScreenState extends State<VideoRecordScreen> with WidgetsBindi
               clipBehavior: Clip.antiAlias,
               child: _buildMediaView(), // Убрали Stack и контролы отсюда
             ),
-          ),
+          )),
 
           // 2. Панель управления (появляется только при просмотре)
           if (_isPreviewMode)
@@ -224,16 +265,23 @@ class _VideoRecordScreenState extends State<VideoRecordScreen> with WidgetsBindi
 
               _buildMainButton(),
 
-              _isPreviewMode
-                  ? _buildIconBtn(Icons.send, context.ui.primaryColor, () async {
-                final file = File(_videoPath!);
-                Navigator.pop(context, VideoRecordResult(
-                  path: _videoPath!,
-                  duration: Duration(seconds: _recordDuration),
-                  sizeInBytes: await file.length(),
-                ));
-              })
-                  : const SizedBox(width: 50),
+              if (_isPreviewMode)
+                _buildActionButton(Icons.send_rounded, context.ui.primaryColor, () async {
+                  final file = File(_videoPath!);
+                  Navigator.pop(context, VideoRecordResult(
+                    path: _videoPath!,
+                    duration: Duration(seconds: _recordDuration),
+                    sizeInBytes: await file.length(),
+                  ));
+                })
+              else if (_isRecording)
+                _buildActionButton(
+                  _isPaused ? Icons.play_arrow_rounded : Icons.pause_rounded,
+                  Colors.orange,
+                  _isPaused ? _resumeRecording : _pauseRecording,
+                )
+              else
+                const SizedBox(width: 50), // Заглушка для симметрии
             ],
           ),
         ],
@@ -323,6 +371,14 @@ class _VideoRecordScreenState extends State<VideoRecordScreen> with WidgetsBindi
               child: ValueListenableBuilder(
                 valueListenable: _videoPosition,
                 builder: (context, Duration pos, child) {
+                  final double durationMs = _videoPlayerController!.value.duration.inMilliseconds.toDouble();
+                  final double positionMs = pos.inMilliseconds.toDouble();
+
+                  // Убеждаемся, что max всегда хотя бы 1.0 и не меньше текущей позиции
+                  final double maxSafe = durationMs > 0 ? durationMs : (positionMs > 0 ? positionMs : 1.0);
+                  // Убеждаемся, что текущее значение не вылетает за границы [0, maxSafe]
+                  final double valueSafe = positionMs.clamp(0.0, maxSafe);
+
                   return SliderTheme(
                     data: SliderTheme.of(context).copyWith(
                       trackHeight: 4,
@@ -333,8 +389,8 @@ class _VideoRecordScreenState extends State<VideoRecordScreen> with WidgetsBindi
                       thumbColor: context.ui.primaryColor,
                     ),
                     child: Slider(
-                      value: pos.inMilliseconds.toDouble(),
-                      max: _videoPlayerController!.value.duration.inMilliseconds.toDouble(),
+                      value: valueSafe,
+                      max: maxSafe,
                       onChanged: (v) {
                         _videoPlayerController!.seekTo(Duration(milliseconds: v.toInt()));
                       },
@@ -349,18 +405,46 @@ class _VideoRecordScreenState extends State<VideoRecordScreen> with WidgetsBindi
     );
   }
 
+  Widget _buildActionButton(IconData icon, Color color, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 50,
+        height: 50,
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          shape: BoxShape.circle,
+        ),
+        child: Icon(icon, color: color, size: 28),
+      ),
+    );
+  }
+
   Widget _buildMainButton() {
     if (_isPreviewMode) return const SizedBox(width: 80);
     return GestureDetector(
       onTap: _isRecording ? _stopRecording : _startRecording,
-      child: Center(
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          width: _isRecording ? 30 : 60,
-          height: _isRecording ? 30 : 60,
-          decoration: BoxDecoration(
-            color: context.ui.primaryColor,
-            borderRadius: BorderRadius.circular(_isRecording ? 5 : 30),
+      child: Container(
+        width: 80,
+        height: 80,
+        decoration: BoxDecoration(
+          color: _isRecording ? Colors.red.withOpacity(0.2) : context.ui.primaryColor.withOpacity(0.2),
+          shape: BoxShape.circle,
+        ),
+        child: Center(
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            width: _isRecording ? 30 : 60,
+            height: _isRecording ? 30 : 60,
+            decoration: BoxDecoration(
+              color: _isRecording ? Colors.red : context.ui.primaryColor,
+              borderRadius: BorderRadius.circular(_isRecording ? 5 : 30),
+            ),
+            child: Icon(
+              _isRecording ? Icons.stop : Icons.videocam_rounded,
+              color: Colors.white,
+              size: _isRecording ? 20 : 30,
+            ),
           ),
         ),
       ),

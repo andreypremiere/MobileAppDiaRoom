@@ -7,6 +7,7 @@ import 'package:dia_room/models/enums/diary/attachment_type.dart';
 import 'package:dia_room/models/enums/diary/message_status.dart';
 import 'package:dia_room/models/enums/diary/message_type.dart';
 import 'package:dia_room/services/diary/diary_utils.dart';
+import 'package:dia_room/services/diary/video_record_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 
@@ -47,7 +48,7 @@ class UploadManager extends ChangeNotifier {
     required MessageType type,
     String? messageText,
     List<SelectedMedia>? media,
-    String? videoNotePath,
+    VideoRecordResult? videoNote,
     VoiceRecordResult? audioNote,
     VoidCallback? onSuccess,
     void Function(MessagePresentation)? addMessageCallback,
@@ -293,6 +294,91 @@ class UploadManager extends ChangeNotifier {
 
         print('Аудиосообщение создано и добавлено');
 
+      }
+      if (type == MessageType.videoNote) {
+        const mimeType = 'video/mp4';
+        if (videoNote == null) {
+          return;
+        }
+        deletingFiles.add(videoNote.path);
+        updateProgress(0.2);
+
+        // Формируем превью
+        final pathPreview = await DiaryUtils.generatePreview(videoNote.path, quality: 50, maxHeight: 720);
+        if (pathPreview != null) {
+          deletingFiles.add(pathPreview);
+        } else {
+          print("Не удалось создать превью для видеозаметки");
+          return;
+        }
+
+        // Формируем запрос
+        final AttachmentCreating attachmentCreating = AttachmentCreating(
+            attachmentType: AttachmentType.videoNote,
+            duration: videoNote.duration,
+            fileSize: videoNote.sizeInBytes,
+            mimeType: mimeType);
+
+        final CreatingMessage creatingMessage = CreatingMessage(
+          type: type,
+          attachments: [attachmentCreating],
+        );
+
+        print("${creatingMessage.toMap()}");
+        updateProgress(0.4);
+
+        // // Выполняем запрос
+        final response = await createMessage(message: creatingMessage);
+
+        if (!response.success) {
+          print('Ответ пришел отрицательный при создании');
+          return;
+        }
+        updateProgress(0.6);
+
+        final MessageCreateResponse data = MessageCreateResponse.fromMap(response.data);
+
+        if (data.uploadItems.isEmpty || data.uploadItems.length != 1) {
+          print('Ошибка при получении аттача');
+          return;
+        }
+        final AttachmentUploadItem videoUrls = data.uploadItems[0];
+
+        // Загружаем в хранилище видео
+        final responseAttach = await uploadSingleMediaFile(videoNote.path, videoUrls.presignedUrl, mimeType);
+        if (!responseAttach) {
+          print('Не удалось загрузить файл в хранилище');
+          updateStatus(updatingMessage: UpdatingMessage(messageId: data.messageId, status: MessageStatus.failed));
+          return;
+        }
+        updateProgress(0.7);
+        // Загружаем в хранилище превью
+        final responsePreview = await uploadSingleMediaFile(pathPreview, videoUrls.presignedPreviewUrl!, "image/jpeg");
+        if (!responsePreview) {
+          print('Не удалось загрузить файл в хранилище');
+          updateStatus(updatingMessage: UpdatingMessage(messageId: data.messageId, status: MessageStatus.failed));
+          return;
+        }
+        updateProgress(0.8);
+
+        // Обновляем статус
+        final responseStatus = await updateStatus(updatingMessage: UpdatingMessage(messageId: data.messageId, status: MessageStatus.sent));
+        if (!responseStatus.success) {
+          print('Не удалось обновить статус сообщения');
+        }
+
+        if (responseStatus.data == null) {
+          print('Пришло пустое тело на обновление статуса');
+          return;
+        }
+        final newMessage = UpdatingStatus.fromMap(responseStatus.data);
+
+        // Если все прошло хорошо, добавляем в список результат
+        if (addMessageCallback != null && newMessage.messagePresentation != null) {
+          addMessageCallback(newMessage.messagePresentation!);
+        }
+
+        print('Видеосообщение создано и добавлено');
       }
     } catch (e) {
       print("Ошибка фоновой загрузки: $e");

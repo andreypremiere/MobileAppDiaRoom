@@ -1,3 +1,4 @@
+import 'package:dia_room/components/diary/video_note_card.dart';
 import 'package:dia_room/components/diary/voice_card.dart';
 import 'package:dia_room/contracts/diary/response/getting_messages.dart';
 import 'package:dia_room/models/enums/diary/message_type.dart';
@@ -65,6 +66,8 @@ class DiaryMessageCard extends StatelessWidget {
       messageContent = _buildStandardMessage(message, context);
     } else if (message.message.msgType == MessageType.voiceNote) {
       messageContent = VoiceMessageBubble(message: message);
+    } else if (message.message.msgType == MessageType.videoNote) {
+      messageContent = VideoMessageBubble(message: message);
     }
     else {
       return SizedBox.shrink();

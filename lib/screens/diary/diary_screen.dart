@@ -133,7 +133,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
         type: MessageType.voiceNote,
         messageText: null,
         media: null,
-        videoNotePath: null,
+        videoNote: null,
         audioNote: audio,
         addMessageCallback: (newMessage) {
           if (mounted) {
@@ -147,38 +147,35 @@ class _DiaryScreenState extends State<DiaryScreen> {
   }
 
   void _handleCreateVideoNote() async {
-    // final VoiceRecordResult? audio = (await Navigator.push<VoiceRecordResult?>(
-    //   context,
-    //   MaterialPageRoute(builder: (context) => const AudioRecordScreen()),
-    // ));
+    final VideoRecordResult? video = (await Navigator.push<VideoRecordResult?>(
+      context,
+      MaterialPageRoute(builder: (context) => const VideoRecordScreen()),
+    ));
 
-    await Navigator.push<VideoRecordResult?>(
-        context,
-        MaterialPageRoute(builder: (context) => const VideoRecordScreen()));
+    if (video != null && mounted) {
+      final uploadProvider = context.read<UploadManager>();
+      print(video.path);
+      print(video.duration.inMilliseconds);
+      print(video.sizeInBytes);
 
-    // if (audio != null && mounted) {
-    //   final uploadProvider = context.read<UploadManager>();
-    //   print("Путь: ${audio.path}");
-    //   print("Длительность: ${audio.duration.inSeconds} сек");
-    //
-    //   // Снимаем фокус с клавиатуры, если он был
-    //   FocusScope.of(context).unfocus();
-    //
-    //   uploadProvider.addMessage(
-    //     type: MessageType.voiceNote,
-    //     messageText: null,
-    //     media: null,
-    //     videoNotePath: null,
-    //     audioNote: audio,
-    //     addMessageCallback: (newMessage) {
-    //       if (mounted) {
-    //         setState(() {
-    //           _messages.insert(0, newMessage);
-    //         });
-    //       }
-    //     },
-    //   );
-    // }
+      // Снимаем фокус с клавиатуры, если он был
+      FocusScope.of(context).unfocus();
+
+      uploadProvider.addMessage(
+        type: MessageType.videoNote,
+        messageText: null,
+        media: null,
+        videoNote: video,
+        audioNote: null,
+        addMessageCallback: (newMessage) {
+          if (mounted) {
+            setState(() {
+              _messages.insert(0, newMessage);
+            });
+          }
+        },
+      );
+    }
   }
 
   Future<void> _sendStandardMessage() async {

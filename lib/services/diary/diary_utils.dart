@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:get_thumbnail_video/index.dart';
 import 'package:get_thumbnail_video/video_thumbnail.dart';
 import 'package:path/path.dart' as p;
@@ -57,15 +56,15 @@ class DiaryUtils {
     return null;
   }
 
-  static Future<String?> generatePreview(String path) async {
+  static Future<String?> generatePreview(String path, {int quality = 80, int maxHeight = 1080}) async {
     if (path.isEmpty) return null;
 
     final uint8list = await VideoThumbnail.thumbnailFile(
       video: path,
       thumbnailPath: (await getTemporaryDirectory()).path,
       imageFormat: ImageFormat.JPEG,
-      maxHeight: 1080,
-      quality: 80,
+      maxHeight: maxHeight,
+      quality: quality,
     );
 
     return uint8list.path;
@@ -108,4 +107,18 @@ class DiaryUtils {
       await controller.dispose();
     }
   }
+
+  static Future<void> deleteFile(String? path) async {
+    if (path == null) return;
+    try {
+      final file = File(path);
+      if (await file.exists()) {
+        await file.delete();
+        print("Квадратик был удален");
+      }
+    } catch (e) {
+      print('Файл не был удален');
+    }
+  }
+
 }
