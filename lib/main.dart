@@ -2,6 +2,7 @@ import 'package:dia_room/models/enums/file_type.dart';
 import 'package:dia_room/models/post_creator/post_draft.dart';
 import 'package:dia_room/screens/authorization/registration_screen.dart';
 import 'package:dia_room/screens/diary/diary_screen.dart';
+import 'package:dia_room/screens/diary/select_folder_diary.dart';
 import 'package:dia_room/screens/room/room_settings_screen.dart';
 import 'package:dia_room/screens/publication/full_image_screen.dart';
 import 'package:dia_room/screens/publication/full_video_screen.dart';
@@ -258,6 +259,22 @@ class App extends StatelessWidget {
                 builder: (context, state) => SelectFolderScreen(
                   roomId: state.pathParameters['roomId']!,
                   targetId: state.pathParameters['targetId']!,
+                  currentFolderId: state.pathParameters['currentFolderId'],
+                ),
+              ),
+            ],
+          ),
+          GoRoute(
+            path: '/select-folder-diary/:roomId',
+            builder: (context, state) => SelectFolderDiaryScreen(
+              roomId: state.pathParameters['roomId']!,
+              currentFolderId: null,
+            ),
+            routes: [
+              GoRoute(
+                path: ':currentFolderId',
+                builder: (context, state) => SelectFolderDiaryScreen(
+                  roomId: state.pathParameters['roomId']!,
                   currentFolderId: state.pathParameters['currentFolderId'],
                 ),
               ),

@@ -1,11 +1,14 @@
+import 'package:dia_room/components/diary/panel_link_buttons.dart';
 import 'package:dia_room/components/diary/video_note_card.dart';
 import 'package:dia_room/components/diary/voice_card.dart';
 import 'package:dia_room/contracts/diary/response/getting_messages.dart';
 import 'package:dia_room/models/enums/diary/message_type.dart';
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../configuration/constants.dart';
 import '../../models/diary/message.dart';
 import 'media_grid.dart';
 
@@ -28,6 +31,26 @@ class DiaryMessageCard extends StatelessWidget {
       return DateFormat('HH:mm · dd.MM.yy').format(date);
     }
   }
+
+  void _handleOnTapWorkshop(BuildContext context) {
+    print('Там по мастерской');
+    final workshopId = message.message.attachedObjectWorkshopId;
+    final roomId = message.message.roomId;
+
+    if (workshopId == null) return;
+
+    // Если это "нулевой" ID, переходим только по roomId, иначе добавляем folderId
+    final String path = (workshopId == uuidNil)
+        ? '/workshop/$roomId'
+        : '/workshop/$roomId/$workshopId';
+
+    context.push(path);
+  }
+
+  void _handleOnTapPost() {
+    print('Там по посту');
+  }
+
 
   Widget _buildStandardMessage(MessagePresentation message, BuildContext context) {
     return Column(
@@ -54,7 +77,13 @@ class DiaryMessageCard extends StatelessWidget {
         // 3. Кнопки ссылок (Объекты мастерской/посты)
         if (message.message.attachedObjectWorkshopId != null ||
             message.message.attachedObjectPostId != null)
-          _buildLinkButtons(context),
+          AttachedLinksBlock(
+              workshopLink: message.message.attachedObjectWorkshopId,
+              postLink: message.message.attachedObjectPostId,
+              labelWorkshop: 'Ссылка в мастерской', labelPost: 'Ссылка в публикациях',
+              onTapWorkshop: () => _handleOnTapWorkshop(context),
+              onTapPost: _handleOnTapPost,),
+
       ],
     );
   }

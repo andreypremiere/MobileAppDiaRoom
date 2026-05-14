@@ -3,18 +3,22 @@ import 'dart:io';
 import 'package:dia_room/contracts/diary/response/getting_messages.dart';
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 import '../../api/account_api.dart';
 import '../../api/auth_response.dart';
 import '../../api/diary_api.dart';
+import '../../components/diary/diary_link_picker.dart';
+import '../../components/diary/input_panel.dart';
 import '../../components/diary/message_card.dart';
 import '../../components/general/app_avatar.dart';
 import '../../components/general/app_back_button.dart';
 import '../../models/diary/selected_media.dart';
 import '../../models/enums/diary/attachment_type.dart';
 import '../../models/enums/diary/creating_actions.dart';
+import '../../models/enums/diary/link_objects.dart';
 import '../../models/enums/diary/message_type.dart';
 import '../../models/post_view/author.dart';
 import '../../services/diary/diary_utils.dart';
@@ -37,7 +41,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
   final TextEditingController _messageController = TextEditingController();
 
   // Состояние
-  List<MessagePresentation> _messages = []; // Здесь будут твои модели Message
+  List<MessagePresentation> _messages = [];
 
   List<SelectedMedia> _selectedMedia = [];
   final int _maxPhotos = 5;
@@ -48,6 +52,8 @@ class _DiaryScreenState extends State<DiaryScreen> {
   int _currentPage = 0;
   final int _limit = 20;
   bool isMyRoom = false;
+  String? _linkWorkshop;
+  String? _linkPost;
 
   late Future<AuthResponse> _roomInfoFuture;
 
@@ -111,6 +117,18 @@ class _DiaryScreenState extends State<DiaryScreen> {
         _scrollController.position.maxScrollExtent - 200) {
       _loadMessages();
     }
+  }
+
+  void _handleClearPost() {
+    setState(() {
+      _linkPost = null;
+    });
+  }
+
+  void _handleClearWorkshop() {
+    setState(() {
+      _linkWorkshop = null;
+    });
   }
 
   void _handleCreateVoiceNote() async {
@@ -178,17 +196,49 @@ class _DiaryScreenState extends State<DiaryScreen> {
     }
   }
 
+  Future<void> _handleBindLink() async {
+    final LinkAction? result = await showDialog<LinkAction>(
+      context: context,
+      barrierDismissible: true, // Закрыть при нажатии на пустую область
+      builder: (context) => const DiaryLinkPicker(),
+    );
+
+    if (result != null) {
+      // Обрабатываем выбор
+      switch (result) {
+        case LinkAction.linkWorkshop:
+          print("Выбрана мастерская");
+          final destinationId = await context.push<String?>(
+            '/select-folder-diary/${widget.roomId}',
+          );
+
+          if (destinationId != null) {
+            print("Выбранная папка назвачения: $destinationId");
+            setState(() {
+              _linkWorkshop = destinationId;
+            });
+          }
+          break;
+        case LinkAction.linkPost:
+          print("Выбрана публикация");
+          break;
+      }
+    }
+  }
+
   Future<void> _sendStandardMessage() async {
     final uploader = context.read<UploadManager>();
     if (uploader.isUploading) return;
 
     final text = _messageController.text.trim();
     final media = List<SelectedMedia>.from(_selectedMedia);
+    final linkWorkshop = _linkWorkshop;
 
     if (text.isEmpty && media.isEmpty) return;
 
     _messageController.clear();
     setState(() {
+      _linkWorkshop = null;
       _selectedMedia.clear();
     });
     FocusScope.of(context).unfocus();
@@ -197,6 +247,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
       type: MessageType.standard,
       messageText: text,
       media: media,
+      linkWorkshop: linkWorkshop,
       addMessageCallback: (newMessage) {
         if (mounted) {
           setState(() {
@@ -259,187 +310,9 @@ class _DiaryScreenState extends State<DiaryScreen> {
     );
   }
 
-  Widget _buildMessageInput() {
-    final uploadProvider = context.watch<UploadManager>();
-    final isUploading = uploadProvider.isUploading;
-    final progress = uploadProvider.progress;
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
-          height: isUploading ? 30 : 0,
-          clipBehavior: Clip.hardEdge,
-          decoration: const BoxDecoration(),
-          child: isUploading
-              ? OverflowBox(
-                  alignment: Alignment.topCenter,
-                  minHeight: 0,
-                  maxHeight: 30,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      LinearProgressIndicator(
-                        value: progress,
-                        minHeight: 4,
-                        backgroundColor: context.ui.containerColor,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          context.ui.primaryColor,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        "${(progress * 100).toInt()}%",
-                        style: const TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                )
-              : const SizedBox.shrink(),
-        ),
-        // --- Строка с выбранными медиа ---
-        if (_selectedMedia.isNotEmpty)
-          Container(
-            height: 80,
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: _selectedMedia.length,
-              itemBuilder: (context, index) {
-                final media = _selectedMedia[index];
-                return Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: Stack(
-                    children: [
-                      // Квадратик превью
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: Container(
-                          width: 70,
-                          height: 70,
-                          color: context.ui.containerColor,
-                          child: media.type == AttachmentType.video
-                              ? (media.thumbnail != null
-                                    ? Image.file(
-                                        File(media.thumbnail!),
-                                        fit: BoxFit.cover,
-                                      )
-                                    : const Center(
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                        ),
-                                      ))
-                              : Image.file(media.file, fit: BoxFit.cover),
-                        ),
-                      ),
-                      // Иконка видео поверх
-                      if (media.type == AttachmentType.video)
-                        const Positioned.fill(
-                          child: Icon(
-                            Icons.play_circle_outline,
-                            color: Colors.white,
-                            size: 30,
-                          ),
-                        ),
-                      // Кнопка удаления
-                      Positioned(
-                        top: 2,
-                        right: 2,
-                        child: GestureDetector(
-                          onTap: () =>
-                              setState(() => _selectedMedia.removeAt(index)),
-                          child: Container(
-                            decoration: const BoxDecoration(
-                              color: Colors.black54,
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.close,
-                              size: 16,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-          ),
-
-        // --- Твоя основная панель ввода ---
-        Container(
-          margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
-          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-          decoration: BoxDecoration(
-            color: context.ui.containerColor,
-            borderRadius: BorderRadius.circular(32),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withAlpha(5),
-                blurRadius: 10,
-                offset: const Offset(0, 0),
-              ),
-            ],
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              // Твой PopupMenuButton
-              _buildAddMenu(),
-
-              Expanded(
-                child: TextField(
-                  onChanged: (text) {
-                    setState(() {});
-                  },
-                  controller: _messageController,
-                  maxLines: 5,
-                  minLines: 1,
-                  style: TextStyle(color: context.ui.fontColorPrimary),
-                  decoration: const InputDecoration(
-                    filled: false,
-                    hintText: "Сообщение...",
-                    border: InputBorder.none,
-                    contentPadding: EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 10,
-                    ),
-                  ),
-                ),
-              ),
-
-              IconButton(
-                onPressed: isUploading ? null : () => _sendStandardMessage(),
-                icon: Icon(
-                  Icons.send_rounded,
-                  color:
-                      (_messageController.text.trim().isNotEmpty ||
-                              _selectedMedia.isNotEmpty) &&
-                          (!isUploading)
-                      ? context
-                            .ui
-                            .primaryColor // Красим кнопку, если есть контент
-                      : context.ui.iconColorPrimary,
-                  size: 24,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      // Этот метод снимает фокус и скрывает клавиатуру
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
         appBar: AppBar(
@@ -509,12 +382,24 @@ class _DiaryScreenState extends State<DiaryScreen> {
                       );
                     }
 
-                    // Здесь будет твой виджет сообщения (DiaryMessageCard)
                     return DiaryMessageCard(message: _messages[index]);
                   },
                 ),
               ),
-              isMyRoom ? _buildMessageInput() : SizedBox.shrink(),
+              isMyRoom
+                  ? DiaryInputPanel(
+                      controller: _messageController,
+                      selectedMedia: _selectedMedia,
+                      onSend: _sendStandardMessage,
+                      onRemoveMediaAt: (index) =>
+                          setState(() => _selectedMedia.removeAt(index)),
+                      addMenu: _buildAddMenu(),
+                      linkPost: _linkPost,
+                      linkWorkshop: _linkWorkshop,
+                      onClosePost: _handleClearPost,
+                      onCloseWorkshop: _handleClearWorkshop,
+                    )
+                  : const SizedBox.shrink(),
             ],
           ),
         ),
@@ -585,15 +470,12 @@ class _DiaryScreenState extends State<DiaryScreen> {
   Widget _buildAddMenu() {
     return PopupMenuButton<CreatingDiaryAction>(
       tooltip: '',
-      // Убираем всплывающую подсказку, если не нужна
       padding: EdgeInsets.zero,
-      // Убираем лишние отступы самой кнопки
       constraints: const BoxConstraints(),
-      // Снимаем стандартные ограничения размера
-      // Кастомизация самой кнопки (вместо child)
+
       icon: Icon(
         Icons.add_rounded,
-        size: 34, // Увеличил, как ты и хотел
+        size: 34,
         color: context.ui.iconColorPrimary,
       ),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -619,6 +501,9 @@ class _DiaryScreenState extends State<DiaryScreen> {
         }
         if (action == CreatingDiaryAction.videoNote) {
           _handleCreateVideoNote();
+        }
+        if (action == CreatingDiaryAction.link) {
+          _handleBindLink();
         }
       },
       itemBuilder: (context) => CreatingDiaryAction.values

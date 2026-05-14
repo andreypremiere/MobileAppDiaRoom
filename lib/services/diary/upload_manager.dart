@@ -49,6 +49,7 @@ class UploadManager extends ChangeNotifier {
     String? messageText,
     List<SelectedMedia>? media,
     VideoRecordResult? videoNote,
+    String? linkWorkshop,
     VoiceRecordResult? audioNote,
     VoidCallback? onSuccess,
     void Function(MessagePresentation)? addMessageCallback,
@@ -171,6 +172,7 @@ class UploadManager extends ChangeNotifier {
           type: type,
           text: messageText,
           attachments: attachments,
+          workshopFolderId: linkWorkshop,
         );
 
         updateProgress(0.6);
