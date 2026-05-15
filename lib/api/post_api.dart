@@ -70,9 +70,11 @@ Future<AuthResponse> savePostCanvas({
   }
 }
 
-Future<AuthResponse> getAllPosts() async {
+Future<AuthResponse> getAllPosts(
+{required int page, required int limit}
+    ) async {
   try {
-    final res = await ApiService.get('/post/allPosts');
+    final res = await ApiService.get('/post/allPosts', queryParameters: {"page": page, "limit": limit});
     final List<dynamic> data = res.data;
     return AuthResponse(
       success: true,
