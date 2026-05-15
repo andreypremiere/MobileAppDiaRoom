@@ -386,6 +386,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
                   padding: const EdgeInsets.all(6),
                   itemCount: _messages.length + (_hasMore ? 1 : 0),
                   itemBuilder: (context, index) {
+                    print('Текущая длина списка месседж: ${_messages.length}');
                     if (index == _messages.length) {
                       return const Center(
                         child: Padding(
