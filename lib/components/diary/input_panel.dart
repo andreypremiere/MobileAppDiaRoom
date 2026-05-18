@@ -1,5 +1,7 @@
 import 'dart:io';
 import 'package:dia_room/components/diary/panel_link_buttons.dart';
+import 'package:dia_room/components/diary/tag_chip.dart';
+import 'package:dia_room/models/diary/tag.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:dia_room/utils/app_theme.dart';
@@ -12,11 +14,13 @@ class DiaryInputPanel extends StatelessWidget {
   final List<SelectedMedia> selectedMedia;
   final VoidCallback onSend;
   final Function(int) onRemoveMediaAt;
+  final List<MessageTag> selectedTags;
   final Widget addMenu;
   final String? linkWorkshop;
   final String? linkPost;
   final VoidCallback? onCloseWorkshop;
   final VoidCallback? onClosePost;
+  final Function(String)? onCloseTag;
 
   const DiaryInputPanel({
     super.key,
@@ -25,10 +29,12 @@ class DiaryInputPanel extends StatelessWidget {
     required this.onSend,
     required this.onRemoveMediaAt,
     required this.addMenu,
+    required this.selectedTags,
     this.linkWorkshop,
     this.linkPost,
     this.onCloseWorkshop,
-    this.onClosePost
+    this.onClosePost,
+    this.onCloseTag,
   });
 
   @override
@@ -38,6 +44,7 @@ class DiaryInputPanel extends StatelessWidget {
     final progress = uploadProvider.progress;
 
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
         // 1. Прогресс загрузки
@@ -52,9 +59,34 @@ class DiaryInputPanel extends StatelessWidget {
         // 2. Список выбранных медиа
         if (selectedMedia.isNotEmpty) _buildMediaPreview(context),
 
+        if (selectedTags.isNotEmpty) _buildTagsPanel(),
+
         // 3. Поле ввода и кнопки
         _buildInputRow(context, isUploading),
       ],
+    );
+  }
+
+  Widget _buildTagsPanel() {
+    return Container(
+      height: 48,
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: selectedTags.map((tag) {
+            return Padding(
+              padding: const EdgeInsets.only(right: 8), // Расстояние между тегами
+              child: TagChip(
+                tag: tag,
+                isSelected: true, // В этой панели они всегда "выбранные"
+                onClose: onCloseTag,
+              ),
+            );
+          }).toList(),
+        ),
+      ),
     );
   }
 

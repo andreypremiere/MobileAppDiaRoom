@@ -116,7 +116,7 @@ class App extends StatelessWidget {
           // Главный экран ленты
           GoRoute(
             path: '/',
-            builder: (context, state) => MainPageScreen(),
+            builder: (context, state) => DiaryScreen(roomId: "64a13030-7175-463f-9f7e-5a7b80382017",),
           ),
 
           GoRoute(

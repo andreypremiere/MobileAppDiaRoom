@@ -13,9 +13,11 @@ import '../../api/diary_api.dart';
 import '../../components/diary/diary_link_picker.dart';
 import '../../components/diary/input_panel.dart';
 import '../../components/diary/message_card.dart';
+import '../../components/diary/tag_picker_window.dart';
 import '../../components/general/app_avatar.dart';
 import '../../components/general/app_back_button.dart';
 import '../../models/diary/selected_media.dart';
+import '../../models/diary/tag.dart';
 import '../../models/enums/diary/attachment_type.dart';
 import '../../models/enums/diary/creating_actions.dart';
 import '../../models/enums/diary/link_objects.dart';
@@ -44,6 +46,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
   List<MessagePresentation> _messages = [];
 
   List<SelectedMedia> _selectedMedia = [];
+  List<MessageTag> _currentSelectedTags = [];
   final int _maxPhotos = 5;
   final int _maxVideos = 2;
 
@@ -221,9 +224,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
           break;
         case LinkAction.linkPost:
           print("Выбрана публикация");
-          final postId = await context.push<String?>(
-            '/select_post_diary',
-          );
+          final postId = await context.push<String?>('/select_post_diary');
 
           if (postId != null) {
             print("Выбранный пост: $postId");
@@ -293,6 +294,18 @@ class _DiaryScreenState extends State<DiaryScreen> {
       print("Ошибка при выборе нескольких изображений: $e");
       return [];
     }
+  }
+
+  Future<void> _handlePickTag() async {
+    final result = await showModalBottomSheet<List<MessageTag>>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => TagPickerSheet(
+        selectedTags: _currentSelectedTags,
+        roomId: widget.roomId,
+      ),
+    );
+    if (result != null) setState(() => _currentSelectedTags = result);
   }
 
   Widget _buildSkeletonItem({
@@ -412,6 +425,15 @@ class _DiaryScreenState extends State<DiaryScreen> {
                       linkWorkshop: _linkWorkshop,
                       onClosePost: _handleClearPost,
                       onCloseWorkshop: _handleClearWorkshop,
+                      selectedTags: _currentSelectedTags,
+                      onCloseTag: (String id) {
+                        print('Нажато закрытие');
+                        setState(() {
+                          _currentSelectedTags.removeWhere(
+                            (tag) => tag.id == id,
+                          );
+                        });
+                      },
                     )
                   : const SizedBox.shrink(),
             ],
@@ -518,6 +540,9 @@ class _DiaryScreenState extends State<DiaryScreen> {
         }
         if (action == CreatingDiaryAction.link) {
           _handleBindLink();
+        }
+        if (action == CreatingDiaryAction.tag) {
+          _handlePickTag();
         }
       },
       itemBuilder: (context) => CreatingDiaryAction.values
