@@ -1,4 +1,5 @@
 import 'package:dia_room/components/diary/panel_link_buttons.dart';
+import 'package:dia_room/components/diary/tags_widget.dart';
 import 'package:dia_room/components/diary/video_note_card.dart';
 import 'package:dia_room/components/diary/voice_card.dart';
 import 'package:dia_room/contracts/diary/response/getting_messages.dart';
@@ -93,6 +94,14 @@ class DiaryMessageCard extends StatelessWidget {
               onTapWorkshop: () => _handleOnTapWorkshop(context),
               onTapPost: () => _handleOnTapPost(context)),
 
+        // Теги сообщения
+        if (message.tags.isNotEmpty)
+          TagsWidget(
+            tags: message.tags,
+            onTagTap: (tag) {
+              print('Клик по тегу: ${tag.name} (id: ${tag.id})');
+            },
+          ),
       ],
     );
   }

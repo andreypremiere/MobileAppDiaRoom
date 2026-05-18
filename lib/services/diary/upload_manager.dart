@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:dia_room/contracts/diary/requests/creating_message.dart';
 import 'package:dia_room/contracts/diary/requests/update_status_message.dart';
 import 'package:dia_room/models/diary/selected_media.dart';
+import 'package:dia_room/models/diary/tag.dart';
 import 'package:dia_room/models/enums/diary/attachment_type.dart';
 import 'package:dia_room/models/enums/diary/message_status.dart';
 import 'package:dia_room/models/enums/diary/message_type.dart';
@@ -50,6 +51,7 @@ class UploadManager extends ChangeNotifier {
     List<SelectedMedia>? media,
     VideoRecordResult? videoNote,
     String? linkWorkshop,
+    List<MessageTag>? selectedTags,
     String? linkPost,
     VoiceRecordResult? audioNote,
     VoidCallback? onSuccess,
@@ -174,7 +176,7 @@ class UploadManager extends ChangeNotifier {
           text: messageText,
           attachments: attachments,
           workshopFolderId: linkWorkshop,
-          publicationPostId: linkPost
+          publicationPostId: linkPost, tags: selectedTags ?? []
         );
 
         updateProgress(0.6);
@@ -248,6 +250,7 @@ class UploadManager extends ChangeNotifier {
         final CreatingMessage creatingMessage = CreatingMessage(
           type: type,
           attachments: [attachmentCreating],
+          tags: selectedTags ?? []
         );
 
         print("${creatingMessage.toMap()}");
@@ -326,6 +329,7 @@ class UploadManager extends ChangeNotifier {
         final CreatingMessage creatingMessage = CreatingMessage(
           type: type,
           attachments: [attachmentCreating],
+          tags: selectedTags ?? []
         );
 
         print("${creatingMessage.toMap()}");

@@ -1,3 +1,4 @@
+import 'package:dia_room/models/diary/tag.dart';
 import 'package:dia_room/models/enums/diary/attachment_type.dart';
 import 'package:dia_room/models/enums/diary/message_type.dart';
 
@@ -7,6 +8,7 @@ class CreatingMessage {
   final List<AttachmentCreating> attachments;
   final String? workshopFolderId;
   final String? publicationPostId;
+  final List<MessageTag> tags;
 
   CreatingMessage({
     required this.type,
@@ -14,6 +16,7 @@ class CreatingMessage {
     this.attachments = const [],
     this.workshopFolderId,
     this.publicationPostId,
+    required this.tags,
   });
 
   Map<String, dynamic> toMap() {
@@ -22,7 +25,8 @@ class CreatingMessage {
       'content': text,
       'attachments': attachments.map((x) => x.toMap()).toList(),
       'workshopFolderId': workshopFolderId,
-      'publicationPostId': publicationPostId
+      'publicationPostId': publicationPostId,
+      'tags': tags.map((x) => x.toMap()).toList()
     };
   }
 }

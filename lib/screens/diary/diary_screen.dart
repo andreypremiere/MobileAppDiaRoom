@@ -245,6 +245,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
     final media = List<SelectedMedia>.from(_selectedMedia);
     final linkWorkshop = _linkWorkshop;
     final linkPost = _linkPost;
+    final selectedTags = List<MessageTag>.from(_currentSelectedTags);
 
     if (text.isEmpty && media.isEmpty) return;
 
@@ -253,6 +254,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
       _linkWorkshop = null;
       _linkPost = null;
       _selectedMedia.clear();
+      _currentSelectedTags.clear();
     });
     FocusScope.of(context).unfocus();
 
@@ -260,6 +262,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
       type: MessageType.standard,
       messageText: text,
       media: media,
+      selectedTags: selectedTags,
       linkWorkshop: linkWorkshop,
       linkPost: linkPost,
       addMessageCallback: (newMessage) {

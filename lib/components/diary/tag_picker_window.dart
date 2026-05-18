@@ -1,7 +1,10 @@
 import 'package:dia_room/components/diary/tag_chip.dart';
+import 'package:dia_room/contracts/diary/requests/creating_tag.dart';
+import 'package:dia_room/contracts/diary/requests/updating_tag.dart';
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 
+import '../../api/diary_api.dart';
 import '../../models/diary/tag.dart';
 
 class TagPickerSheet extends StatefulWidget {
@@ -42,20 +45,40 @@ class _TagPickerSheetState extends State<TagPickerSheet> {
     _loadTags();
   }
 
-  void _handleAddNewTag() {
+  Future<void> _handleAddNewTag() async {
     if (_newTagController.text.trim().isNotEmpty) {
-      final newTag = MessageTag(
-        id: 'temp_${DateTime.now().millisecondsSinceEpoch}',
-        roomId: widget.roomId,
-        name: _newTagController.text.trim(),
-        colorValue: _selectedColorValue,
-      );
+
+      final response = await createTag(tag: CreatingTag(name: _newTagController.text.trim(), color: _selectedColorValue));
+
+      if (!response.success) {
+        print("Не удалось создать тег");
+        return;
+      }
+
+      final MessageTag tag = MessageTag.fromMap(response.data);
+
       setState(() {
-        _allUserTags.insert(0, newTag);
-        _tempSelected.add(newTag);
+        _allUserTags.insert(0, tag);
+        _tempSelected.add(tag);
         _newTagController.clear();
       });
     }
+  }
+
+  Future<void> _handleDeleteTag(MessageTag tag) async {
+    final response = await deleteTag(tagId: tag.id);
+
+    if (!response.success) {
+      print("Не удалось удалить тег");
+      return;
+    }
+
+    setState(() {
+      _allUserTags.removeWhere((t) => t.id == tag.id);
+      _tempSelected.removeWhere((t) => t.id == tag.id);
+    });
+    Navigator.pop(context); // Закрыть подтверждение
+    Navigator.pop(this.context); // Закрыть основное окно редактирования
   }
 
   void _showColorGridDialog({required int currentColor, required Function(int) onColorSelected}) {
@@ -162,9 +185,9 @@ class _TagPickerSheetState extends State<TagPickerSheet> {
                 elevation: 0,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               ),
-              onPressed: () {
+              onPressed: () async {
                 if (editController.text.trim().isEmpty) return;
-                _handleUpdateTag(tag, editController.text.trim(), editColorValue);
+                await _handleUpdateTag(tag, editController.text.trim(), editColorValue);
                 Navigator.pop(context);
               },
               child: const Text("Сохранить", style: TextStyle(color: Colors.white)),
@@ -192,14 +215,8 @@ class _TagPickerSheetState extends State<TagPickerSheet> {
             child: const Text("Отмена"),
           ),
           TextButton(
-            onPressed: () {
-              // Логика удаления
-              setState(() {
-                _allUserTags.removeWhere((t) => t.id == tag.id);
-                _tempSelected.removeWhere((t) => t.id == tag.id);
-              });
-              Navigator.pop(context); // Закрыть подтверждение
-              Navigator.pop(this.context); // Закрыть основное окно редактирования
+            onPressed: () async {
+              await _handleDeleteTag(tag);
             },
             child: const Text("Удалить", style: TextStyle(color: Colors.red)),
           ),
@@ -209,36 +226,41 @@ class _TagPickerSheetState extends State<TagPickerSheet> {
   }
 
 // Логика обновления
-  void _handleUpdateTag(MessageTag tag, String newName, int newColor) {
+  Future<void> _handleUpdateTag(MessageTag tag, String newName, int newColor) async {
+    final response = await updateTag(tagId: tag.id, tag: UpdatingTag(name: newName, color: newColor));
+
+    if (!response.success) {
+      print("Не удалось обновить тег;");
+    }
+
+    final MessageTag newTag = MessageTag.fromMap(response.data);
+
     setState(() {
       final index = _allUserTags.indexWhere((t) => t.id == tag.id);
       if (index != -1) {
-        final updatedTag = MessageTag(
-          id: tag.id,
-          roomId: tag.roomId,
-          name: newName,
-          colorValue: newColor,
-        );
-        _allUserTags[index] = updatedTag;
+        _allUserTags[index] = newTag;
 
         final selectedIndex = _tempSelected.indexWhere((t) => t.id == tag.id);
-        if (selectedIndex != -1) _tempSelected[selectedIndex] = updatedTag;
+        if (selectedIndex != -1) _tempSelected[selectedIndex] = newTag;
       }
     });
   }
 
   Future<void> _loadTags() async {
-    // Тут твой вызов: final tags = await TagApi.getUserTags();
-    final List<MessageTag> mockTags = [
-      MessageTag(id: '1', roomId: widget.roomId, name: 'Работа', colorValue: 0xFF2196F3), // Синий
-      MessageTag(id: '2', roomId: widget.roomId, name: 'Идеи', colorValue: 0xFF9C27B0),   // Фиолетовый
-      MessageTag(id: '3', roomId: widget.roomId, name: 'Важное', colorValue: 0xFFF44336), // Красный
-      MessageTag(id: '4', roomId: widget.roomId, name: 'Спорт', colorValue: 0xFF4CAF50),  // Зеленый
-      MessageTag(id: '5', roomId: widget.roomId, name: 'Путешествия', colorValue: 0xFFFF9800), // Оранжевый
-      MessageTag(id: '6', roomId: widget.roomId, name: 'Учеба', colorValue: 0xFF00BCD4),  // Бирюзовый
-      MessageTag(id: '7', roomId: widget.roomId, name: 'Семья', colorValue: 0xFFE91E63),  // Розовый
-    ];
-    _allUserTags.addAll(mockTags);
+    setState(() => _isLoading = true);
+
+    final response = await getTagsByRoomId(roomId: widget.roomId);
+    if (!response.success) {
+      print("Ошибка при получении тегов");
+      setState(() => _isLoading = false);
+      return;
+    }
+
+    final List<MessageTag> tags = (response.data as List?)
+        ?.map((el) => MessageTag.fromMap(el as Map<String, dynamic>))
+        .toList() ?? [];
+
+    _allUserTags.addAll(tags);
     setState(() => _isLoading = false);
   }
 
@@ -321,7 +343,7 @@ class _TagPickerSheetState extends State<TagPickerSheet> {
                 contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
                 suffixIcon: IconButton(
                   icon: const Icon(Icons.add_circle_outline),
-                  onPressed: () => _handleAddNewTag(),
+                  onPressed: () async => await _handleAddNewTag(),
                 ),
               ),
             ),

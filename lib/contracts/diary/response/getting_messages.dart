@@ -1,5 +1,6 @@
 import 'package:dia_room/models/diary/attachment.dart';
 import 'package:dia_room/models/diary/message.dart';
+import 'package:dia_room/models/diary/tag.dart';
 
 class GettingMessages {
   final List<MessagePresentation> messages;
@@ -18,8 +19,9 @@ class GettingMessages {
 class MessagePresentation {
   final Message message;
   final List<Attachment> attachments;
+  final List<MessageTag> tags;
 
-  MessagePresentation({required this.message, required this.attachments});
+  MessagePresentation({required this.message, required this.attachments, required this.tags});
 
   factory MessagePresentation.fromMap(Map<String, dynamic> map) {
     return MessagePresentation(
@@ -27,6 +29,9 @@ class MessagePresentation {
       attachments: (map['attachments'] as List? ?? [])
           .map((el) => Attachment.fromMap(el))
           .toList(),
+      tags: (map['tags'] as List? ?? [])
+        .map((el) => MessageTag.fromMap(el))
+        .toList(),
     );
   }
 }

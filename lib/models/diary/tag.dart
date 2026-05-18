@@ -22,6 +22,6 @@ class MessageTag {
   }
 
   Map<String, dynamic> toMap() {
-    return {"name": name, "color": color.toARGB32()};
+    return {"name": name, "color": color.toARGB32(), "id": id, "roomId": roomId};
   }
 }
