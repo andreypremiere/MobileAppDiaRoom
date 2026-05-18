@@ -3,6 +3,7 @@ import 'package:dia_room/components/diary/tags_widget.dart';
 import 'package:dia_room/components/diary/video_note_card.dart';
 import 'package:dia_room/components/diary/voice_card.dart';
 import 'package:dia_room/contracts/diary/response/getting_messages.dart';
+import 'package:dia_room/models/enums/diary/message_action.dart';
 import 'package:dia_room/models/enums/diary/message_type.dart';
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
@@ -14,8 +15,77 @@ import 'media_grid.dart';
 
 class DiaryMessageCard extends StatelessWidget {
   final MessagePresentation message;
+  final Function(MessageAction action, MessagePresentation message)? onLongPress;
 
-  const DiaryMessageCard({super.key, required this.message});
+  const DiaryMessageCard({super.key, required this.message, this.onLongPress});
+
+  Future<void> _showPopUp(BuildContext context, LongPressStartDetails details) async {
+    final Offset tapPosition = details.globalPosition;
+    final double screenWidth = MediaQuery.of(context).size.width;
+    final double screenHeight = MediaQuery.of(context).size.height;
+    const double menuWidth = 200.0;
+    const double menuHeight = 120.0; // примерная высота меню (зависит от количества пунктов)
+
+    // Вычисляем позицию: левый верхний угол меню
+    double left = tapPosition.dx;
+    double top = tapPosition.dy;
+
+    // Корректировка, чтобы не выходило за правый край
+    if (left + menuWidth > screenWidth) {
+    left = screenWidth - menuWidth - 16;
+    }
+    // Корректировка, чтобы не выходило за левый край
+    if (left < 16) left = 16;
+
+    // Корректировка по вертикали: если не помещается снизу, показываем выше касания
+    if (top + menuHeight > screenHeight) {
+    top = tapPosition.dy - menuHeight;
+    }
+    // Корректировка, чтобы не выходило за верхний край
+    if (top < 16) top = 16;
+
+    final result = await showMenu<MessageAction>(
+      color: context.ui.containerColor,
+      context: context,
+      position: RelativeRect.fromLTRB(
+          left,
+          top,
+          left + menuWidth,
+          top + menuHeight,
+      ),
+      items: MessageAction.values.map((action) {
+        return PopupMenuItem<MessageAction>(
+          value: action,
+          child: Row(
+            children: [
+              Icon(
+                action.icon,
+                size: 20,
+                color: action == MessageAction.delete ? Colors.redAccent : context.ui.fontColorHint,
+              ),
+              const SizedBox(width: 12),
+              Text(
+                action.label,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: context.ui.fontColorPrimary,
+                ),
+              ),
+            ],
+          ),
+        );
+      }).toList(),
+      elevation: 4,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+    );
+
+    if (result != null) {
+      print('Выбрано действие: ${result.label}');
+      await onLongPress!(result, message);
+    }
+  }
 
   String formatSmartDate(DateTime date) {
     final localDate = date.toLocal();
@@ -120,41 +190,44 @@ class DiaryMessageCard extends StatelessWidget {
       return SizedBox.shrink();
     }
 
-    return Container(
-      padding: const EdgeInsets.all(4),
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: context.ui.containerColor,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha(5),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        spacing: 4,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          messageContent,
+    return GestureDetector(
+      onLongPressStart: (details) async =>_showPopUp(context, details),
+      child: Container(
+        padding: const EdgeInsets.all(4),
+        margin: const EdgeInsets.only(bottom: 12),
+        decoration: BoxDecoration(
+          color: context.ui.containerColor,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withAlpha(5),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          spacing: 4,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            messageContent,
 
-          // Общий футер с датой
-          Padding(
-            padding: const EdgeInsets.only(bottom: 6, right: 10, top: 2),
-            child: Align(
-              alignment: Alignment.bottomRight,
-              child: Text(
-                formatSmartDate(message.message.createdAt),
-                style: TextStyle(
-                  fontSize: 11,
-                  color: context.ui.fontColorPrimary.withAlpha(120),
+            // Общий футер с датой
+            Padding(
+              padding: const EdgeInsets.only(bottom: 6, right: 10, top: 2),
+              child: Align(
+                alignment: Alignment.bottomRight,
+                child: Text(
+                  formatSmartDate(message.message.createdAt),
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: context.ui.fontColorPrimary.withAlpha(120),
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

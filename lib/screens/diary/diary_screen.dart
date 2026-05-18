@@ -1,8 +1,10 @@
 import 'dart:io';
 
 import 'package:dia_room/contracts/diary/response/getting_messages.dart';
+import 'package:dia_room/models/enums/diary/message_action.dart';
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
@@ -132,6 +134,31 @@ class _DiaryScreenState extends State<DiaryScreen> {
     setState(() {
       _linkWorkshop = null;
     });
+  }
+
+  Future<void> _actionMessage(MessageAction action, MessagePresentation message) async {
+    switch (action) {
+      case MessageAction.copy:
+        if (message.message.content != null && message.message.content!.isNotEmpty) {
+          Clipboard.setData(ClipboardData(text: message.message.content!));
+        }
+        break;
+
+      case MessageAction.delete:
+        final result = await deleteMessage(messageId: message.message.id);
+
+        if (!result.success) {
+          print("Не удалось удалить сообщение");
+          return;
+        }
+
+        setState(() {
+          _messages.removeWhere(
+                (mes) => mes.message.id == message.message.id,
+          );
+        });
+        break;
+    }
   }
 
   void _handleCreateVoiceNote() async {
@@ -412,7 +439,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
                       );
                     }
 
-                    return DiaryMessageCard(message: _messages[index]);
+                    return DiaryMessageCard(message: _messages[index], onLongPress: _actionMessage,);
                   },
                 ),
               ),

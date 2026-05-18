@@ -109,3 +109,15 @@ Future<AuthResponse> getTagsByRoomId({
     return handleDioError(e, "Ошибка при получении тегов");
   }
 }
+
+Future<AuthResponse> deleteMessage({
+  required String messageId,
+}) async {
+  try {
+    await ApiService.delete('/diary/message/$messageId');
+
+    return AuthResponse(success: true);
+  } on DioException catch (e) {
+    return handleDioError(e, "Ошибка при получении тегов");
+  }
+}
