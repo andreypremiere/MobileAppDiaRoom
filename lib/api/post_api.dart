@@ -235,3 +235,19 @@ Future<AuthResponse> requestDeletePost(String postId) async {
     return handleSystemError(e);
   }
 }
+
+Future<AuthResponse> searchPosts(
+    {required int page, required int limit, required String value}
+    ) async {
+  try {
+    final res = await ApiService.get('/post/search', queryParameters: {"page": page, "limit": limit, "value": value});
+    return AuthResponse(
+      success: true,
+      data: res.data,
+    );
+  } on DioException catch (e) {
+    return handleDioError(e, "Ошибка получения ленты");
+  } catch (e) {
+    return handleSystemError(e);
+  }
+}

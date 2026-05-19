@@ -5,6 +5,7 @@ import 'package:dia_room/screens/diary/diary_screen.dart';
 import 'package:dia_room/screens/diary/search_messages.dart';
 import 'package:dia_room/screens/diary/select_folder_diary.dart';
 import 'package:dia_room/screens/diary/select_post_diary.dart';
+import 'package:dia_room/screens/global_search_screen.dart';
 import 'package:dia_room/screens/room/room_settings_screen.dart';
 import 'package:dia_room/screens/publication/full_image_screen.dart';
 import 'package:dia_room/screens/publication/full_video_screen.dart';
@@ -119,7 +120,7 @@ class App extends StatelessWidget {
           // Главный экран ленты
           GoRoute(
             path: '/',
-            builder: (context, state) => DiaryScreen(roomId: "64a13030-7175-463f-9f7e-5a7b80382017",),
+            builder: (context, state) => GlobalSearchScreen(),
           ),
 
           GoRoute(
@@ -146,7 +147,12 @@ class App extends StatelessWidget {
               );
             },
           ),
-
+          GoRoute(
+            path: '/search',
+            builder: (context, state) {
+              return GlobalSearchScreen();
+            },
+          ),
           GoRoute(
             name: 'verifyCode',
             path: '/verifyCode/:userId',
