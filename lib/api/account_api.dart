@@ -240,3 +240,20 @@ Future<AuthResponse> unfollowRoom(String roomId) async {
     return handleSystemError(e);
   }
 }
+
+Future<AuthResponse> searchRooms({
+  required int limit,
+  required int page,
+  required String value}) async {
+  try {
+    final response = await ApiService.get(
+      '/account/search',
+      queryParameters: {"limit": limit, "page": page, "value": value,}
+    );
+    return AuthResponse(success: true, data: response.data);
+  } on DioException catch (e) {
+    return handleDioError(e, "Не удалось выполнить поиск по комнатам");
+  } catch (e) {
+    return handleSystemError(e);
+  }
+}

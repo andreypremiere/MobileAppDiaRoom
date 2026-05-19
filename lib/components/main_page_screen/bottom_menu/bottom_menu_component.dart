@@ -56,12 +56,15 @@ class BottomMenu extends StatelessWidget {
           BottomMenuItem(
             icon: Icons.search_rounded,
             onPressed: () {
-              // Будущая логика поиска
+              context.push('/search');
             },
           ),
           BottomMenuItem(
             icon: Icons.settings_rounded,
-            onPressed: () => _handleLogout(context),
+            onPressed: () {
+              final roomId = context.read<AuthProvider>().roomId;
+              if (roomId != null) context.push('/settings/$roomId');
+            },
           ),
         ],
       ),

@@ -5,9 +5,9 @@ class FoundRooms {
 
   FoundRooms({required this.rooms});
 
-  factory FoundRooms.fromMap(List<dynamic> map) {
+  factory FoundRooms.fromMap(Map<String, dynamic> map) {
     return FoundRooms(
-      rooms: map
+      rooms: (map["rooms"] as List<dynamic>)
           .map((item) => RoomInfo.fromMap(item as Map<String, dynamic>))
           .toList(),
     );

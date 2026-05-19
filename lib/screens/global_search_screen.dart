@@ -2,6 +2,7 @@ import 'package:dia_room/api/auth_response.dart';
 import 'package:dia_room/api/diary_api.dart';
 import 'package:dia_room/api/post_api.dart';
 import 'package:dia_room/contracts/diary/response/getting_messages.dart';
+import 'package:dia_room/contracts/global_search/responses/found_rooms.dart';
 import 'package:dia_room/contracts/posts/responses/found_posts.dart';
 import 'package:dia_room/models/enums/global_search/global_search_method.dart';
 import 'package:dia_room/models/post_view/feed_post.dart';
@@ -12,7 +13,10 @@ import 'package:flutter/services.dart';
 import '../../components/diary/message_card.dart';
 import '../../components/general/app_back_button.dart';
 import '../../models/enums/diary/message_action.dart';
+import '../api/account_api.dart';
+import '../components/global_search_screen/room_tile.dart';
 import '../components/post_card/feed_card.dart';
+import '../models/global_search/room_info.dart';
 
 class GlobalSearchScreen extends StatefulWidget {
   const GlobalSearchScreen({
@@ -124,6 +128,17 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
 
       switch (_currentMethod) {
         case GlobalSearchMethod.room:
+          final response = await searchRooms(page: _currentPage, limit: _limit, value: _searchController.text.trim());
+
+          if (!response.success) {
+            print("Ошибка при комнат");
+            return;
+          }
+
+          final FoundRooms foundRooms= FoundRooms.fromMap(response.data);
+
+          _foundValues.addAll(foundRooms.rooms);
+          print("пришло сообщений: ${foundRooms.rooms.length}");
           break;
         case GlobalSearchMethod.post:
           print("Поиск по постам");
@@ -235,8 +250,7 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
                   }
                   switch (_currentMethod) {
                     case GlobalSearchMethod.room:
-                      // привести список к типу
-                      return Text("room $index");
+                      return RoomTile(room: _foundValues[index] as RoomInfo,);
                     case GlobalSearchMethod.post:
                       return FeedPostComponent(post: _foundValues[index] as FeedPost);
                   }
