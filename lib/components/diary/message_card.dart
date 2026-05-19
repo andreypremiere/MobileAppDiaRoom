@@ -11,6 +11,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../configuration/constants.dart';
+import '../../models/enums/diary/search_method.dart';
 import 'media_grid.dart';
 
 class DiaryMessageCard extends StatelessWidget {
@@ -169,7 +170,10 @@ class DiaryMessageCard extends StatelessWidget {
           TagsWidget(
             tags: message.tags,
             onTagTap: (tag) {
-              print('Клик по тегу: ${tag.name} (id: ${tag.id})');
+              context.push('/search-messages/${message.message.roomId}', extra: {
+                'text': tag.name,
+                'method': SearchMethod.byTag,
+              });
             },
           ),
       ],

@@ -2,6 +2,7 @@ import 'package:dia_room/models/enums/file_type.dart';
 import 'package:dia_room/models/post_creator/post_draft.dart';
 import 'package:dia_room/screens/authorization/registration_screen.dart';
 import 'package:dia_room/screens/diary/diary_screen.dart';
+import 'package:dia_room/screens/diary/search_messages.dart';
 import 'package:dia_room/screens/diary/select_folder_diary.dart';
 import 'package:dia_room/screens/diary/select_post_diary.dart';
 import 'package:dia_room/screens/room/room_settings_screen.dart';
@@ -28,6 +29,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+
+import 'models/enums/diary/search_method.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -124,6 +127,23 @@ class App extends StatelessWidget {
             builder: (context, state) {
               final roomId = state.pathParameters['roomId']!;
               return DiaryScreen(roomId: roomId);
+            },
+          ),
+          GoRoute(
+            path: '/search-messages/:roomId',
+            builder: (context, state) {
+              final roomId = state.pathParameters['roomId']!;
+
+              final extra = state.extra as Map<String, dynamic>?;
+
+              final text = extra?['text'] as String?;
+              final method = extra?['method'] as SearchMethod?;
+
+              return SearchMessagesScreen(
+                roomId: roomId,
+                text: text,
+                method: method,
+              );
             },
           ),
 

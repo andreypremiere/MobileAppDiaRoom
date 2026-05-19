@@ -6,7 +6,6 @@ import 'package:dio/dio.dart';
 import '../contracts/diary/requests/creating_message.dart';
 import '../contracts/diary/requests/update_status_message.dart';
 import '../contracts/diary/requests/updating_tag.dart';
-import '../models/enums/diary/message_status.dart';
 import '../utils/dio_service.dart';
 import 'auth_response.dart';
 import 'exception_handler.dart';
@@ -119,5 +118,22 @@ Future<AuthResponse> deleteMessage({
     return AuthResponse(success: true);
   } on DioException catch (e) {
     return handleDioError(e, "Ошибка при получении тегов");
+  }
+}
+
+Future<AuthResponse> searchMessages({
+  required String roomId,
+  String? tagText,
+  String? messageText,
+  required int page,
+  required int limit,
+}) async {
+  try {
+    final response = await ApiService.get('/diary/search-messages/$roomId',
+        queryParameters: {"page": page, "limit": limit, "tagText": tagText, "messageText": messageText});
+
+    return AuthResponse(success: true, data: response.data);
+  } on DioException catch (e) {
+    return handleDioError(e, "Ошибка при поиске сообщений");
   }
 }

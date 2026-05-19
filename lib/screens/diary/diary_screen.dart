@@ -24,6 +24,7 @@ import '../../models/enums/diary/attachment_type.dart';
 import '../../models/enums/diary/creating_actions.dart';
 import '../../models/enums/diary/link_objects.dart';
 import '../../models/enums/diary/message_type.dart';
+import '../../models/enums/diary/search_method.dart';
 import '../../models/post_view/author.dart';
 import '../../services/diary/diary_utils.dart';
 import '../../services/diary/upload_manager.dart';
@@ -136,10 +137,14 @@ class _DiaryScreenState extends State<DiaryScreen> {
     });
   }
 
-  Future<void> _actionMessage(MessageAction action, MessagePresentation message) async {
+  Future<void> _actionMessage(
+    MessageAction action,
+    MessagePresentation message,
+  ) async {
     switch (action) {
       case MessageAction.copy:
-        if (message.message.content != null && message.message.content!.isNotEmpty) {
+        if (message.message.content != null &&
+            message.message.content!.isNotEmpty) {
           Clipboard.setData(ClipboardData(text: message.message.content!));
         }
         break;
@@ -153,9 +158,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
         }
 
         setState(() {
-          _messages.removeWhere(
-                (mes) => mes.message.id == message.message.id,
-          );
+          _messages.removeWhere((mes) => mes.message.id == message.message.id);
         });
         break;
     }
@@ -418,6 +421,16 @@ class _DiaryScreenState extends State<DiaryScreen> {
               );
             },
           ),
+          actions: [
+            IconButton(
+              onPressed: () => context.push('/search-messages/${widget.roomId}'),
+              icon: Icon(
+                Icons.search_rounded,
+                size: context.ui.iconSizePanel,
+              ),
+              color: context.ui.iconColorPrimary,
+            ),
+          ],
         ),
         body: SafeArea(
           child: Column(
@@ -439,7 +452,10 @@ class _DiaryScreenState extends State<DiaryScreen> {
                       );
                     }
 
-                    return DiaryMessageCard(message: _messages[index], onLongPress: _actionMessage,);
+                    return DiaryMessageCard(
+                      message: _messages[index],
+                      onLongPress: _actionMessage,
+                    );
                   },
                 ),
               ),
