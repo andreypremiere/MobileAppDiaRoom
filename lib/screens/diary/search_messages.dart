@@ -60,6 +60,7 @@ class _SearchMessagesScreenState extends State<SearchMessagesScreen> {
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 200) {
       if (!_isLoading && _hasMore) {
+        print('Выполнен запрос при скролле, данные page: $_currentPage');
         _fetchMessages();
       }
     }
@@ -90,6 +91,69 @@ class _SearchMessagesScreenState extends State<SearchMessagesScreen> {
         });
         break;
     }
+  }
+
+  void onTapMethod(SearchMethod method) {
+    'Нажата кнопка ${method.label}';
+    setState(() {
+      _currentMethod = method;
+    });
+    _searchMessages();
+  }
+
+  Widget _buttonMethod(SearchMethod method) {
+    return ElevatedButton(
+      onPressed: () {
+        onTapMethod(method);
+      },
+      style: ElevatedButton.styleFrom(
+        backgroundColor: method == _currentMethod
+            ? context.ui.primaryColor
+            : context.ui.containerColor,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+
+          side: method == _currentMethod
+              ? BorderSide.none
+              : BorderSide(color: context.ui.primaryColor, width: 2),
+        ),
+
+        // Полезное дополнение: убирает тень, если она не нужна
+        elevation: 0,
+      ),
+      child: Text(
+        method.label,
+        style: TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+          color: method != _currentMethod
+              ? context.ui.primaryColor
+              : context.ui.containerColor,
+        ),
+      ),
+    );
+  }
+
+  Widget _panelButtons() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 4),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: 36,
+          minHeight: 0,
+        ),
+        child: ListView.separated(
+          physics: const BouncingScrollPhysics(),
+          scrollDirection: Axis.horizontal,
+          itemCount: SearchMethod.values.length,
+          separatorBuilder: (context, index) => const SizedBox(width: 8),
+          itemBuilder: (context, index) {
+            return _buttonMethod(SearchMethod.values[index]);
+          },
+        ),
+      ),
+    );
   }
 
   Future<void> _fetchMessages() async {
@@ -132,6 +196,7 @@ class _SearchMessagesScreenState extends State<SearchMessagesScreen> {
       setState(() {
         _currentPage++;
         _messages.addAll(gotMessages.messages);
+        print("пришло сообщений: ${gotMessages.messages.length}");
         // Если пришло меньше чем лимит, значит данных больше нет
         if (gotMessages.messages.length < _limit) _hasMore = false;
       });
@@ -147,11 +212,13 @@ class _SearchMessagesScreenState extends State<SearchMessagesScreen> {
       _searchController.clear();
       _messages.clear();
       _currentPage = 0;
+      _hasMore = true;
     });
     FocusManager.instance.primaryFocus?.unfocus();
   }
 
   void _searchMessages() {
+    _hasMore = true;
     _currentPage = 0;
     _messages.clear();
     _fetchMessages();
@@ -171,17 +238,19 @@ class _SearchMessagesScreenState extends State<SearchMessagesScreen> {
             Expanded(
               child: Container(
                 // Ограничиваем высоту контейнера
-                height: 46, child: TextField(
-                controller: _searchController,
-                decoration: InputDecoration(
-                  hintText: "Поиск в комнате...",
-                  border: InputBorder.none,
-                  contentPadding: EdgeInsets.only(left: 10),
-                  suffixIcon: IconButton(
-                    icon: const Icon(Icons.clear),
-                    onPressed: _clearText,
+                height: 46,
+                child: TextField(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    hintText: "Поиск в комнате...",
+                    border: InputBorder.none,
+                    contentPadding: EdgeInsets.only(left: 10),
+                    suffixIcon: IconButton(
+                      icon: const Icon(Icons.clear),
+                      onPressed: _clearText,
+                    ),
                   ),
-                ),),
+                ),
               ),
             ),
             IconButton(
@@ -195,29 +264,36 @@ class _SearchMessagesScreenState extends State<SearchMessagesScreen> {
           ],
         ),
       ),
-      body: ListView.builder(
-        controller: _scrollController,
-        itemCount: _searchController.text.trim().isEmpty
-            ? 1
-            : (_messages.length + (_isLoading ? 1 : 0)),
-        itemBuilder: (context, index) {
-          if (_searchController.text.trim().isEmpty) {
-            return const Center(child: Text("Введите значение"));
-          } else {
-            if (index == _messages.length) {
-              return const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: CircularProgressIndicator(),
-                ),
-              );
-            }
-            return DiaryMessageCard(
-              message: _messages[index],
-              onLongPress: _actionMessage,
-            );
-          }
-        },
+      body: Column(
+        children: [
+          _panelButtons(),
+          Expanded(
+            child: ListView.builder(
+              controller: _scrollController,
+              itemCount: _searchController.text.trim().isEmpty
+                  ? 1
+                  : (_messages.length + (_isLoading ? 1 : 0)),
+              itemBuilder: (context, index) {
+                if (_searchController.text.trim().isEmpty) {
+                  return SizedBox.shrink();
+                } else {
+                  if (index == _messages.length) {
+                    return const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(8.0),
+                        child: CircularProgressIndicator(),
+                      ),
+                    );
+                  }
+                  return DiaryMessageCard(
+                    message: _messages[index],
+                    onLongPress: _actionMessage,
+                  );
+                }
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
