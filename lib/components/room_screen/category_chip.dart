@@ -28,17 +28,17 @@ class CategoryChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          SvgPicture.asset(
-            'assets/icons/$slug.svg',
-            width: 16,
-            height: 16,
-            // Перекрашиваем иконку в цвет текста
-            colorFilter: ColorFilter.mode(
-              context.ui.fontColorPrimary,
-              BlendMode.srcIn,
-            ),
-          ),
-          const SizedBox(width: 8),
+          // SvgPicture.asset(
+          //   'assets/icons/$slug.svg',
+          //   width: 16,
+          //   height: 16,
+          //   // Перекрашиваем иконку в цвет текста
+          //   colorFilter: ColorFilter.mode(
+          //     context.ui.fontColorPrimary,
+          //     BlendMode.srcIn,
+          //   ),
+          // ),
+          // const SizedBox(width: 8),
           Text(
             name,
             style: TextStyle(

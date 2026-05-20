@@ -10,7 +10,7 @@ import 'package:provider/provider.dart';
 
 import '../../api/account_api.dart';
 import '../../components/info_dialog_component.dart';
-import '../../models/enums/room_categories.dart';
+import '../../models/enums/categories.dart';
 import '../../utils/utils.dart';
 
 
@@ -29,7 +29,7 @@ class _RoomSettingsScreenState extends State<RoomSettingsScreen> {
 
   String? _avatarPath;
   String? _backgroundPath;
-  final List<RoomCategory> _selectedCategories = [];
+  final List<Categories> _selectedCategories = [];
 
   @override
   void dispose() {
@@ -147,9 +147,9 @@ class _RoomSettingsScreenState extends State<RoomSettingsScreen> {
                 width: double.maxFinite,
                 child: ListView.builder(
                   shrinkWrap: true,
-                  itemCount: RoomCategory.values.length,
+                  itemCount: Categories.values.length,
                   itemBuilder: (context, index) {
-                    final category = RoomCategory.values[index];
+                    final category = Categories.values[index];
                     final isSelected = _selectedCategories.contains(category);
 
                     return CheckboxListTile(

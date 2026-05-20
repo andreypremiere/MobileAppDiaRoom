@@ -1,4 +1,4 @@
-import 'package:dia_room/models/enums/post_categories.dart';
+import 'package:dia_room/models/enums/categories.dart';
 import 'package:dia_room/models/post_creator/post_draft.dart';
 
 import 'block_post.dart';
@@ -9,7 +9,7 @@ class PublicationPost {
   String? previewPublicURL;
   Map<String, dynamic> metadata;
 
-  PostCategory categorySlug;
+  Categories categorySlug;
 
   List<BlockUpload>? payload;
 

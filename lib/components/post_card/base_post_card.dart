@@ -1,12 +1,12 @@
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:dia_room/models/enums/post_categories.dart';
+import 'package:dia_room/models/enums/categories.dart';
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 
 class BasePostCard extends StatelessWidget {
   final String title;
   final String? previewUrl;
-  final PostCategory category;
+  final Categories category;
   final VoidCallback onTap;
   final Widget bottomPanel;
   final Widget? topAction;

@@ -1,11 +1,12 @@
-import 'package:dia_room/models/enums/room_categories.dart';
 import 'package:path/path.dart' as p;
+
+import '../../../models/enums/categories.dart';
 
 
 class SaveRoomRequest {
   final String roomUniqueId;
   final String roomName;
-  final List<RoomCategory>? listCategory;
+  final List<Categories>? listCategory;
   final String? bio;
   final String? avatarPath;
   final String? backgroundPath;

@@ -183,7 +183,7 @@ class _RoomState extends State<RoomScreen> {
                                                       .map((category) {
                                                         return CategoryChip(
                                                           slug: category.slug,
-                                                          name: category.name,
+                                                          name: category.label,
                                                         );
                                                       })
                                                       .toList(),

@@ -1,10 +1,10 @@
-import '../enums/post_categories.dart';
+import '../enums/categories.dart';
 
 class PostData {
   final String postId;
   final String title;
   final String preview;
-  final PostCategory category;
+  final Categories category;
   final String canvasId;
 
   PostData({
@@ -20,7 +20,7 @@ class PostData {
       postId: map['postId'] ?? '',
       title: map['title'] ?? '',
       preview: map['previewUrl'] ?? '',
-      category: PostCategory.fromId(map['categorySlug']),
+      category: Categories.fromSlug(map['categorySlug']),
       canvasId: map['canvasId'] ?? '',
     );
   }

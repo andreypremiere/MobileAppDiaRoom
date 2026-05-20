@@ -18,6 +18,7 @@ import 'package:dia_room/screens/room/room_screen.dart';
 import 'package:dia_room/screens/publication/set_settings_for_post_screen.dart';
 import 'package:dia_room/screens/publication/showing_post_screen.dart';
 import 'package:dia_room/screens/authorization/verify_code_screen.dart';
+import 'package:dia_room/screens/room/settings_screen.dart';
 import 'package:dia_room/screens/workshop/select_folder_screen.dart';
 import 'package:dia_room/screens/workshop/workshop_screen.dart';
 import 'package:dia_room/services/diary/upload_manager.dart';

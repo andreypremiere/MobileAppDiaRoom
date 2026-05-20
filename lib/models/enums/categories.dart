@@ -1,4 +1,4 @@
-enum PostCategory {
+enum Categories {
   defaultVal('not-selected', 'Не выбрана'),
   visualArts('visual-arts', 'Арт и Иллюстрация'),
   traditionalArt('traditional-art', 'Живопись и Рисование'),
@@ -8,25 +8,23 @@ enum PostCategory {
   videoProduction('video-production', 'Видеопроизводство'),
   motionDesign('motion-design', 'Моушн дизайн'),
   animation('animation', 'Анимация'),
-  music('music', 'Музыка'),
-  soundDesign('sound-design', 'Саунд-дизайн'),
   podcasts('podcasts', 'Подкасты'),
   literature('literature', 'Литература и Статьи'),
   gamedev('gamedev', 'Игры'),
-  itTech('it-tech', 'Код и Технологии'),
   fashion('fashion', 'Мода и Стиль'),
   architecture('architecture-interior', 'Архитектура и Интерьер'),
   craftDiy('craft-diy', 'Крафт и DIY'),
+  cars("cars", "Автомобили"),
   lifestyle('lifestyle-blog', 'Жизнь и Блог');
 
-  final String id;
+  final String slug;
   final String label;
-  const PostCategory(this.id, this.label);
+  const Categories(this.slug, this.label);
 
-  static PostCategory fromId(String? id) {
-    return PostCategory.values.firstWhere(
-          (element) => element.id == id,
-      orElse: () => PostCategory.defaultVal,
+  static Categories fromSlug(String? slug) {
+    return Categories.values.firstWhere(
+          (element) => element.slug == slug,
+      orElse: () => Categories.defaultVal,
     );
   }
 }

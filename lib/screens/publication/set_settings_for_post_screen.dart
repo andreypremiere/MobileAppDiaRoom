@@ -8,7 +8,7 @@ import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../components/general/app_back_button.dart';
 import '../../components/info_dialog_component.dart';
-import '../../models/enums/post_categories.dart';
+import '../../models/enums/categories.dart';
 
 
 class SetSettingsForPostScreen extends StatefulWidget {
@@ -80,7 +80,7 @@ class _SetSettingsForPostState extends State<SetSettingsForPostScreen> {
       return;
     }
 
-    if (widget.postDraft.category == PostCategory.defaultVal) {
+    if (widget.postDraft.category == Categories.defaultVal) {
       AppInfoDialog.show(context, "Необходимо выбрать категорию публикации :(");
       return;
     }
@@ -361,12 +361,12 @@ class _SetSettingsForPostState extends State<SetSettingsForPostScreen> {
   }
 
   Widget _buildCategorySelector() {
-    return PopupMenuButton<PostCategory>(
+    return PopupMenuButton<Categories>(
       color: Color(0xFFD0D0D0),
       offset: const Offset(0, 50),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       onSelected: (val) => setState(() => widget.postDraft.category = val),
-      itemBuilder: (context) => PostCategory.values
+      itemBuilder: (context) => Categories.values
           .map(
             (cat) => PopupMenuItem(
               value: cat,
