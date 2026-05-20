@@ -198,6 +198,21 @@ Future<AuthResponse> getRoomByRoomId(String roomId) async {
   }
 }
 
+Future<AuthResponse> getRoomForSettings() async {
+  try {
+    final res = await ApiService.get('/account/room-settings');
+
+    return AuthResponse(
+      success: true,
+      data: res.data,
+    );
+  } on DioException catch (e) {
+    return handleDioError(e, "Ошибка загрузки данных комнаты");
+  } catch (e) {
+    return handleSystemError(e);
+  }
+}
+
 Future<AuthResponse> checkSubscription(String roomId) async {
   try {
     final res = await ApiService.get('/account/checkRoomSubscription/$roomId');

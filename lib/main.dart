@@ -121,7 +121,7 @@ class App extends StatelessWidget {
           // Главный экран ленты
           GoRoute(
             path: '/',
-            builder: (context, state) => MainPageScreen(),
+            builder: (context, state) => SettingsScreen(),
           ),
 
           GoRoute(

@@ -1,5 +1,8 @@
 import 'dart:io';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:dia_room/api/account_api.dart';
 import 'package:dia_room/components/general/app_back_button.dart';
+import 'package:dia_room/contracts/room/responses/room_response.dart';
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart'; // Для красивого свитча (iOS style)
@@ -18,20 +21,78 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   final ImagePicker _picker = ImagePicker();
 
-  // Заглушки данных
-  String? _avatarPath;
+  late RoomResponse room;
+
+  late String _roomId;
+  late String _roomName;
+  late String _bio;
   String? _backgroundPath;
-  String _roomId = "my_awesome_room";
-  String _roomName = "Моя уютная комната";
+  String? _avatarPath;
+
   bool _compressMedia = true;
+
+  bool _isLoading = true;
+  bool _isError = false;
 
   // Новые переменные состояния
   final List<Categories> _selectedCategories = [];
   double _fontSizeLevel = 2.0; // 1.0 - мелкий, 2.0 - средний, 3.0 - крупный
 
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    setState(() {
+      _isLoading = true;
+      _isError = false;
+    });
+
+    try {
+      final response = await getRoomForSettings();
+
+      if (!response.success) {
+        print('Не удалось получить данные комнаты');
+        _isError = true;
+        return;
+      }
+
+      room = RoomResponse.fromMap(response.data);
+
+      _roomId = room.roomUniqueId;
+      _roomName = room.roomName;
+      _selectedCategories.clear();
+      _selectedCategories.addAll(room.listCategory);
+      _bio = room.bio;
+      _backgroundPath = room.backgroundPath;
+      _avatarPath = room.avatarPath;
+
+      print("Полученные данные ${room.toMap()}");
+
+    } catch (e) {
+      print("Возникла ошибка при подргрузке данных : $e");
+      _isError = true;
+      return;
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _handleUpdateAvatar() async {
+
+  }
+
+  Future<void> _handleUpdateBackground() async {
+
+  }
+
   // --- ОБРАБОТКА ИЗОБРАЖЕНИЙ ---
 
-  Future<void> _pickAndCropAvatar() async {
+  Future<String?> _pickAndCropAvatar() async {
     final XFile? pickedFile = await _picker.pickImage(
       source: ImageSource.gallery,
     );
@@ -55,12 +116,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
       );
 
       if (croppedFile != null) {
-        setState(() => _avatarPath = croppedFile.path);
+        return croppedFile.path;
       }
     }
+
+    return null;
   }
 
-  Future<void> _pickAndCropBackground() async {
+  Future<String?> _pickAndCropBackground() async {
     final XFile? pickedFile = await _picker.pickImage(
       source: ImageSource.gallery,
     );
@@ -88,14 +151,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
       );
 
       if (croppedFile != null) {
-        setState(() => _backgroundPath = croppedFile.path);
+        return croppedFile.path;
       }
     }
+    return null;
   }
 
   // --- МОДАЛЬНОЕ ОКНО ДЛЯ РЕДАКТИРОВАНИЯ ТЕКСТА ---
 
-  void _showEditDialog(String title, String currentValue, Function(String) onSave) {
+  void _showEditDialog(String title, String currentValue, Function(String) onSave, {int? stroke = 1}) {
     final TextEditingController controller = TextEditingController(text: currentValue);
 
     showDialog(
@@ -109,9 +173,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
             style: const TextStyle(fontFamily: 'SNPro', fontSize: 20, fontWeight: FontWeight.w600),
           ),
           content: TextField(
+            minLines: 1,
+            maxLines: stroke,
             controller: controller,
             style: const TextStyle(fontFamily: 'SNPro', fontSize: 16),
             decoration: InputDecoration(
+
               filled: true,
               fillColor: Colors.white,
               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -273,7 +340,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         iconTheme: const IconThemeData(color: Colors.black),
       ),
-      body: SingleChildScrollView(
+      body: _buildBody()
+    );
+  }
+
+
+  Widget _buildBody() {
+    if (_isLoading && !_isError) {
+      return Center(child: CircularProgressIndicator());
+    } else if (!_isLoading && _isError) {
+      return Center(child: Text("Не удалось загрузить данные"),);
+    } else if (!_isLoading && !_isError) {
+      return SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -298,6 +376,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 _showEditDialog("Изменить название", _roomName, (newValue) {
                   setState(() => _roomName = newValue);
                 });
+              },
+            ),
+            _buildListTile(
+              title: "Описание",
+              subtitle: _bio,
+              onTap: () {
+                _showEditDialog("Изменить описание", _bio, (newValue) {
+                  setState(() => _bio = newValue);
+                }, stroke: 4);
               },
             ),
             _buildListTile(
@@ -344,8 +431,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(height: 40),
           ],
         ),
-      ),
-    );
+      );
+    }
+    return SizedBox.shrink();
   }
 
   // --- UI КОМПОНЕНТЫ ---
@@ -386,27 +474,44 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildBackgroundContainer() {
-    return Container(
+    // Проверяем, есть ли ссылка
+    bool hasImage = _backgroundPath != null && _backgroundPath!.isNotEmpty;
+
+    return SizedBox(
       height: 160,
-      decoration: BoxDecoration(
-        color: const Color(0xFFF0F0F0),
-        borderRadius: BorderRadius.circular(16),
-        image: _backgroundPath != null
-            ? DecorationImage(
-          image: FileImage(File(_backgroundPath!)),
-          fit: BoxFit.cover,
-        )
-            : null,
-      ),
-      child: _backgroundPath == null
-          ? const Center(
-        child: Icon(Icons.wallpaper, color: Colors.grey, size: 40),
+      width: double.infinity,
+      child: hasImage
+          ? CachedNetworkImage(
+        imageUrl: _backgroundPath!,
+        imageBuilder: (context, imageProvider) => Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFFF0F0F0),
+            borderRadius: BorderRadius.circular(16),
+            image: DecorationImage(image: imageProvider, fit: BoxFit.cover),
+          ),
+        ),
+        placeholder: (context, url) => Container(
+          decoration: BoxDecoration(color: const Color(0xFFF0F0F0), borderRadius: BorderRadius.circular(16)),
+          child: const Center(child: CupertinoActivityIndicator()),
+        ),
+        errorWidget: (context, url, error) => Container(
+          decoration: BoxDecoration(color: const Color(0xFFF0F0F0), borderRadius: BorderRadius.circular(16)),
+          child: const Center(child: Icon(Icons.error, color: Colors.grey)),
+        ),
       )
-          : null,
+          : Container(
+        decoration: BoxDecoration(
+          color: const Color(0xFFF0F0F0),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: const Center(child: Icon(Icons.wallpaper, color: Colors.grey, size: 40)),
+      ),
     );
   }
 
   Widget _buildAvatarContainer() {
+    bool hasImage = _avatarPath != null && _avatarPath!.isNotEmpty;
+
     return Container(
       height: 100,
       width: 100,
@@ -415,24 +520,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
         shape: BoxShape.circle,
         border: Border.all(color: Colors.white, width: 4),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          )
+          BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 8, offset: const Offset(0, 4))
         ],
-        image: _avatarPath != null
-            ? DecorationImage(
-          image: FileImage(File(_avatarPath!)),
-          fit: BoxFit.cover,
-        )
-            : null,
       ),
-      child: _avatarPath == null
-          ? const Center(
-        child: Icon(Icons.person, color: Colors.grey, size: 40),
+      child: hasImage
+          ? ClipOval(
+        child: CachedNetworkImage(
+          imageUrl: _avatarPath!,
+          fit: BoxFit.cover,
+          placeholder: (context, url) => const Center(child: CupertinoActivityIndicator()),
+          errorWidget: (context, url, error) => const Icon(Icons.error, color: Colors.grey),
+        ),
       )
-          : null,
+          : const Center(child: Icon(Icons.person, color: Colors.grey, size: 40)),
     );
   }
 
