@@ -62,8 +62,7 @@ class BottomMenu extends StatelessWidget {
           BottomMenuItem(
             icon: Icons.settings_rounded,
             onPressed: () {
-              final roomId = context.read<AuthProvider>().roomId;
-              if (roomId != null) context.push('/settings/$roomId');
+              context.push('/settings');
             },
           ),
         ],

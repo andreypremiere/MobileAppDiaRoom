@@ -350,7 +350,7 @@ Future<AuthResponse> updateRoomBio(UpdatingTextFieldRequest request) async {
 Future<AuthResponse> updateCategories(UpdatingCategoriesRequest request) async {
   try {
     await ApiService.post(
-      '/account/categories/bio',
+      '/account/update/categories',
       data: request.toMap(),
     );
     return AuthResponse(success: true);

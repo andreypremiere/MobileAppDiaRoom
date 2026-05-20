@@ -5,6 +5,7 @@ import 'package:dia_room/api/diary_api.dart';
 import 'package:dia_room/components/general/app_back_button.dart';
 import 'package:dia_room/contracts/room/requests/updating_avatar_request.dart';
 import 'package:dia_room/contracts/room/requests/updating_background_request.dart';
+import 'package:dia_room/contracts/room/requests/updating_text_field_request.dart';
 import 'package:dia_room/contracts/room/responses/room_response.dart';
 import 'package:dia_room/contracts/room/responses/updating_avatar_response.dart';
 import 'package:dia_room/contracts/room/responses/updating_background_response.dart';
@@ -15,8 +16,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart'; // Для красивого свитча (iOS style)
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
 
+import '../../components/info_dialog_component.dart';
+import '../../contracts/room/requests/updating_categories_request.dart';
 import '../../models/enums/categories.dart';
+import '../../utils/auth_service.dart';
+import '../../utils/utils.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -188,20 +194,94 @@ class _SettingsScreenState extends State<SettingsScreen> {
     });
   }
 
-  Future<void> _handleUpdateUniqueId() async {
+  Future<void> _handleUpdateUniqueId(String newValue) async {
+    final resultCheck = isValidRoomId(newValue);
+    if (resultCheck != null) {
+      print("Проверка не пройдена");
+      return;
+    }
 
+    final response = await updateRoomUniqueId(UpdatingTextFieldRequest(value: newValue));
+
+    if (!response.success) {
+      print("Не удалось обновить");
+      return;
+    }
+
+    setState(() {
+      _roomId = newValue;
+    });
   }
 
-  Future<void> _handleUpdateRoomName() async {
+  Future<void> _handleUpdateRoomName(String newValue) async {
+    final resultCheck = isValidRoomName(newValue);
+    if (!resultCheck) {
+      print("Проверка не пройдена");
+      return;
+    }
 
+    final response = await updateRoomName(UpdatingTextFieldRequest(value: newValue));
+
+    if (!response.success) {
+      print("Не удалось обновить");
+      return;
+    }
+
+    setState(() {
+      _roomName = newValue;
+    });
   }
 
-  Future<void> _handleUpdateBio() async {
+  Future<void> _handleUpdateBio(String newValue) async {
+    final response = await updateRoomBio(UpdatingTextFieldRequest(value: newValue));
 
+    if (!response.success) {
+      print("Не удалось обновить");
+      return;
+    }
+
+    setState(() {
+      _bio = newValue;
+    });
   }
 
-  Future<void> _handleUpdateCategories() async {
+  Future<bool> _handleUpdateCategories(List<Categories> newCategories) async {
+    // 1. Формируем запрос
+    final request = UpdatingCategoriesRequest(categories: newCategories);
 
+    // 2. Отправляем запрос на сервер
+    final response = await updateCategories(request);
+
+    // 3. Обрабатываем результат
+    if (response.success) {
+      return true; // Успех
+    } else {
+      // // Показываем ошибку пользователю (если handleDioError возвращает errorMessage)
+      // // Либо просто дефолтный текст
+      // if (mounted) {
+      //   ScaffoldMessenger.of(context).showSnackBar(
+      //     SnackBar(
+      //       content: Text("Ошибка: не удалось обновить категории"),
+      //       backgroundColor: Colors.redAccent,
+      //     ),
+      //   );
+      // }
+      return false; // Ошибка
+    }
+  }
+
+  Future<void> _handleLogout(BuildContext context) async {
+    // Выполнить запрос выхода
+    final result = await requestLogout(context);
+    if (result == null) {
+      context.read<AuthProvider>().logout();
+    } else {
+      if (result.success) {
+        context.read<AuthProvider>().logout();
+      } else {
+        AppInfoDialog.show(context, "Не удалось выйти из приложения");
+      }
+    }
   }
 
   // --- ОБРАБОТКА ИЗОБРАЖЕНИЙ ---
@@ -315,8 +395,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
             TextButton(
-              onPressed: () {
-                onSave(controller.text.trim());
+              onPressed: () async {
+                await onSave(controller.text.trim());
                 Navigator.pop(context);
               },
               child: const Text(
@@ -338,12 +418,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
   // --- МОДАЛЬНОЕ ОКНО ВЫБОРА КАТЕГОРИЙ ---
 
   void _showCategoriesDialog() {
+    // Создаем ВРЕМЕННУЮ копию текущих выбранных категорий
+    List<Categories> tempSelectedCategories = List.from(_selectedCategories);
+
+    // Флаг для отображения индикатора загрузки
+    bool isLoading = false;
+
     showDialog(
       context: context,
+      // Запрещаем закрывать окно случайным тапом мимо, пока идет загрузка
+      barrierDismissible: !isLoading,
       builder: (BuildContext context) {
         return StatefulBuilder(
           builder: (context, setStateDialog) {
-            // Исключаем дефолтное значение из списка выбора
             final categoriesToDisplay = Categories.values
                 .where((c) => c != Categories.defaultVal)
                 .toList();
@@ -364,7 +451,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     Padding(
                       padding: const EdgeInsets.only(bottom: 8.0, left: 4.0),
                       child: Text(
-                        "Выбрано: ${_selectedCategories.length}/3",
+                        "Выбрано: ${tempSelectedCategories.length}/3", // Используем временный список
                         style: const TextStyle(fontFamily: 'SNPro', fontSize: 14, color: Colors.grey),
                       ),
                     ),
@@ -374,7 +461,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         itemCount: categoriesToDisplay.length,
                         itemBuilder: (context, index) {
                           final category = categoriesToDisplay[index];
-                          final isSelected = _selectedCategories.contains(category);
+                          // Проверяем временный список
+                          final isSelected = tempSelectedCategories.contains(category);
 
                           return CheckboxListTile(
                             title: Text(
@@ -385,14 +473,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             activeColor: const Color(0xFF525252),
                             contentPadding: EdgeInsets.zero,
                             dense: true,
+                            // Отключаем чекбоксы, пока идет отправка данных
+                            enabled: !isLoading,
                             onChanged: (bool? checked) {
                               setStateDialog(() {
                                 if (checked == true) {
-                                  if (_selectedCategories.length < 3) {
-                                    setState(() => _selectedCategories.add(category));
+                                  if (tempSelectedCategories.length < 3) {
+                                    tempSelectedCategories.add(category);
                                   }
                                 } else {
-                                  setState(() => _selectedCategories.remove(category));
+                                  tempSelectedCategories.remove(category);
                                 }
                               });
                             },
@@ -404,9 +494,50 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ),
               actions: [
+                // Кнопка отмены (чтобы можно было выйти без сохранения)
                 TextButton(
-                  onPressed: () => Navigator.pop(context),
+                  onPressed: isLoading ? null : () => Navigator.pop(context),
                   child: const Text(
+                    "Отмена",
+                    style: TextStyle(color: Colors.grey, fontFamily: 'SNPro', fontSize: 16),
+                  ),
+                ),
+                // Кнопка сохранения
+                TextButton(
+                  onPressed: isLoading
+                      ? null
+                      : () async {
+                    // 1. Показываем лоадер
+                    setStateDialog(() => isLoading = true);
+
+                    // 2. Отправляем запрос
+                    final success = await _handleUpdateCategories(tempSelectedCategories);
+
+                    // 3. Скрываем лоадер
+                    setStateDialog(() => isLoading = false);
+
+                    // 4. Если всё хорошо — обновляем ГЛАВНЫЙ стейт экрана и закрываем диалог
+                    if (success) {
+                      setState(() {
+                        _selectedCategories.clear();
+                        _selectedCategories.addAll(tempSelectedCategories);
+                      });
+
+                      if (context.mounted) {
+                        Navigator.pop(context);
+                      }
+                    }
+                  },
+                  child: isLoading
+                      ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Color(0xFF525252)
+                    ),
+                  )
+                      : const Text(
                     "Готово",
                     style: TextStyle(
                       color: Color(0xFF525252),
@@ -478,27 +609,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
               title: "ID комнаты",
               subtitle: _roomId,
               onTap: () {
-                _showEditDialog("Изменить ID", _roomId, (newValue) {
-                  setState(() => _roomId = newValue);
-                });
+                _showEditDialog("Изменить ID", _roomId, _handleUpdateUniqueId);
               },
             ),
             _buildListTile(
               title: "Название",
               subtitle: _roomName,
               onTap: () {
-                _showEditDialog("Изменить название", _roomName, (newValue) {
-                  setState(() => _roomName = newValue);
-                });
+                _showEditDialog("Изменить название", _roomName, _handleUpdateRoomName);
               },
             ),
             _buildListTile(
               title: "Описание",
               subtitle: _bio,
               onTap: () {
-                _showEditDialog("Изменить описание", _bio, (newValue) {
-                  setState(() => _bio = newValue);
-                }, stroke: 4);
+                _showEditDialog("Изменить описание", _bio, _handleUpdateBio, stroke: 4);
               },
             ),
             _buildListTile(
@@ -506,30 +631,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
               subtitle: _getCategoriesSubtitle(),
               onTap: _showCategoriesDialog,
             ),
-            const SizedBox(height: 24),
-
-            // Секция Интерфейс (Новый раздел с трехпозиционным ползунком)
-            _buildSectionHeader("Интерфейс"),
-            _buildDiscreteSliderTile(
-              title: "Крупность шрифта",
-              value: _fontSizeLevel,
-              onChanged: (double newValue) {
-                setState(() {
-                  _fontSizeLevel = newValue;
-                });
-              },
-            ),
-            const SizedBox(height: 24),
-
-            // Секция Оптимизация
-            _buildSectionHeader("Оптимизация"),
-            _buildSwitchTile(
-              title: "Сжимать медиа",
-              value: _compressMedia,
-              onChanged: (val) {
-                setState(() => _compressMedia = val);
-              },
-            ),
+            // const SizedBox(height: 24),
+            //
+            // // Секция Интерфейс (Новый раздел с трехпозиционным ползунком)
+            // _buildSectionHeader("Интерфейс"),
+            // _buildDiscreteSliderTile(
+            //   title: "Крупность шрифта",
+            //   value: _fontSizeLevel,
+            //   onChanged: (double newValue) {
+            //     setState(() {
+            //       _fontSizeLevel = newValue;
+            //     });
+            //   },
+            // ),
+            // const SizedBox(height: 24),
+            //
+            // // Секция Оптимизация
+            // _buildSectionHeader("Оптимизация"),
+            // _buildSwitchTile(
+            //   title: "Сжимать медиа",
+            //   value: _compressMedia,
+            //   onChanged: (val) {
+            //     setState(() => _compressMedia = val);
+            //   },
+            // ),
             const SizedBox(height: 24),
 
             // Секция Аккаунт
@@ -538,8 +663,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
               title: "Выйти из аккаунта",
               icon: Icons.logout,
               color: Colors.redAccent,
-              onTap: () {
-                print("Выход из аккаунта");
+              onTap: () async {
+                await _handleLogout(context);
               },
             ),
             const SizedBox(height: 40),
