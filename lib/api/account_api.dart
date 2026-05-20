@@ -1,5 +1,9 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:dia_room/contracts/room/requests/updating_avatar_request.dart';
+import 'package:dia_room/contracts/room/requests/updating_background_request.dart';
+import 'package:dia_room/contracts/room/requests/updating_categories_request.dart';
+import 'package:dia_room/contracts/room/requests/updating_text_field_request.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
@@ -272,3 +276,88 @@ Future<AuthResponse> searchRooms({
     return handleSystemError(e);
   }
 }
+
+Future<AuthResponse> updateAvatar(UpdatingAvatarRequest request) async {
+  try {
+    final response = await ApiService.post(
+      '/account/update/avatar',
+      data: request.toMap(),
+    );
+    return AuthResponse(success: true, data: response.data);
+  } on DioException catch (e) {
+    return handleDioError(e, "Не удалось обновить аватарку");
+  } catch (e) {
+    return handleSystemError(e);
+  }
+}
+
+Future<AuthResponse> updateBackground(UpdatingBackgroundRequest request) async {
+  try {
+    final response = await ApiService.post(
+      '/account/update/background',
+      data: request.toMap(),
+    );
+    return AuthResponse(success: true, data: response.data);
+  } on DioException catch (e) {
+    return handleDioError(e, "Не удалось обновить фон комнаты");
+  } catch (e) {
+    return handleSystemError(e);
+  }
+}
+
+Future<AuthResponse> updateRoomUniqueId(UpdatingTextFieldRequest request) async {
+  try {
+    await ApiService.post(
+      '/account/update/roomUniqueId',
+      data: request.toMap(),
+    );
+    return AuthResponse(success: true);
+  } on DioException catch (e) {
+    return handleDioError(e, "Не удалось обновить ID комнаты");
+  } catch (e) {
+    return handleSystemError(e);
+  }
+}
+
+Future<AuthResponse> updateRoomName(UpdatingTextFieldRequest request) async {
+  try {
+    final response = await ApiService.post(
+      '/account/update/roomName',
+      data: request.toMap(),
+    );
+    return AuthResponse(success: true, data: response.data);
+  } on DioException catch (e) {
+    return handleDioError(e, "Не удалось обновить название комнаты");
+  } catch (e) {
+    return handleSystemError(e);
+  }
+}
+
+Future<AuthResponse> updateRoomBio(UpdatingTextFieldRequest request) async {
+  try {
+    await ApiService.post(
+      '/account/update/bio',
+      data: request.toMap(),
+    );
+    return AuthResponse(success: true);
+  } on DioException catch (e) {
+    return handleDioError(e, "Не удалось обновить описание комнаты");
+  } catch (e) {
+    return handleSystemError(e);
+  }
+}
+
+Future<AuthResponse> updateCategories(UpdatingCategoriesRequest request) async {
+  try {
+    await ApiService.post(
+      '/account/categories/bio',
+      data: request.toMap(),
+    );
+    return AuthResponse(success: true);
+  } on DioException catch (e) {
+    return handleDioError(e, "Не удалось обновить категории");
+  } catch (e) {
+    return handleSystemError(e);
+  }
+}
+

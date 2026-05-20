@@ -1,9 +1,16 @@
 import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dia_room/api/account_api.dart';
+import 'package:dia_room/api/diary_api.dart';
 import 'package:dia_room/components/general/app_back_button.dart';
+import 'package:dia_room/contracts/room/requests/updating_avatar_request.dart';
+import 'package:dia_room/contracts/room/requests/updating_background_request.dart';
 import 'package:dia_room/contracts/room/responses/room_response.dart';
+import 'package:dia_room/contracts/room/responses/updating_avatar_response.dart';
+import 'package:dia_room/contracts/room/responses/updating_background_response.dart';
+import 'package:dia_room/services/diary/diary_utils.dart';
 import 'package:dia_room/utils/app_theme.dart';
+import 'package:dia_room/utils/compress_image_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart'; // Для красивого свитча (iOS style)
 import 'package:image_cropper/image_cropper.dart';
@@ -33,6 +40,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   bool _isLoading = true;
   bool _isError = false;
+
+  int _avatarVersion = 0;
+  int _backgroundVersion = 0;
 
   // Новые переменные состояния
   final List<Categories> _selectedCategories = [];
@@ -83,10 +93,114 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _handleUpdateAvatar() async {
+    final path = await _pickAndCropAvatar();
 
+    if (path == null || path.isEmpty) {
+      print("Путь равен нулю");
+      return;
+    }
+
+    print("Сжатие");
+    final compressedPath = await CompressImageService.compressForPreview(XFile(path));
+    if (compressedPath == null) {
+      print("Не удалось сжать изображение");
+      return;
+    }
+
+    final mimeType = DiaryUtils.getSupportedMimeType(compressedPath);
+    if (mimeType == null) {
+      print('Не удалось получить mimeType');
+      return;
+    }
+    print("Полученный mimeType: $mimeType");
+
+    print("Обновление");
+    final UpdatingAvatarRequest request = UpdatingAvatarRequest(mimeType: mimeType);
+
+    final response = await updateAvatar(request);
+
+    if (!response.success) {
+      print("Ошибка при обновлении на сервере");
+    }
+
+    final UpdatingAvatarResponse data = UpdatingAvatarResponse.fromMap(response.data);
+
+    print("Загрузка");
+    final resultUpload = await uploadSingleMediaFile(compressedPath, data.uploadUrl, mimeType);
+    if (resultUpload == false) {
+      print("Не удалось загрузить фотографию в хранилище");
+      return;
+    }
+
+    await CachedNetworkImage.evictFromCache(data.publicUrl);
+
+    setState(() {
+      _avatarPath = data.publicUrl;
+      _avatarVersion++;
+    });
   }
 
   Future<void> _handleUpdateBackground() async {
+    final path = await _pickAndCropBackground();
+
+    if (path == null || path.isEmpty) {
+      print("Путь равен нулю");
+      return;
+    }
+
+    print("Сжатие");
+    final compressedPath = await CompressImageService.compressForPreview(XFile(path));
+    if (compressedPath == null) {
+      print("Не удалось сжать изображение");
+      return;
+    }
+
+    final mimeType = DiaryUtils.getSupportedMimeType(compressedPath);
+    if (mimeType == null) {
+      print('Не удалось получить mimeType');
+      return;
+    }
+    print("Полученный mimeType: $mimeType");
+
+    print("Обновление");
+    final UpdatingBackgroundRequest request = UpdatingBackgroundRequest(mimeType: mimeType);
+
+    final response = await updateBackground(request);
+
+    if (!response.success) {
+      print("Ошибка при обновлении на сервере");
+    }
+
+    final UpdatingBackgroundResponse data = UpdatingBackgroundResponse.fromMap(response.data);
+
+    print("Загрузка");
+    final resultUpload = await uploadSingleMediaFile(compressedPath, data.uploadUrl, mimeType);
+    if (resultUpload == false) {
+      print("Не удалось загрузить фотографию в хранилище");
+      return;
+    }
+
+    await CachedNetworkImage.evictFromCache(data.publicUrl);
+
+    setState(() {
+      _backgroundPath = data.publicUrl;
+      _backgroundVersion++;
+    });
+  }
+
+  Future<void> _handleUpdateUniqueId() async {
+
+  }
+
+  Future<void> _handleUpdateRoomName() async {
+
+  }
+
+  Future<void> _handleUpdateBio() async {
+
+  }
+
+  Future<void> _handleUpdateCategories() async {
 
   }
 
@@ -453,7 +567,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         Positioned(
           top: 24,
           right: 24,
-          child: _buildEditButton(onTap: _pickAndCropBackground),
+          child: _buildEditButton(onTap: _handleUpdateBackground),
         ),
         Positioned(
           bottom: 0,
@@ -464,7 +578,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               Positioned(
                 bottom: 0,
                 right: -4,
-                child: _buildEditButton(onTap: _pickAndCropAvatar),
+                child: _buildEditButton(onTap: _handleUpdateAvatar),
               ),
             ],
           ),
@@ -482,6 +596,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       width: double.infinity,
       child: hasImage
           ? CachedNetworkImage(
+        key: ValueKey('$_backgroundPath-$_backgroundVersion'),
         imageUrl: _backgroundPath!,
         imageBuilder: (context, imageProvider) => Container(
           decoration: BoxDecoration(
@@ -526,6 +641,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       child: hasImage
           ? ClipOval(
         child: CachedNetworkImage(
+          key:ValueKey('$_avatarPath-$_avatarVersion'),
           imageUrl: _avatarPath!,
           fit: BoxFit.cover,
           placeholder: (context, url) => const Center(child: CupertinoActivityIndicator()),
