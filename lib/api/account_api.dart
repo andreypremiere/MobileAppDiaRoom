@@ -128,12 +128,15 @@ Future<AuthResponse> requestUploadImage(String presignedUrl, File file) async {
 
 Future<AuthResponse?> requestLogout(BuildContext context) async {
   try {
+    // Извлекает refresh token из провайдера
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final String? token = await authProvider.getRefreshToken();
+
+    // Если токена нет, то возвращаем null
     if (token == null) return null;
 
-    final res = await ApiService.post('/account/logout', data: {"refreshToken": token});
-    return AuthResponse(success: true, data: res.data);
+    await ApiService.post('/account/logout', data: {"refreshToken": token});
+    return AuthResponse(success: true);
   } on DioException catch (e) {
     return handleDioError(e, "Ошибка при выходе");
   } catch (e) {

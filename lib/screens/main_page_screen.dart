@@ -1,4 +1,3 @@
-import 'package:dia_room/api/auth_response.dart';
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -28,7 +27,6 @@ class _StateMainPageScreen extends State<MainPageScreen> {
   bool _hasMore = true;
   String? _errorMessage;
 
-  // late Future<AuthResponse> _response;
   bool _isBottomMenuVisible = true;
   final ScrollController _scrollController = ScrollController();
   bool _showBackToTop = false;
@@ -88,10 +86,12 @@ class _StateMainPageScreen extends State<MainPageScreen> {
   Future<void> _fetchPosts() async {
     if (_isLoading || !_hasMore) return;
 
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
+    if (mounted) {
+      setState(() {
+        _isLoading = true;
+        _errorMessage = null;
+      });
+    }
 
     try {
       final response = await getAllPosts(page: _currentPage, limit: _limit);
@@ -99,25 +99,31 @@ class _StateMainPageScreen extends State<MainPageScreen> {
       if (response.success) {
         final List<FeedPost> newPosts = response.data?['listPosts'] ?? [];
 
-        setState(() {
-          _posts.addAll(newPosts);
-          _currentPage++;
-          _isLoading = false;
-          if (newPosts.length < _limit) {
-            _hasMore = false;
-          }
-        });
+        if (mounted) {
+          setState(() {
+            _posts.addAll(newPosts);
+            _currentPage++;
+            _isLoading = false;
+            if (newPosts.length < _limit) {
+              _hasMore = false;
+            }
+          });
+        }
       } else {
-        setState(() {
-          _isLoading = false;
-          _errorMessage = response.data?['error'] ?? "Ошибка загрузки";
-        });
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+            _errorMessage = response.message ?? "Ошибка загрузки";
+          });
+        }
       }
     } catch (e) {
-      setState(() {
-        _isLoading = false;
-        _errorMessage = "Ошибка сети";
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = "Ошибка сети";
+        });
+      }
     }
   }
 

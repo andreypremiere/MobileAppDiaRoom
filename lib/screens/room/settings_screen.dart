@@ -274,12 +274,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
     // Выполнить запрос выхода
     final result = await requestLogout(context);
     if (result == null) {
-      context.read<AuthProvider>().logout();
+      if (context.mounted) {
+        await context.read<AuthProvider>().logout();
+      }
     } else {
       if (result.success) {
-        context.read<AuthProvider>().logout();
+        if (context.mounted) {
+          await context.read<AuthProvider>().logout();
+        }
       } else {
-        AppInfoDialog.show(context, "Не удалось выйти из приложения");
+        if (context.mounted) {
+          await AppInfoDialog.show(context, result.message ?? "Не удалось выйти из приложения");
+        }
       }
     }
   }

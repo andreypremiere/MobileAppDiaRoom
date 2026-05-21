@@ -1,7 +1,9 @@
 import 'dart:io';
 
+import 'package:dia_room/api/auth_response.dart';
 import 'package:dio/dio.dart';
 
+import '../api/exception_handler.dart';
 import '../configuration/urls.dart';
 import 'auth_service.dart';
 
@@ -25,7 +27,7 @@ class ApiService {
 
         // Если пути нет в списке исключений — добавляем заголовок
         if (!whiteList.any((path) => options.path.contains(path))) {
-          final token = authProvider.accessToken; // Нужен метод получения Access токена
+          final token = authProvider.accessToken;
           if (token != null) {
             options.headers['Authorization'] = 'Bearer $token';
           }
@@ -33,60 +35,111 @@ class ApiService {
         return handler.next(options);
       },
 
-      // 2. ПРИ ОШИБКЕ (Обработка 401 и Refresh)
+      // Обработка ошибок
       onError: (e, handler) async {
-        if (e.response?.statusCode == 401) {
-          // Пытаемся обновить токен
-          final success = await _attemptRefresh(authProvider);
+        // Если упал запрос на обновление токенов, то возвращаем ошибку,которую вернул запрос attemptRefresh
+        if (e.requestOptions.path.contains('/account/refreshSession')) {
+          return handler.next(e);
+        }
 
-          if (success) {
-            // Если обновили — повторяем старый запрос с новым токеном
+        // Обработка 401 ошибки
+        if (e.response?.statusCode == 401) {
+          if (e.requestOptions.extra['isRetry'] == true) {
+            await authProvider.logout();
+            return handler.next(e);
+          }
+
+          // Запрос обновления токена
+          final success = await attemptRefresh(authProvider);
+
+          // Сработает, если нет refreshToken в хранилище,
+          // Если не найдено значение в бд
+          // Если истек срок токена ( запрос attemptRefresh вернул 401 ошибку)
+          if (success == null) {
+            // Сервер ответил 401 или 404 (NOT_FOUND) на рефреш — жесткий логаут
+            await authProvider.logout();
+            return handler.next(e); // Возвращаем изначальную ошибку
+          }
+
+          else if (success.success) {
+            // Токен успешно обновился! Повторяем исходный запрос
             final String? newToken = authProvider.accessToken;
             final options = e.requestOptions;
             options.headers['Authorization'] = 'Bearer $newToken';
 
-            // Делаем повторный запрос
-            final response = await _dio.fetch(options);
-            return handler.resolve(response);
-          } else {
-            // Если рефреш не удался (токен протух совсем) — выкидываем из приложения
-            authProvider.logout();
+            // Помечаем запрос, что он отправляется повторно
+            options.extra['isRetry'] = true;
+
+            try {
+              final response = await _dio.fetch(options);
+              return handler.resolve(response);
+            } catch (retryError) {
+              return handler.next(retryError is DioException ? retryError : e);
+            }
+          }
+
+          else {
+            print("Результат обновления токена false");
+            return handler.next(e);
           }
         }
+
+        print("Конец обработки ошибки.");
         return handler.next(e);
       },
     ));
   }
 
   // Внутренний метод для рефреша
-  static Future<bool> _attemptRefresh(AuthProvider authProvider) async {
+  static Future<AuthResponse?> attemptRefresh(AuthProvider authProvider) async {
     try {
       final refreshToken = await authProvider.getRefreshToken();
-      if (refreshToken == null) return false;
+      if (refreshToken == null) return null;
 
-      // Вызываем твой Go-метод /refresh
-      final response = await _dio.post(
-          '/account/refreshSession',
-          data: {'refreshToken': refreshToken}
+      final refreshDio = Dio(BaseOptions(
+        baseUrl: baseUrl, // Замени на свой baseUrl
+      ));
+
+      final response = await refreshDio.post(
+        '/account/refreshSession',
+        data: {'refreshToken': refreshToken},
       );
 
-      if (response.statusCode == 200) {
-        try {
-          String refreshToken = response.data['refreshToken'];
-          String accessToken = response.data['accessToken'];
-          // Сохраняем новые токены (реализуй этот метод в AuthProvider)
+      // Токены успешно обновлены
+      String refreshTokenUpdated = response.data['refreshToken'];
+      String accessToken = response.data['accessToken'];
 
-          await authProvider.saveTokensSilently(accessToken, refreshToken);
-        } catch (e) {
-          print("Ошибка при сохранении или извлечении токенов dio_service: $e");
+      // Обновляет значения в провайдере и сохраняет в хранилище
+      await authProvider.saveTokensSilently(accessToken, refreshTokenUpdated);
+
+      return AuthResponse(success: true);
+
+    } on DioException catch (e) {
+      final response = e.response;
+
+      print("пришедший response: $response");
+
+      if (response != null) {
+        print("Статус-код рефреша: ${response.statusCode}");
+        print("Тип данных response.data: ${response.data.runtimeType}");
+        print("Содержимое response.data: ${response.data}");
+
+        // 2. Проверяем 404 с конкретным кодом ошибки
+        if (response.statusCode == 404 && response.data?["error_code"] == "NOT_FOUND") {
+          print("Сессия не найдена на сервере (404 NOT_FOUND). Запускаем logout.");
+          return null; // Вернет null -> сработает logout()
         }
-
-        return true;
+        // 3. Проверяем 401 Unauthorized
+        else if (response.statusCode == 401) {
+          print("Истек срок жизни токена (401). Запускаем logout.");
+          return null; // Вернет null -> сработает logout()
+        }
       }
+      return handleDioError(e, "Ошибка при обновлении токенов. Пожалуйста, сообщите в поддержку.");
     } catch (e) {
-      print("Refresh failed: $e");
+      print("Выполнился последний блок");
+      return AuthResponse(success: false, message: "Ошибка при обновлении токенов. Пожалуйста, сообщите в поддержку.");
     }
-    return false;
   }
 
   // Универсальный POST

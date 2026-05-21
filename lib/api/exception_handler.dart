@@ -15,7 +15,7 @@ AuthResponse handleDioError(DioException e, String defaultMessage) {
   } else if (e.type == DioExceptionType.connectionError) {
     message = "Нет соединения с интернетом";
   } else if (e.response != null) {
-    message = e.response?.data['message'] ?? e.response?.data['error'] ?? "Ошибка сервера";
+    message = e.response?.data['message'] ?? e.response?.data['error'] ?? "Ошибка на стороне сервера. Пожалуйста, сообщите в поддержку.";
   }
 
   return AuthResponse(
@@ -26,5 +26,5 @@ AuthResponse handleDioError(DioException e, String defaultMessage) {
 
 // Вспомогательный метод для системных ошибок
 AuthResponse handleSystemError(Object e) {
-  return AuthResponse(success: false, message: "Непредвиденная ошибка: $e");
+  return AuthResponse(success: false, message: "Непредвиденная ошибка в работе приложения. Пожалуйста, сообщите в поддержку.");
 }
