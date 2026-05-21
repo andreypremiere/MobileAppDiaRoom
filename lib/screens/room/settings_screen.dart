@@ -13,7 +13,7 @@ import 'package:dia_room/services/diary/diary_utils.dart';
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:dia_room/utils/compress_image_service.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart'; // Для красивого свитча (iOS style)
+import 'package:flutter/cupertino.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';

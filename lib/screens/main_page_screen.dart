@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import '../api/post_api.dart';
 import '../components/general/keyboard_dismissible.dart';
+import '../components/loading_widget/error_widget.dart';
+import '../components/loading_widget/loader_widget.dart';
 import '../components/main_page_screen/bottom_menu/bottom_menu_component.dart';
 import '../components/main_page_screen/bottom_menu/bottom_menu_item.dart';
 import '../components/post_card/feed_card.dart';
@@ -133,65 +135,76 @@ class _StateMainPageScreen extends State<MainPageScreen> {
     return KeyboardDismissible(
       child: Scaffold(
         extendBody: true,
-        body: RefreshIndicator(
-          color: context.ui.primaryColor,
-          onRefresh: _onRefresh,
-          child: NotificationListener<UserScrollNotification>(
-            onNotification: _handleScrollNotification,
-            child: CustomScrollView(
-              controller: _scrollController,
-              slivers: [
-                // Основной список постов
-                SliverSafeArea(
-                  top: true,
-                  sliver: SliverPadding(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 0,
-                      horizontal: 0,
-                    ),
-                    sliver: _posts.isEmpty && _isLoading
-                        ? const SliverFillRemaining(
-                            child: Center(child: CircularProgressIndicator()),
-                          )
-                        : _posts.isEmpty && !_isLoading
-                        ? SliverFillRemaining(
-                            child: Center(
-                              child: Text(_errorMessage ?? "Лента пуста"),
-                            ),
-                          )
-                        : SliverList(
-                            delegate: SliverChildBuilderDelegate((
-                              context,
-                              index,
-                            ) {
-                              return Padding(
-                                padding: const EdgeInsets.only(bottom: 10),
-                                child: FeedPostComponent(post: _posts[index]),
-                              );
-                            }, childCount: _posts.length),
+        body: !_isLoading && _errorMessage != null
+            ? DiaRoomErrorView(
+                errorMessage: _errorMessage!,
+                onRefresh: () {
+                  _onRefresh();
+                },
+              )
+            : RefreshIndicator(
+                color: context.ui.primaryColor,
+                onRefresh: _onRefresh,
+                child: NotificationListener<UserScrollNotification>(
+                  onNotification: _handleScrollNotification,
+                  child: CustomScrollView(
+                    controller: _scrollController,
+                    slivers: [
+                      // Основной список постов
+                      SliverSafeArea(
+                        top: true,
+                        sliver: SliverPadding(
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 0,
+                            horizontal: 0,
                           ),
-                  ),
-                ),
-
-                // Индикатор загрузки в самом низу (футер)
-                if (_isLoading && _posts.isNotEmpty)
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 20),
-                      child: Center(
-                        child: CircularProgressIndicator(
-                          color: context.ui.primaryColor,
+                          sliver: _posts.isEmpty && _isLoading
+                              ? const SliverFillRemaining(
+                                  child: Center(child: DiaRoomLoader()),
+                                )
+                              : _posts.isEmpty && !_isLoading
+                              ? SliverFillRemaining(
+                                  child: Center(
+                                    child: Text(_errorMessage ?? "Лента пуста"),
+                                  ),
+                                )
+                              : SliverList(
+                                  delegate: SliverChildBuilderDelegate((
+                                    context,
+                                    index,
+                                  ) {
+                                    return Padding(
+                                      padding: const EdgeInsets.only(
+                                        bottom: 10,
+                                      ),
+                                      child: FeedPostComponent(
+                                        post: _posts[index],
+                                      ),
+                                    );
+                                  }, childCount: _posts.length),
+                                ),
                         ),
                       ),
-                    ),
-                  ),
 
-                // // Отступ снизу, чтобы контент не перекрывался меню
-                // SliverToBoxAdapter(child: SizedBox(height: MediaQuery.of(context).padding.bottom + 2)),
-              ],
-            ),
-          ),
-        ),
+                      // Индикатор загрузки в самом низу (футер)
+                      if (_isLoading && _posts.isNotEmpty)
+                        SliverToBoxAdapter(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 20),
+                            child: Center(
+                              child: CircularProgressIndicator(
+                                color: context.ui.primaryColor,
+                              ),
+                            ),
+                          ),
+                        ),
+
+                      // // Отступ снизу, чтобы контент не перекрывался меню
+                      // SliverToBoxAdapter(child: SizedBox(height: MediaQuery.of(context).padding.bottom + 2)),
+                    ],
+                  ),
+                ),
+              ),
 
         // Стрелка вверх
         floatingActionButton: AnimatedOpacity(
@@ -218,7 +231,7 @@ class _StateMainPageScreen extends State<MainPageScreen> {
         ),
 
         // Нижнее меню
-        bottomNavigationBar: AnimatedSlide(
+        bottomNavigationBar: (!_isLoading && _errorMessage != null) || (_isLoading) ? null : AnimatedSlide(
           duration: const Duration(milliseconds: 300),
           offset: _isBottomMenuVisible ? Offset.zero : const Offset(0, 2),
           child: AnimatedOpacity(

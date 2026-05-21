@@ -32,6 +32,7 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import 'components/loading_widget/loader_widget.dart';
 import 'models/enums/diary/search_method.dart';
 
 void main() async {
