@@ -1,12 +1,13 @@
 // ЭТО ОДИНАКОВЫЙ ФАЙЛ С screens/workshop/select_folder_screen
 // ОБЯЗАТЕЛЬНО СДЕЛАТЬ РЕФАКТОРИНГ
 
+import 'package:dia_room/components/info_dialog_component.dart';
+import 'package:dia_room/components/loading_widget/error_widget.dart';
+import 'package:dia_room/components/loading_widget/loader_widget.dart';
 import 'package:dia_room/components/new_public_post/app_bar_button.dart';
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:uuid/uuid.dart';
-
 import '../../api/auth_response.dart';
 import '../../api/workshop_api.dart';
 import '../../components/general/app_back_button.dart';
@@ -14,6 +15,7 @@ import '../../components/general/full_width_button.dart';
 import '../../components/workshop/folder_grid_view.dart';
 import '../../configuration/constants.dart';
 import '../../contracts/workshop/responses/content.dart';
+import '../../models/workshop/folder.dart';
 
 class SelectFolderDiaryScreen extends StatefulWidget {
   final String roomId;
@@ -30,18 +32,54 @@ class SelectFolderDiaryScreen extends StatefulWidget {
 }
 
 class _SelectFolderScreenState extends State<SelectFolderDiaryScreen> {
-  late Future<AuthResponse> _foldersFuture;
+  bool _isLoading = false;
+  String? _errorMessage;
+  List<Folder> _folders = [];
 
   @override
   void initState() {
     super.initState();
-    if (widget.currentFolderId == null) {
-      _foldersFuture = getRootFolders(roomId: widget.roomId);
-    } else {
-      _foldersFuture = getFolders(
-        roomId: widget.roomId,
-        folderId: widget.currentFolderId!,
-      );
+    _loadFolders();
+  }
+
+  Future<void> _loadFolders() async {
+    if (!mounted) return;
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final AuthResponse response;
+
+      if (widget.currentFolderId == null) {
+        response = await getRootFolders(roomId: widget.roomId);
+      } else {
+        response = await getFolders(
+          roomId: widget.roomId,
+          folderId: widget.currentFolderId!,
+        );
+      }
+
+      if (!mounted) return;
+
+      // Проверяем бизнес-логику ответа бэкенда
+      if (response.success) {
+        final Content root = Content.fromMap(response.data);
+        setState(() {
+          _folders = root.folders;
+          _isLoading = false;
+        });
+      } else {
+        setState(() {
+          _errorMessage = response.message ?? "Не удалось загрузить папки";
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (!mounted) return;
+      await AppInfoDialog.show(context, "Ошибка во время работы приложения. Пожалуйста, обратитесь в поддержку.");
     }
   }
 
@@ -76,7 +114,9 @@ class _SelectFolderScreenState extends State<SelectFolderDiaryScreen> {
           padding: const EdgeInsets.all(16.0),
           child: FullWidthButton(
             text: 'Выбрать',
-            onPressed: () {
+            onPressed: (_isLoading || _errorMessage != null)
+                ? () {} // Блокируем кнопку во время загрузки или при ошибке
+                : () {
               if (widget.currentFolderId == null) {
                 context.pop(uuidNil);
               } else {
@@ -86,38 +126,52 @@ class _SelectFolderScreenState extends State<SelectFolderDiaryScreen> {
           ),
         ),
       ),
-      body: FutureBuilder<AuthResponse>(
-        future: _foldersFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError || !snapshot.data!.success) {
-            return const Center(child: Text('Ошибка'));
-          }
+      body: _buildBody(),
+    );
+  }
 
-          final Content root = Content.fromMap(snapshot.data!.data);
+  Widget _buildBody() {
+    // СОСТОЯНИЕ ОШИБКИ
+    if (_errorMessage != null && !_isLoading) {
+      return Center(
+        child: DiaRoomErrorView(
+          errorMessage: _errorMessage!,
+          onRefresh: _loadFolders,
+        ),
+      );
+    }
 
-          // ВАЖНО: Фильтруем список, чтобы нельзя было переместить папку саму в себя
-          final safeFolders = root.folders;
+    //  СОСТОЯНИЕ ЗАГРУЗКИ
+    if (_isLoading) {
+      return const Center(
+        child: DiaRoomLoader(),
+      );
+    }
 
-          // Переиспользуем твой грид, но отключаем контекстные меню!
-          return FolderGridView(
-            folders: safeFolders,
-            isMyRoom: false,
-            onActionSelected: (_, __) {},
-            onFolderTap: (folder) {
-              context
-                  .push<String?>(
-                    '/select-folder-diary/${widget.roomId}/${folder.id}',
-                  )
-                  .then((result) {
-                    if (result != null) context.pop(result);
-                  });
-            },
-          );
-        },
-      ),
+    // ПУСТОЙ РЕЗУЛЬТАТ
+    if (_folders.isEmpty) {
+      return const Center(
+        child: Text(
+          "Тут пусто",
+          style: TextStyle(fontSize: 16, color: Colors.grey),
+        ),
+      );
+    }
+
+    // ОСНОВНОЙ КОНТЕНТ (Данные успешно загружены)
+    return FolderGridView(
+      folders: _folders,
+      isMyRoom: false,
+      onActionSelected: (_, __) {},
+      onFolderTap: (folder) {
+        context
+            .push<String?>(
+          '/select-folder-diary/${widget.roomId}/${folder.id}',
+        )
+            .then((result) {
+          if (result != null && mounted) context.pop(result);
+        });
+      },
     );
   }
 }
