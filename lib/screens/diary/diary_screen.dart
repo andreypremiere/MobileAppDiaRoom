@@ -203,7 +203,9 @@ class _DiaryScreenState extends State<DiaryScreen> {
         final result = await deleteMessage(messageId: message.message.id);
 
         if (!result.success) {
-          return;
+          if (mounted) {
+            await AppInfoDialog.show(context, result.message ?? "Не удалось удалить сообщение. Пожалуйста, сообщите в поддержку.");
+          }
         }
 
         if (mounted) {
@@ -335,6 +337,10 @@ class _DiaryScreenState extends State<DiaryScreen> {
       FocusScope.of(context).unfocus();
     }
 
+    if (media.isNotEmpty) {
+      AppInfoDialog.show(context, "Пожалуйста, во избежание ошибок не закрывайте приложение, пока сообщение публикуется.");
+    }
+
     uploader.addMessage(
       type: MessageType.standard,
       messageText: text,
@@ -422,67 +428,6 @@ class _DiaryScreenState extends State<DiaryScreen> {
           ],
         ),
         body: _buildBody()
-        // (!_isLoading && _errorMessage != null)
-        //     ? DiaRoomErrorView(
-        //         errorMessage: _errorMessage!,
-        //         onRefresh: _onRefresh,
-        //       )
-        //     : SafeArea(
-        //         child: Column(
-        //           children: [
-        //             Expanded(
-        //               child: ListView.builder(
-        //                 reverse: true,
-        //                 controller: _scrollController,
-        //                 padding: const EdgeInsets.all(6),
-        //                 itemCount: _messages.length + (_hasMore ? 1 : 0),
-        //                 itemBuilder: (context, index) {
-        //                   if (index == _messages.length) {
-        //                     return const Center(
-        //                       child: Padding(
-        //                         padding: EdgeInsets.all(8.0),
-        //                         child: CircularProgressIndicator(),
-        //                       ),
-        //                     );
-        //                   }
-        //
-        //                   return DiaryMessageCard(
-        //                     message: _messages[index],
-        //                     onLongPress: _actionMessage,
-        //                   );
-        //                 },
-        //               ),
-        //             ),
-        //             isMyRoom
-        //                 ? DiaryInputPanel(
-        //                     controller: _messageController,
-        //                     selectedMedia: _selectedMedia,
-        //                     onSend: _sendStandardMessage,
-        //                     onRemoveMediaAt: (index) {
-        //                       if (mounted) {
-        //                         setState(() => _selectedMedia.removeAt(index));
-        //                       }
-        //                     },
-        //                     addMenu: _buildAddMenu(),
-        //                     linkPost: _linkPost,
-        //                     linkWorkshop: _linkWorkshop,
-        //                     onClosePost: _handleClearPost,
-        //                     onCloseWorkshop: _handleClearWorkshop,
-        //                     selectedTags: _currentSelectedTags,
-        //                     onCloseTag: (String id) {
-        //                       if (mounted) {
-        //                         setState(() {
-        //                           _currentSelectedTags.removeWhere(
-        //                                 (tag) => tag.id == id,
-        //                           );
-        //                         });
-        //                       }
-        //                     },
-        //                   )
-        //                 : const SizedBox.shrink(),
-        //           ],
-        //         ),
-        //       ),
       ),
     );
   }

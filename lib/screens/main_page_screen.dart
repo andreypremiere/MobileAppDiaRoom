@@ -39,10 +39,14 @@ class _StateMainPageScreen extends State<MainPageScreen> {
       if (_scrollController.offset > 300 &&
           !_showBackToTop &&
           _isBottomMenuVisible) {
-        setState(() => _showBackToTop = true);
+        if (mounted) {
+          setState(() => _showBackToTop = true);
+        }
       } else if ((_scrollController.offset <= 300 || !_isBottomMenuVisible) &&
           _showBackToTop) {
-        setState(() => _showBackToTop = false);
+        if (mounted) {
+          setState(() => _showBackToTop = false);
+        }
       }
       if (_scrollController.position.pixels >=
           _scrollController.position.maxScrollExtent - 200) {
@@ -70,14 +74,18 @@ class _StateMainPageScreen extends State<MainPageScreen> {
   bool _handleScrollNotification(UserScrollNotification notification) {
     if (notification.direction == ScrollDirection.reverse) {
       if (_isBottomMenuVisible) {
-        setState(() {
-          _isBottomMenuVisible = false;
-          _showBackToTop = false;
-        });
+        if (mounted) {
+          setState(() {
+            _isBottomMenuVisible = false;
+            _showBackToTop = false;
+          });
+        }
       }
     } else if (notification.direction == ScrollDirection.forward) {
       if (!_isBottomMenuVisible) {
-        setState(() => _isBottomMenuVisible = true);
+        if (mounted) {
+          setState(() => _isBottomMenuVisible = true);
+        }
       }
     }
     return true;
@@ -121,18 +129,20 @@ class _StateMainPageScreen extends State<MainPageScreen> {
       if (mounted) {
         setState(() {
           _isLoading = false;
-          _errorMessage = "Ошибка сети";
+          _errorMessage = "Ошибка в работе приложения. Пожалуйста, обратитесь в поддержку.";
         });
       }
     }
   }
 
   Future<void> _onRefresh() async {
-    setState(() {
-      _posts = [];
-      _currentPage = 0;
-      _hasMore = true;
-    });
+    if (mounted) {
+      setState(() {
+        _posts = [];
+        _currentPage = 0;
+        _hasMore = true;
+      });
+    }
     await _fetchPosts();
   }
 

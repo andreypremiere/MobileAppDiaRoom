@@ -32,17 +32,16 @@ class UploadManager extends ChangeNotifier {
   }
 
   Future<void> _deleteFiles({required List<String?> files}) async {
-    try {
-      for (int i=0; i<files.length; i++) {
+    for (int i=0; i<files.length; i++) {
+      try {
         if (files[i] != null) {
           final f = File(files[i]!);
           if (await f.exists()) await f.delete();
         }
+      } catch (e) {
+        continue;
       }
-    } catch (e) {
-      print("Ошибка при фоновом удалении файлов");
     }
-
   }
 
   Future<void> addMessage({
@@ -89,7 +88,6 @@ class UploadManager extends ChangeNotifier {
                   XFile(mediaFile.file.path),
                 );
                 if (originalPath == null) {
-                  print('Не удалось сжать изображение');
                   continue;
                 }
                 deletingFiles.add(originalPath);
@@ -98,7 +96,6 @@ class UploadManager extends ChangeNotifier {
                   XFile(originalPath),
                 );
                 if (previewPath == null) {
-                  print('Не удалось создать превью изображения');
                   continue;
                 }
                 deletingFiles.add(previewPath);
@@ -106,7 +103,6 @@ class UploadManager extends ChangeNotifier {
                 final sizePhoto = await DiaryUtils.getFileSize(originalPath);
                 final mimeType = DiaryUtils.getSupportedMimeType(originalPath);
                 if (mimeType == null) {
-                  print('Не получить mimeType изображения');
                   continue;
                 }
                 attachmentCreating = AttachmentCreating(
@@ -124,7 +120,6 @@ class UploadManager extends ChangeNotifier {
                   XFile(mediaFile.thumbnail!),
                 );
                 if (previewPath == null) {
-                  print('Не удалось сжать превью видео');
                   continue;
                 }
                 deletingFiles.add(previewPath);
@@ -139,7 +134,6 @@ class UploadManager extends ChangeNotifier {
                   mediaFile.file.path,
                 );
                 if (mimeType == null) {
-                  print('Не удалось получить mimetype video $i');
                   continue;
                 }
                 attachmentCreating = AttachmentCreating(
@@ -159,15 +153,12 @@ class UploadManager extends ChangeNotifier {
                 });
               }
             } catch (e) {
-              print('Ошибка во время обработки медиафайла $i');
+              continue;
             }
           }
         }
         updateProgress(0.5);
         if ((messageText == null || messageText.isEmpty) && attachments.isEmpty) {
-          print(
-            'Сообщение не создано, т.к. текст null или пустая строка, а список вложений пустой',
-          );
           return;
         }
         // Когда прошли по списку для стандартного сообщения
@@ -183,7 +174,6 @@ class UploadManager extends ChangeNotifier {
         // Отправка запроса
         final response = await createMessage(message: creatingMessage);
         if (!response.success) {
-          print('Не удалось создать сообщение');
           return;
         }
 
@@ -192,7 +182,6 @@ class UploadManager extends ChangeNotifier {
         final gotUrls = decodedResponse.uploadItems;
 
         if (gotUrls.length != mappedAttach.length) {
-          print('Не совпадает длина списков медиафайлов');
           updateStatus(updatingMessage: UpdatingMessage(messageId: decodedResponse.messageId, status: MessageStatus.failed));
           return;
         }
@@ -208,16 +197,14 @@ class UploadManager extends ChangeNotifier {
             // Для файла
             await uploadSingleMediaFile(mappedAttach[i]["originalPath"], urls.presignedUrl, mappedAttach[i]["mimeType"]);
           }
-          print("Все медиафайлы успешно загружены");
         } catch (e) {
-          print("Возникла ошибка во время загрузки медиа $e");
           updateStatus(updatingMessage: UpdatingMessage(messageId: decodedResponse.messageId, status: MessageStatus.failed));
           return;
         }
         updateProgress(0.95);
         final responseStatus = await updateStatus(updatingMessage: UpdatingMessage(messageId: decodedResponse.messageId, status: MessageStatus.sent));
         if (!responseStatus.success) {
-          print('Не удалось обновить статус сообщения');
+          return;
         }
         final UpdatingStatus newMessage = UpdatingStatus.fromMap(responseStatus.data);
         if (newMessage.messagePresentation == null) {
@@ -253,14 +240,12 @@ class UploadManager extends ChangeNotifier {
           tags: selectedTags ?? []
         );
 
-        print("${creatingMessage.toMap()}");
         updateProgress(0.4);
 
         // // Выполняем запрос
         final response = await createMessage(message: creatingMessage);
 
         if (!response.success) {
-          print('Ответ пришел отрицательный при создании');
           return;
         }
         updateProgress(0.6);
@@ -268,7 +253,6 @@ class UploadManager extends ChangeNotifier {
         final MessageCreateResponse data = MessageCreateResponse.fromMap(response.data);
 
         if (data.uploadItems.isEmpty || data.uploadItems.length != 1) {
-          print('Ошибка при получении аттача');
           return;
         }
         final AttachmentUploadItem audioUrls = data.uploadItems[0];
@@ -276,7 +260,6 @@ class UploadManager extends ChangeNotifier {
         // Загружаем в хранилище
         final responseAttach = await uploadSingleMediaFile(audioNote.path, audioUrls.presignedUrl, mimeType);
         if (!responseAttach) {
-          print('Не удалось загрузить файл в хранилище');
           updateStatus(updatingMessage: UpdatingMessage(messageId: data.messageId, status: MessageStatus.failed));
           return;
         }
@@ -285,11 +268,10 @@ class UploadManager extends ChangeNotifier {
         // Обновляем статус
         final responseStatus = await updateStatus(updatingMessage: UpdatingMessage(messageId: data.messageId, status: MessageStatus.sent));
         if (!responseStatus.success) {
-          print('Не удалось обновить статус сообщения');
+          return;
         }
 
         if (responseStatus.data == null) {
-          print('Пришло пустое тело на обновление статуса');
           return;
         }
         final newMessage = UpdatingStatus.fromMap(responseStatus.data);
@@ -298,9 +280,6 @@ class UploadManager extends ChangeNotifier {
         if (addMessageCallback != null && newMessage.messagePresentation != null) {
           addMessageCallback(newMessage.messagePresentation!);
         }
-
-        print('Аудиосообщение создано и добавлено');
-
       }
       if (type == MessageType.videoNote) {
         const mimeType = 'video/mp4';
@@ -315,7 +294,6 @@ class UploadManager extends ChangeNotifier {
         if (pathPreview != null) {
           deletingFiles.add(pathPreview);
         } else {
-          print("Не удалось создать превью для видеозаметки");
           return;
         }
 
@@ -332,14 +310,12 @@ class UploadManager extends ChangeNotifier {
           tags: selectedTags ?? []
         );
 
-        print("${creatingMessage.toMap()}");
         updateProgress(0.4);
 
         // // Выполняем запрос
         final response = await createMessage(message: creatingMessage);
 
         if (!response.success) {
-          print('Ответ пришел отрицательный при создании');
           return;
         }
         updateProgress(0.6);
@@ -347,7 +323,6 @@ class UploadManager extends ChangeNotifier {
         final MessageCreateResponse data = MessageCreateResponse.fromMap(response.data);
 
         if (data.uploadItems.isEmpty || data.uploadItems.length != 1) {
-          print('Ошибка при получении аттача');
           return;
         }
         final AttachmentUploadItem videoUrls = data.uploadItems[0];
@@ -355,7 +330,6 @@ class UploadManager extends ChangeNotifier {
         // Загружаем в хранилище видео
         final responseAttach = await uploadSingleMediaFile(videoNote.path, videoUrls.presignedUrl, mimeType);
         if (!responseAttach) {
-          print('Не удалось загрузить файл в хранилище');
           updateStatus(updatingMessage: UpdatingMessage(messageId: data.messageId, status: MessageStatus.failed));
           return;
         }
@@ -363,7 +337,6 @@ class UploadManager extends ChangeNotifier {
         // Загружаем в хранилище превью
         final responsePreview = await uploadSingleMediaFile(pathPreview, videoUrls.presignedPreviewUrl!, "image/jpeg");
         if (!responsePreview) {
-          print('Не удалось загрузить файл в хранилище');
           updateStatus(updatingMessage: UpdatingMessage(messageId: data.messageId, status: MessageStatus.failed));
           return;
         }
@@ -372,11 +345,10 @@ class UploadManager extends ChangeNotifier {
         // Обновляем статус
         final responseStatus = await updateStatus(updatingMessage: UpdatingMessage(messageId: data.messageId, status: MessageStatus.sent));
         if (!responseStatus.success) {
-          print('Не удалось обновить статус сообщения');
+          return;
         }
 
         if (responseStatus.data == null) {
-          print('Пришло пустое тело на обновление статуса');
           return;
         }
         final newMessage = UpdatingStatus.fromMap(responseStatus.data);
@@ -385,14 +357,11 @@ class UploadManager extends ChangeNotifier {
         if (addMessageCallback != null && newMessage.messagePresentation != null) {
           addMessageCallback(newMessage.messagePresentation!);
         }
-
-        print('Видеосообщение создано и добавлено');
       }
     } catch (e) {
-      print("Ошибка фоновой загрузки: $e");
+      return;
     } finally {
       _deleteFiles(files: deletingFiles);
-      print('Файлы медиа удалены');
       _isUploading = false;
       notifyListeners();
     }
