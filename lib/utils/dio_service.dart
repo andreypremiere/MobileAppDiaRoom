@@ -97,7 +97,9 @@ class ApiService {
       if (refreshToken == null) return null;
 
       final refreshDio = Dio(BaseOptions(
-        baseUrl: baseUrl, // Замени на свой baseUrl
+        baseUrl: baseUrl,
+        connectTimeout: const Duration(seconds: 5),
+        receiveTimeout: const Duration(seconds: 3),
       ));
 
       final response = await refreshDio.post(
