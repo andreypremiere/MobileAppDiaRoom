@@ -1,5 +1,7 @@
 import 'package:dia_room/api/auth_response.dart';
 import 'package:dia_room/api/diary_api.dart';
+import 'package:dia_room/components/info_dialog_component.dart';
+import 'package:dia_room/components/loading_widget/error_widget.dart';
 import 'package:dia_room/contracts/diary/response/getting_messages.dart';
 import 'package:dia_room/models/enums/diary/search_method.dart';
 import 'package:dia_room/utils/app_theme.dart';
@@ -8,6 +10,7 @@ import 'package:flutter/services.dart';
 
 import '../../components/diary/message_card.dart';
 import '../../components/general/app_back_button.dart';
+import '../../components/loading_widget/loader_widget.dart';
 import '../../models/enums/diary/message_action.dart';
 
 class SearchMessagesScreen extends StatefulWidget {
@@ -30,17 +33,17 @@ class _SearchMessagesScreenState extends State<SearchMessagesScreen> {
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
 
-  List<MessagePresentation> _messages = [];
+  final List<MessagePresentation> _messages = [];
   int _currentPage = 0;
   final int _limit = 20;
   bool _isLoading = false;
   bool _hasMore = true;
   SearchMethod _currentMethod = SearchMethod.byMessage;
+  String? _errorMessage;
 
   @override
   void initState() {
     super.initState();
-    print('id комнаты: ${widget.roomId}');
     _scrollController.addListener(_onScroll);
 
     if (widget.text != null) {
@@ -60,7 +63,6 @@ class _SearchMessagesScreenState extends State<SearchMessagesScreen> {
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 200) {
       if (!_isLoading && _hasMore) {
-        print('Выполнен запрос при скролле, данные page: $_currentPage');
         _fetchMessages();
       }
     }
@@ -82,22 +84,28 @@ class _SearchMessagesScreenState extends State<SearchMessagesScreen> {
         final result = await deleteMessage(messageId: message.message.id);
 
         if (!result.success) {
-          print("Не удалось удалить сообщение");
+          if (mounted) {
+            await AppInfoDialog.show(context, result.message ?? "Не удалось удалить сообщение. Пожалуйста, обратитесь в поддержку.");
+          }
           return;
         }
-
-        setState(() {
-          _messages.removeWhere((mes) => mes.message.id == message.message.id);
-        });
+        if (mounted) {
+          setState(() {
+            _messages.removeWhere((mes) => mes.message.id == message.message.id);
+          });
+        }
         break;
     }
   }
 
   void onTapMethod(SearchMethod method) {
-    'Нажата кнопка ${method.label}';
-    setState(() {
-      _currentMethod = method;
-    });
+    if (mounted) {
+      setState(() {
+        _currentMethod = method;
+      });
+    } else {
+      return;
+    }
     _searchMessages();
   }
 
@@ -157,7 +165,9 @@ class _SearchMessagesScreenState extends State<SearchMessagesScreen> {
   }
 
   Future<void> _fetchMessages() async {
-    setState(() => _isLoading = true);
+    if (mounted) {
+      setState(() => _isLoading = true);
+    }
 
     try {
       if (_searchController.text.trim().isEmpty) {
@@ -183,41 +193,53 @@ class _SearchMessagesScreenState extends State<SearchMessagesScreen> {
           );
       }
 
+      print('Запрос $response');
+
       if (!response.success) {
-        print('Не удалось загрузить сообщения');
+        print("Запрос не выполнился");
+        _errorMessage = response.message ?? "Не удалось выполнить запрос.";
         return;
       }
 
-      print(response.data);
       final GettingMessages gotMessages = GettingMessages.fromMap(
         response.data,
       );
 
-      setState(() {
-        _currentPage++;
-        _messages.addAll(gotMessages.messages);
-        print("пришло сообщений: ${gotMessages.messages.length}");
-        // Если пришло меньше чем лимит, значит данных больше нет
-        if (gotMessages.messages.length < _limit) _hasMore = false;
-      });
+      if (mounted) {
+        setState(() {
+          _currentPage++;
+          _messages.addAll(gotMessages.messages);
+          // Если пришло меньше чем лимит, значит данных больше нет
+          if (gotMessages.messages.length < _limit) _hasMore = false;
+        });
+      }
     } catch (e) {
-      print('Возникла непредвиденная ошибка в парсинге $e');
+      print(e);
+      if (mounted) {
+        await AppInfoDialog.show(context, "Возникла непредвиденная ошибка во время работы приложения. Пожалуйста, обратитесь в поддержку.");
+      }
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
   void _clearText() {
-    setState(() {
-      _searchController.clear();
-      _messages.clear();
-      _currentPage = 0;
-      _hasMore = true;
-    });
-    FocusManager.instance.primaryFocus?.unfocus();
+    if (mounted) {
+      setState(() {
+        _searchController.clear();
+        _messages.clear();
+        _errorMessage = null;
+        _currentPage = 0;
+        _hasMore = true;
+      });
+      FocusManager.instance.primaryFocus?.unfocus();
+    }
   }
 
   void _searchMessages() {
+    _errorMessage =  null;
     _hasMore = true;
     _currentPage = 0;
     _messages.clear();
@@ -264,36 +286,72 @@ class _SearchMessagesScreenState extends State<SearchMessagesScreen> {
           ],
         ),
       ),
+      // Сделать отладку при ошибке.
       body: Column(
         children: [
           _panelButtons(),
-          Expanded(
-            child: ListView.builder(
-              controller: _scrollController,
-              itemCount: _searchController.text.trim().isEmpty
-                  ? 1
-                  : (_messages.length + (_isLoading ? 1 : 0)),
-              itemBuilder: (context, index) {
-                if (_searchController.text.trim().isEmpty) {
-                  return SizedBox.shrink();
-                } else {
-                  if (index == _messages.length) {
-                    return const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(8.0),
-                        child: CircularProgressIndicator(),
-                      ),
-                    );
-                  }
-                  return DiaryMessageCard(
-                    message: _messages[index],
-                    onLongPress: _actionMessage,
-                  );
-                }
-              },
-            ),
-          ),
+          buildBody()
         ],
+      ),
+    );
+  }
+
+  Widget buildBody() {
+    if (_errorMessage != null && !_isLoading) {
+      return Expanded(
+        child: Center(
+          child: DiaRoomErrorView(
+            errorMessage: _errorMessage!,
+            onRefresh: _searchMessages,
+          ),
+        ),
+      );
+    }
+
+    if (_isLoading && _messages.isEmpty) {
+      return const Expanded(
+        child: Center(
+          child: DiaRoomLoader(),
+        ),
+      );
+    }
+
+    if (_searchController.text.trim().isEmpty) {
+      return const Expanded(
+        child: SizedBox.shrink(),
+      );
+    }
+
+    if (!_isLoading && _messages.isEmpty) {
+      return const Expanded(
+        child: Center(
+          child: Text(
+            "Список пуст",
+            style: TextStyle(fontSize: 16, color: Colors.grey),
+          ),
+        ),
+      );
+    }
+
+    return Expanded(
+      child: ListView.builder(
+        controller: _scrollController,
+        itemCount: _messages.length + (_isLoading ? 1 : 0),
+        itemBuilder: (context, index) {
+          if (index == _messages.length) {
+            return const Center(
+              child: Padding(
+                padding: EdgeInsets.all(8.0),
+                child: DiaRoomLoader(),
+              ),
+            );
+          }
+
+          return DiaryMessageCard(
+            message: _messages[index],
+            onLongPress: _actionMessage,
+          );
+        },
       ),
     );
   }

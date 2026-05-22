@@ -21,6 +21,7 @@ import '../../components/diary/message_card.dart';
 import '../../components/diary/tag_picker_window.dart';
 import '../../components/general/app_back_button.dart';
 import '../../components/loading_widget/error_widget.dart';
+import '../../components/loading_widget/loader_widget.dart';
 import '../../configuration/constants.dart';
 import '../../models/diary/selected_media.dart';
 import '../../models/diary/tag.dart';
@@ -416,67 +417,154 @@ class _DiaryScreenState extends State<DiaryScreen> {
             ),
           ],
         ),
-        body: (!_isLoading && _errorMessage != null)
-            ? DiaRoomErrorView(
-                errorMessage: _errorMessage!,
-                onRefresh: _onRefresh,
-              )
-            : SafeArea(
-                child: Column(
-                  children: [
-                    Expanded(
-                      child: ListView.builder(
-                        reverse: true,
-                        controller: _scrollController,
-                        padding: const EdgeInsets.all(6),
-                        itemCount: _messages.length + (_hasMore ? 1 : 0),
-                        itemBuilder: (context, index) {
-                          if (index == _messages.length) {
-                            return const Center(
-                              child: Padding(
-                                padding: EdgeInsets.all(8.0),
-                                child: CircularProgressIndicator(),
-                              ),
-                            );
-                          }
+        body: _buildBody()
+        // (!_isLoading && _errorMessage != null)
+        //     ? DiaRoomErrorView(
+        //         errorMessage: _errorMessage!,
+        //         onRefresh: _onRefresh,
+        //       )
+        //     : SafeArea(
+        //         child: Column(
+        //           children: [
+        //             Expanded(
+        //               child: ListView.builder(
+        //                 reverse: true,
+        //                 controller: _scrollController,
+        //                 padding: const EdgeInsets.all(6),
+        //                 itemCount: _messages.length + (_hasMore ? 1 : 0),
+        //                 itemBuilder: (context, index) {
+        //                   if (index == _messages.length) {
+        //                     return const Center(
+        //                       child: Padding(
+        //                         padding: EdgeInsets.all(8.0),
+        //                         child: CircularProgressIndicator(),
+        //                       ),
+        //                     );
+        //                   }
+        //
+        //                   return DiaryMessageCard(
+        //                     message: _messages[index],
+        //                     onLongPress: _actionMessage,
+        //                   );
+        //                 },
+        //               ),
+        //             ),
+        //             isMyRoom
+        //                 ? DiaryInputPanel(
+        //                     controller: _messageController,
+        //                     selectedMedia: _selectedMedia,
+        //                     onSend: _sendStandardMessage,
+        //                     onRemoveMediaAt: (index) {
+        //                       if (mounted) {
+        //                         setState(() => _selectedMedia.removeAt(index));
+        //                       }
+        //                     },
+        //                     addMenu: _buildAddMenu(),
+        //                     linkPost: _linkPost,
+        //                     linkWorkshop: _linkWorkshop,
+        //                     onClosePost: _handleClearPost,
+        //                     onCloseWorkshop: _handleClearWorkshop,
+        //                     selectedTags: _currentSelectedTags,
+        //                     onCloseTag: (String id) {
+        //                       if (mounted) {
+        //                         setState(() {
+        //                           _currentSelectedTags.removeWhere(
+        //                                 (tag) => tag.id == id,
+        //                           );
+        //                         });
+        //                       }
+        //                     },
+        //                   )
+        //                 : const SizedBox.shrink(),
+        //           ],
+        //         ),
+        //       ),
+      ),
+    );
+  }
 
-                          return DiaryMessageCard(
-                            message: _messages[index],
-                            onLongPress: _actionMessage,
-                          );
-                        },
-                      ),
-                    ),
-                    isMyRoom
-                        ? DiaryInputPanel(
-                            controller: _messageController,
-                            selectedMedia: _selectedMedia,
-                            onSend: _sendStandardMessage,
-                            onRemoveMediaAt: (index) {
-                              if (mounted) {
-                                setState(() => _selectedMedia.removeAt(index));
-                              }
-                            },
-                            addMenu: _buildAddMenu(),
-                            linkPost: _linkPost,
-                            linkWorkshop: _linkWorkshop,
-                            onClosePost: _handleClearPost,
-                            onCloseWorkshop: _handleClearWorkshop,
-                            selectedTags: _currentSelectedTags,
-                            onCloseTag: (String id) {
-                              if (mounted) {
-                                setState(() {
-                                  _currentSelectedTags.removeWhere(
-                                        (tag) => tag.id == id,
-                                  );
-                                });
-                              }
-                            },
-                          )
-                        : const SizedBox.shrink(),
-                  ],
-                ),
+  Widget _buildBody() {
+    // СОСТОЯНИЕ ОШИБКИ (Показываем на весь экран, если загрузка не идет)
+    if (_errorMessage != null && !_isLoading) {
+      return Center(
+        child: DiaRoomErrorView(
+          errorMessage: _errorMessage!,
+          onRefresh: _onRefresh,
+        ),
+      );
+    }
+
+    // ПЕРВОНАЧАЛЬНАЯ ЗАГРУЗКА (Экран пуст, данных еще нет, идет первый запрос)
+    if (_isLoading && _messages.isEmpty) {
+      return const Center(
+        child: DiaRoomLoader(),
+      );
+    }
+
+    // ОСНОВНОЙ КОНТЕНТ (Здесь обрабатывается и пустой список, и заполненный)
+    return SafeArea(
+      child: Column(
+        children: [
+          // Область контента (Список или заглушка "Пусто")
+          Expanded(
+            child: _messages.isEmpty
+                ? const Center(
+              child: Text(
+                "Тут пусто :(",
+                style: TextStyle(fontSize: 16, color: Colors.grey),
               ),
+            )
+                : ListView.builder(
+              reverse: true,
+              controller: _scrollController,
+              padding: const EdgeInsets.all(6),
+              // Добавляем +1 к длине только если есть еще данные для пагинации
+              itemCount: _messages.length + (_hasMore ? 1 : 0),
+              itemBuilder: (context, index) {
+                // При reverse: true этот лоадер красиво появится на самом верху списка при скролле
+                if (index == _messages.length) {
+                  return const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(8.0),
+                      child: DiaRoomLoader(),
+                    ),
+                  );
+                }
+
+                return DiaryMessageCard(
+                  message: _messages[index],
+                  onLongPress: _actionMessage,
+                );
+              },
+            ),
+          ),
+
+          // Панель ввода (Остается видимой всегда, даже если сообщений нет)
+          if (isMyRoom)
+            DiaryInputPanel(
+              controller: _messageController,
+              selectedMedia: _selectedMedia,
+              onSend: _sendStandardMessage,
+              onRemoveMediaAt: (index) {
+                if (mounted) {
+                  setState(() => _selectedMedia.removeAt(index));
+                }
+              },
+              addMenu: _buildAddMenu(),
+              linkPost: _linkPost,
+              linkWorkshop: _linkWorkshop,
+              onClosePost: _handleClearPost,
+              onCloseWorkshop: _handleClearWorkshop,
+              selectedTags: _currentSelectedTags,
+              onCloseTag: (String id) {
+                if (mounted) {
+                  setState(() {
+                    _currentSelectedTags.removeWhere((tag) => tag.id == id);
+                  });
+                }
+              },
+            ),
+        ],
       ),
     );
   }
