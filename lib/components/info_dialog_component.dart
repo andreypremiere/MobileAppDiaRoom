@@ -1,3 +1,4 @@
+import 'package:dia_room/components/general/dialog_button.dart';
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 
@@ -39,28 +40,7 @@ class AppInfoDialog extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () => Navigator.of(context).pop(),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: context.ui.primaryColor, // Фирменный цвет
-                  foregroundColor: Colors.white,            // Белый текст
-                  elevation: 0,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: Text(
-                  buttonText,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ),
+            DialogButton(text: buttonText, onPressed: () => Navigator.of(context).pop())
           ],
         ),
       ),

@@ -37,11 +37,11 @@ class _LoginState extends State<Login> {
     final password = _passwordController.text;
 
     if (email.isEmpty) {
-      AppInfoDialog.show(context, "Email пустой :(. Заполните поле.");
+      AppInfoDialog.show(context, "Email не может быть пустым.");
       return;
     }
     if (password.isEmpty) {
-      AppInfoDialog.show(context, "Пароль пустой :(. Заполните поле.");
+      AppInfoDialog.show(context, "Пароль не может быть пустым.");
       return;
     }
 
@@ -60,7 +60,7 @@ class _LoginState extends State<Login> {
       }
     } else {
       if (mounted) {
-        AppInfoDialog.show(context, "${response.message} :(");
+        AppInfoDialog.show(context, "${response.message}");
       }
     }
   }
