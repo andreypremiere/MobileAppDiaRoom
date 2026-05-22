@@ -1,5 +1,9 @@
 import 'dart:io';
 
+import 'package:dia_room/components/general/author_tile_appbar/author_error_tile.dart';
+import 'package:dia_room/components/general/author_tile_appbar/author_loading_tile.dart';
+import 'package:dia_room/components/general/author_tile_appbar/author_tile.dart';
+import 'package:dia_room/components/info_dialog_component.dart';
 import 'package:dia_room/contracts/diary/response/getting_messages.dart';
 import 'package:dia_room/models/enums/diary/message_action.dart';
 import 'package:dia_room/utils/app_theme.dart';
@@ -10,21 +14,20 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 import '../../api/account_api.dart';
-import '../../api/auth_response.dart';
 import '../../api/diary_api.dart';
 import '../../components/diary/diary_link_picker.dart';
 import '../../components/diary/input_panel.dart';
 import '../../components/diary/message_card.dart';
 import '../../components/diary/tag_picker_window.dart';
-import '../../components/general/app_avatar.dart';
 import '../../components/general/app_back_button.dart';
+import '../../components/loading_widget/error_widget.dart';
+import '../../configuration/constants.dart';
 import '../../models/diary/selected_media.dart';
 import '../../models/diary/tag.dart';
 import '../../models/enums/diary/attachment_type.dart';
 import '../../models/enums/diary/creating_actions.dart';
 import '../../models/enums/diary/link_objects.dart';
 import '../../models/enums/diary/message_type.dart';
-import '../../models/enums/diary/search_method.dart';
 import '../../models/post_view/author.dart';
 import '../../services/diary/diary_utils.dart';
 import '../../services/diary/upload_manager.dart';
@@ -46,12 +49,10 @@ class _DiaryScreenState extends State<DiaryScreen> {
   final TextEditingController _messageController = TextEditingController();
 
   // Состояние
-  List<MessagePresentation> _messages = [];
+  final List<MessagePresentation> _messages = [];
 
-  List<SelectedMedia> _selectedMedia = [];
+  final List<SelectedMedia> _selectedMedia = [];
   List<MessageTag> _currentSelectedTags = [];
-  final int _maxPhotos = 5;
-  final int _maxVideos = 2;
 
   bool _isLoading = false;
   bool _hasMore = true;
@@ -61,7 +62,9 @@ class _DiaryScreenState extends State<DiaryScreen> {
   String? _linkWorkshop;
   String? _linkPost;
 
-  late Future<AuthResponse> _roomInfoFuture;
+  bool _isLoadingRoomInfo = false;
+  Author? author;
+  String? _errorMessage;
 
   @override
   void initState() {
@@ -69,10 +72,8 @@ class _DiaryScreenState extends State<DiaryScreen> {
 
     final myId = context.read<AuthProvider>().roomId;
     isMyRoom = widget.roomId == myId;
-    print('Пользователь авторизован? $myId');
 
-    _roomInfoFuture = getRoomInfoById(widget.roomId);
-
+    _loadRoomInfo();
     _loadMessages();
     _scrollController.addListener(_onScroll);
   }
@@ -83,10 +84,40 @@ class _DiaryScreenState extends State<DiaryScreen> {
     super.dispose();
   }
 
+  Future<void> _loadRoomInfo() async {
+    if (_isLoadingRoomInfo) return;
+
+    if (mounted) {
+      setState(() {
+        _isLoadingRoomInfo = true;
+      });
+    }
+
+    try {
+      final response = await getRoomInfoById(widget.roomId);
+
+      if (!response.success) {
+        return;
+      }
+
+      author = response.data['roomInfo'] as Author;
+    } catch (e) {
+      return;
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoadingRoomInfo = false;
+        });
+      }
+    }
+  }
+
   Future<void> _loadMessages() async {
     if (_isLoading || !_hasMore) return;
 
-    setState(() => _isLoading = true);
+    if (mounted) {
+      setState(() => _isLoading = true);
+    }
 
     try {
       final response = await getMessages(
@@ -95,30 +126,40 @@ class _DiaryScreenState extends State<DiaryScreen> {
         limit: _limit,
       );
       if (!response.success) {
-        print('Не удалось загрузить сообщения');
+        _errorMessage = response.message ?? "Ошибка при загрузке сообщений";
         return;
       }
 
-      print(response.data);
       final GettingMessages gotMessages = GettingMessages.fromMap(
         response.data,
       );
 
-      setState(() {
-        _currentPage++;
-        _messages.addAll(gotMessages.messages);
-        // Если пришло меньше чем лимит, значит данных больше нет
-        if (gotMessages.messages.length < _limit) _hasMore = false;
-      });
+      if (mounted) {
+        setState(() {
+          _currentPage++;
+          _messages.addAll(gotMessages.messages);
+          if (gotMessages.messages.length < _limit) _hasMore = false;
+        });
+      }
     } catch (e) {
-      print('Возникла непредвиденная ошибка в парсинге $e');
+      return;
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
+  void _onRefresh() {
+    _hasMore = true;
+    _currentPage = 0;
+    _messages.clear();
+    _errorMessage = null;
+    _loadRoomInfo();
+    _loadMessages();
+  }
+
   void _onScroll() {
-    // Если долистали до конца (осталось 200 пикселей до низа)
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 200) {
       _loadMessages();
@@ -126,15 +167,19 @@ class _DiaryScreenState extends State<DiaryScreen> {
   }
 
   void _handleClearPost() {
-    setState(() {
-      _linkPost = null;
-    });
+    if (mounted) {
+      setState(() {
+        _linkPost = null;
+      });
+    }
   }
 
   void _handleClearWorkshop() {
-    setState(() {
-      _linkWorkshop = null;
-    });
+    if (mounted) {
+      setState(() {
+        _linkWorkshop = null;
+      });
+    }
   }
 
   Future<void> _actionMessage(
@@ -153,13 +198,16 @@ class _DiaryScreenState extends State<DiaryScreen> {
         final result = await deleteMessage(messageId: message.message.id);
 
         if (!result.success) {
-          print("Не удалось удалить сообщение");
           return;
         }
 
-        setState(() {
-          _messages.removeWhere((mes) => mes.message.id == message.message.id);
-        });
+        if (mounted) {
+          setState(() {
+            _messages.removeWhere(
+              (mes) => mes.message.id == message.message.id,
+            );
+          });
+        }
         break;
     }
   }
@@ -170,12 +218,8 @@ class _DiaryScreenState extends State<DiaryScreen> {
       MaterialPageRoute(builder: (context) => const AudioRecordScreen()),
     ));
 
-    print('Путь к аудиосообщению: $audio');
-
     if (audio != null && mounted) {
       final uploadProvider = context.read<UploadManager>();
-      print("Путь: ${audio.path}");
-      print("Длительность: ${audio.duration.inSeconds} сек");
 
       // Снимаем фокус с клавиатуры, если он был
       FocusScope.of(context).unfocus();
@@ -205,10 +249,6 @@ class _DiaryScreenState extends State<DiaryScreen> {
 
     if (video != null && mounted) {
       final uploadProvider = context.read<UploadManager>();
-      print(video.path);
-      print(video.duration.inMilliseconds);
-      print(video.sizeInBytes);
-
       // Снимаем фокус с клавиатуры, если он был
       FocusScope.of(context).unfocus();
 
@@ -240,27 +280,27 @@ class _DiaryScreenState extends State<DiaryScreen> {
       // Обрабатываем выбор
       switch (result) {
         case LinkAction.linkWorkshop:
-          print("Выбрана мастерская");
-          final destinationId = await context.push<String?>(
-            '/select-folder-diary/${widget.roomId}',
-          );
+          if (mounted) {
+            final destinationId = await context.push<String?>(
+              '/select-folder-diary/${widget.roomId}',
+            );
 
-          if (destinationId != null) {
-            print("Выбранная папка назвачения: $destinationId");
-            setState(() {
-              _linkWorkshop = destinationId;
-            });
+            if (destinationId != null) {
+              setState(() {
+                _linkWorkshop = destinationId;
+              });
+            }
           }
           break;
         case LinkAction.linkPost:
-          print("Выбрана публикация");
-          final postId = await context.push<String?>('/select_post_diary');
+          if (mounted) {
+            final postId = await context.push<String?>('/select_post_diary');
 
-          if (postId != null) {
-            print("Выбранный пост: $postId");
-            setState(() {
-              _linkPost = postId;
-            });
+            if (postId != null) {
+              setState(() {
+                _linkPost = postId;
+              });
+            }
           }
           break;
       }
@@ -280,13 +320,15 @@ class _DiaryScreenState extends State<DiaryScreen> {
     if (text.isEmpty && media.isEmpty) return;
 
     _messageController.clear();
-    setState(() {
-      _linkWorkshop = null;
-      _linkPost = null;
-      _selectedMedia.clear();
-      _currentSelectedTags.clear();
-    });
-    FocusScope.of(context).unfocus();
+    if (mounted) {
+      setState(() {
+        _linkWorkshop = null;
+        _linkPost = null;
+        _selectedMedia.clear();
+        _currentSelectedTags.clear();
+      });
+      FocusScope.of(context).unfocus();
+    }
 
     uploader.addMessage(
       type: MessageType.standard,
@@ -307,12 +349,14 @@ class _DiaryScreenState extends State<DiaryScreen> {
 
   Future<List<XFile>> _handlePickPhoto() async {
     final ImagePicker picker = ImagePicker();
-    List<XFile> photo;
+    List<XFile> photos;
     try {
-      photo = await picker.pickMultiImage(limit: 5);
-      return photo;
+      photos = await picker.pickMultiImage();
+      return photos;
     } catch (e) {
-      print("Ошибка при выборе нескольких изображений: $e");
+      if (mounted) {
+        await AppInfoDialog.show(context, "Возникла непредвиденная ошибка. Не удалось получить фотографии. Пожалуйста, сообщите в поддержку.");
+      }
       return [];
     }
   }
@@ -321,10 +365,12 @@ class _DiaryScreenState extends State<DiaryScreen> {
     final ImagePicker picker = ImagePicker();
     List<XFile> video;
     try {
-      video = await picker.pickMultiVideo(limit: 2);
+      video = await picker.pickMultiVideo();
       return video;
     } catch (e) {
-      print("Ошибка при выборе нескольких изображений: $e");
+      if (mounted) {
+        await AppInfoDialog.show(context, "Возникла непредвиденная ошибка. Не удалось прикрепить видео. Пожалуйста, сообщите в поддержку.");
+      }
       return [];
     }
   }
@@ -338,35 +384,8 @@ class _DiaryScreenState extends State<DiaryScreen> {
         roomId: widget.roomId,
       ),
     );
-    if (result != null) setState(() => _currentSelectedTags = result);
-  }
-
-  Widget _buildSkeletonItem({
-    required double width,
-    required double height,
-    double radius = 8,
-  }) {
-    return Container(
-      width: width,
-      height: height,
-      decoration: BoxDecoration(
-        color: Colors.grey.withAlpha(20),
-        borderRadius: BorderRadius.circular(radius),
-      ),
-    );
-  }
-
-  Widget _buildShimmerTitle() {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // Скелет для аватара
-        _buildSkeletonItem(width: 36, height: 36, radius: 18),
-        const SizedBox(width: 10),
-        // Скелет для имени
-        _buildSkeletonItem(width: 100, height: 20, radius: 4),
-      ],
-    );
+    if (result != null)
+      if (mounted) setState(() => _currentSelectedTags = result);
   }
 
   @override
@@ -378,132 +397,81 @@ class _DiaryScreenState extends State<DiaryScreen> {
           backgroundColor: context.ui.appBarColor,
           leading: const AppBackButton(),
           centerTitle: false,
-          title: FutureBuilder<AuthResponse>(
-            future: _roomInfoFuture,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return _buildShimmerTitle();
-              }
-
-              if (snapshot.hasError ||
-                  !snapshot.hasData ||
-                  !snapshot.data!.success) {
-                return const SizedBox.shrink();
-              }
-
-              // Данные загружены
-              final roomInfo = snapshot.data!.data!['roomInfo'] as Author;
-
-              return InkWell(
-                onTap: () {},
-                borderRadius: BorderRadius.circular(12),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 4,
-                    vertical: 4,
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      AppAvatar(imageUrl: roomInfo.avatar, radius: 18),
-                      const SizedBox(width: 10),
-                      Text(
-                        roomInfo.roomName,
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                          color: context.ui.fontColorPrimary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
+          title: _isLoadingRoomInfo
+              ? AuthorShimmerTile()
+              : author == null
+              ? AuthorEmptyTile(onRetry: _loadRoomInfo)
+              : AuthorTile(author: author!),
           actions: [
             IconButton(
-              onPressed: () => context.push('/search-messages/${widget.roomId}'),
-              icon: Icon(
-                Icons.search_rounded,
-                size: context.ui.iconSizePanel,
-              ),
+              onPressed: () =>
+                  context.push('/search-messages/${widget.roomId}'),
+              icon: Icon(Icons.search_rounded, size: context.ui.iconSizePanel),
               color: context.ui.iconColorPrimary,
             ),
           ],
         ),
-        body: SafeArea(
-          child: Column(
-            children: [
-              Expanded(
-                child: ListView.builder(
-                  reverse: true,
-                  controller: _scrollController,
-                  padding: const EdgeInsets.all(6),
-                  itemCount: _messages.length + (_hasMore ? 1 : 0),
-                  itemBuilder: (context, index) {
-                    print('Текущая длина списка месседж: ${_messages.length}');
-                    if (index == _messages.length) {
-                      return const Center(
-                        child: Padding(
-                          padding: EdgeInsets.all(8.0),
-                          child: CircularProgressIndicator(),
-                        ),
-                      );
-                    }
+        body: (!_isLoading && _errorMessage != null)
+            ? DiaRoomErrorView(
+                errorMessage: _errorMessage!,
+                onRefresh: _onRefresh,
+              )
+            : SafeArea(
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: ListView.builder(
+                        reverse: true,
+                        controller: _scrollController,
+                        padding: const EdgeInsets.all(6),
+                        itemCount: _messages.length + (_hasMore ? 1 : 0),
+                        itemBuilder: (context, index) {
+                          if (index == _messages.length) {
+                            return const Center(
+                              child: Padding(
+                                padding: EdgeInsets.all(8.0),
+                                child: CircularProgressIndicator(),
+                              ),
+                            );
+                          }
 
-                    return DiaryMessageCard(
-                      message: _messages[index],
-                      onLongPress: _actionMessage,
-                    );
-                  },
+                          return DiaryMessageCard(
+                            message: _messages[index],
+                            onLongPress: _actionMessage,
+                          );
+                        },
+                      ),
+                    ),
+                    isMyRoom
+                        ? DiaryInputPanel(
+                            controller: _messageController,
+                            selectedMedia: _selectedMedia,
+                            onSend: _sendStandardMessage,
+                            onRemoveMediaAt: (index) {
+                              if (mounted) {
+                                setState(() => _selectedMedia.removeAt(index));
+                              }
+                            },
+                            addMenu: _buildAddMenu(),
+                            linkPost: _linkPost,
+                            linkWorkshop: _linkWorkshop,
+                            onClosePost: _handleClearPost,
+                            onCloseWorkshop: _handleClearWorkshop,
+                            selectedTags: _currentSelectedTags,
+                            onCloseTag: (String id) {
+                              if (mounted) {
+                                setState(() {
+                                  _currentSelectedTags.removeWhere(
+                                        (tag) => tag.id == id,
+                                  );
+                                });
+                              }
+                            },
+                          )
+                        : const SizedBox.shrink(),
+                  ],
                 ),
               ),
-              isMyRoom
-                  ? DiaryInputPanel(
-                      controller: _messageController,
-                      selectedMedia: _selectedMedia,
-                      onSend: _sendStandardMessage,
-                      onRemoveMediaAt: (index) =>
-                          setState(() => _selectedMedia.removeAt(index)),
-                      addMenu: _buildAddMenu(),
-                      linkPost: _linkPost,
-                      linkWorkshop: _linkWorkshop,
-                      onClosePost: _handleClearPost,
-                      onCloseWorkshop: _handleClearWorkshop,
-                      selectedTags: _currentSelectedTags,
-                      onCloseTag: (String id) {
-                        print('Нажато закрытие');
-                        setState(() {
-                          _currentSelectedTags.removeWhere(
-                            (tag) => tag.id == id,
-                          );
-                        });
-                      },
-                    )
-                  : const SizedBox.shrink(),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _showLimitWarning(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message, style: TextStyle(color: Color(0xFF262626))),
-        backgroundColor: Color(0xFFE5E5E5),
-        behavior: SnackBarBehavior.floating,
-        // Делает его "парящим" над нижней панелью
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        action: SnackBarAction(
-          label: 'ОК',
-          textColor: Color(0xFF262626),
-          onPressed: () {
-            // Действие при нажатии на кнопку в SnackBar
-          },
-        ),
       ),
     );
   }
@@ -511,8 +479,6 @@ class _DiaryScreenState extends State<DiaryScreen> {
   Future<void> _addMedia(String path) async {
     final type = DiaryUtils.getAttachmentType(path);
     if (type == null) {
-      print("Не поддерживаемый тип файла");
-      // Snackbar
       return;
     }
 
@@ -523,12 +489,10 @@ class _DiaryScreenState extends State<DiaryScreen> {
         .where((m) => m.type == AttachmentType.video)
         .length;
 
-    if (type == AttachmentType.video && currentVideos >= _maxVideos) {
-      _showLimitWarning("Можно прикрепить только 2 видео");
+    if (type == AttachmentType.video && currentVideos >= limitVideosDiaryInMessage) {
       return;
     }
-    if (type == AttachmentType.photo && currentPhotos >= _maxPhotos) {
-      _showLimitWarning("Можно прикрепить только 5 фото");
+    if (type == AttachmentType.photo && currentPhotos >= limitPhotosDiaryInMessage) {
       return;
     }
 
@@ -537,7 +501,6 @@ class _DiaryScreenState extends State<DiaryScreen> {
       thumb = await DiaryUtils.generatePreview(path);
 
       if (thumb == null) {
-        // SnackBar: "Не удалось сгенерировать превью"
         return;
       }
     }
@@ -567,13 +530,31 @@ class _DiaryScreenState extends State<DiaryScreen> {
       onSelected: (action) async {
         FocusScope.of(context).unfocus();
         if (action == CreatingDiaryAction.photo) {
-          final media = await _handlePickPhoto();
+          List<XFile> media = await _handlePickPhoto();
+
+          if (media.length > limitPhotosDiaryInMessage) {
+            if (mounted) {
+              await AppInfoDialog.show(context, "Можно прикрепить не более $limitPhotosDiaryInMessage фотографий.");
+            }
+          }
+
+          media = media.sublist(0, limitPhotosDiaryInMessage);
+
           for (int i = 0; i < media.length; i++) {
             await _addMedia(media[i].path);
           }
         }
         if (action == CreatingDiaryAction.video) {
-          final media = await _handlePickVideo();
+          List<XFile> media = await _handlePickVideo();
+
+          if (media.length > limitVideosDiaryInMessage) {
+            if (mounted) {
+              await AppInfoDialog.show(context, "Можно не более $limitVideosDiaryInMessage видеороликов.");
+            }
+          }
+
+          media = media.sublist(0, limitVideosDiaryInMessage);
+
           for (int i = 0; i < media.length; i++) {
             await _addMedia(media[i].path);
           }

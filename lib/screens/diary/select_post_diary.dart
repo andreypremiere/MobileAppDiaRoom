@@ -8,7 +8,7 @@ import '../../api/post_api.dart';
 import '../../components/general/app_back_button.dart';
 import '../../models/post_view/personal_post.dart';
 import '../../utils/auth_service.dart';
-import 'compact_post_card.dart';
+import '../../components/diary/compact_post_card.dart';
 
 class SelectPostDiary extends StatefulWidget {
 

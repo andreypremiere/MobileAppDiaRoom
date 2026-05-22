@@ -56,7 +56,7 @@ class DiaryUtils {
     return null;
   }
 
-  static Future<String?> generatePreview(String path, {int quality = 80, int maxHeight = 1080}) async {
+  static Future<String?> generatePreview(String path, {int quality = 50, int maxHeight = 1080}) async {
     if (path.isEmpty) return null;
 
     final uint8list = await VideoThumbnail.thumbnailFile(
