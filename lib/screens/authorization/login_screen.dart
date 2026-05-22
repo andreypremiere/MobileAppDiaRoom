@@ -37,11 +37,11 @@ class _LoginState extends State<Login> {
     final password = _passwordController.text;
 
     if (email.isEmpty) {
-      AppInfoDialog.show(context, "Email не может быть пустым.");
+      await AppInfoDialog.show(context, "Email не может быть пустым.");
       return;
     }
     if (password.isEmpty) {
-      AppInfoDialog.show(context, "Пароль не может быть пустым.");
+      await AppInfoDialog.show(context, "Пароль не может быть пустым.");
       return;
     }
 
@@ -57,10 +57,12 @@ class _LoginState extends State<Login> {
             queryParameters: {'email': email},
           ).toString(),
         );
+      } else {
+        return;
       }
     } else {
       if (mounted) {
-        AppInfoDialog.show(context, "${response.message}");
+        await AppInfoDialog.show(context, "${response.message}.");
       }
     }
   }

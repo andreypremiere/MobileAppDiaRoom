@@ -11,11 +11,11 @@ AuthResponse handleDioError(DioException e, String defaultMessage) {
   if (e.type == DioExceptionType.connectionTimeout || e.type == DioExceptionType.receiveTimeout) {
     message = "Сервер не отвечает, попробуйте позже";
   } else if (e.error is SocketException && e.error.toString().contains("Failed host lookup")) {
-    message = "Доступ к серверу ограничен в вашем регионе или заблокирован. Попробуйте воспользоваться VPN.";
+    message = "Доступ к серверу ограничен в вашем регионе или заблокирован. Попробуйте воспользоваться VPN";
   } else if (e.type == DioExceptionType.connectionError) {
     message = "Нет соединения с интернетом";
   } else if (e.response != null) {
-    message = e.response?.data['message'] ?? e.response?.data['error'] ?? "Ошибка на стороне сервера. Пожалуйста, сообщите в поддержку.";
+    message = e.response?.data['message'] ?? e.response?.data['error'] ?? "Ошибка на стороне сервера. Пожалуйста, сообщите в поддержку";
   }
 
   return AuthResponse(
@@ -26,5 +26,5 @@ AuthResponse handleDioError(DioException e, String defaultMessage) {
 
 // Вспомогательный метод для системных ошибок
 AuthResponse handleSystemError(Object e) {
-  return AuthResponse(success: false, message: "Непредвиденная ошибка в работе приложения. Пожалуйста, сообщите в поддержку.");
+  return AuthResponse(success: false, message: "Непредвиденная ошибка в работе приложения. Пожалуйста, сообщите в поддержку");
 }
