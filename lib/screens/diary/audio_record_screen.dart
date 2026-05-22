@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:dia_room/components/info_dialog_component.dart';
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:record/record.dart';
@@ -117,7 +118,11 @@ class _AudioRecordScreenState extends State<AudioRecordScreen> {
         _startTimer();
       }
     } catch (e) {
-      print("Ошибка старта: $e");
+      if (mounted) {
+        await AppInfoDialog.show(context, "Не удалось запустить запись. Пожалуйста, сообщите в поддержку.");
+      } else {
+        return;
+      }
     }
   }
 
@@ -132,10 +137,15 @@ class _AudioRecordScreenState extends State<AudioRecordScreen> {
     // Загружаем файл в плеер сразу после остановки, чтобы получить длительность
     if (path != null) {
       await _audioPlayer.setSourceDeviceFile(path);
+    } else {
+      if (mounted) {
+        await AppInfoDialog.show(context, "Не удалось получить путь к файлу. Пожалуйста, обратитесь в поддержку.");
+      }
     }
   }
 
   void _reset() {
+    _stopTimer();
     _audioPlayer.stop();
     if (_path != null) {
       final file = File(_path!);
