@@ -384,8 +384,13 @@ class _DiaryScreenState extends State<DiaryScreen> {
         roomId: widget.roomId,
       ),
     );
-    if (result != null)
-      if (mounted) setState(() => _currentSelectedTags = result);
+    if (result != null) {
+      if (mounted) {
+        setState(() {
+          _currentSelectedTags = result;
+        });
+      }
+    }
   }
 
   @override
@@ -549,7 +554,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
 
           if (media.length > limitVideosDiaryInMessage) {
             if (mounted) {
-              await AppInfoDialog.show(context, "Можно не более $limitVideosDiaryInMessage видеороликов.");
+              await AppInfoDialog.show(context, "Можно прикрепить не более $limitVideosDiaryInMessage видеороликов.");
             }
           }
 
