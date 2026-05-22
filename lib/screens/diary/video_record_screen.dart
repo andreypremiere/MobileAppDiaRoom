@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:camera/camera.dart';
+import 'package:dia_room/components/info_dialog_component.dart';
 import 'package:dia_room/services/diary/diary_utils.dart';
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
@@ -39,7 +40,7 @@ class _VideoRecordScreenState extends State<VideoRecordScreen> with WidgetsBindi
   int _recordDuration = 0;
 
   // Для управления плеером
-  ValueNotifier<Duration> _videoPosition = ValueNotifier(Duration.zero);
+  final ValueNotifier<Duration> _videoPosition = ValueNotifier(Duration.zero);
 
   @override
   void initState() {
@@ -92,9 +93,13 @@ class _VideoRecordScreenState extends State<VideoRecordScreen> with WidgetsBindi
       await cameraController.initialize();
       // 3. Если во время инициализации пользователь уже ушел с экрана — закрываем камеру
       if (!mounted) return;
-      setState(() {});
+      if (mounted) {
+        setState(() {});
+      }
     } catch (e) {
-      debugPrint("Ошибка камеры: $e");
+      if (mounted) {
+        await AppInfoDialog.show(context, "Не удалось инициализировать камеру. Пожалуйста, обратитесь в поддержку.");
+      }
     }
   }
 
@@ -114,14 +119,20 @@ class _VideoRecordScreenState extends State<VideoRecordScreen> with WidgetsBindi
     if (_controller == null || !_controller!.value.isInitialized) return;
     try {
       await _controller!.startVideoRecording();
-      setState(() {
-        _isRecording = true;
-        _isPaused = false;
-        _recordDuration = 0;
-      });
+      if (mounted) {
+        setState(() {
+          _isRecording = true;
+          _isPaused = false;
+          _recordDuration = 0;
+        });
+      } else {
+        return;
+      }
       _startTimer();
     } catch (e) {
-      debugPrint(e.toString());
+      if (mounted) {
+        await AppInfoDialog.show(context, "Не удалось начать запись. Пожалуйста, обратитесь в поддержку.");
+      }
     }
   }
 
@@ -130,9 +141,13 @@ class _VideoRecordScreenState extends State<VideoRecordScreen> with WidgetsBindi
     try {
       await _controller!.pauseVideoRecording();
       _stopTimer();
-      setState(() => _isPaused = true);
+      if (mounted) {
+        setState(() => _isPaused = true);
+      }
     } catch (e) {
-      debugPrint(e.toString());
+      if (mounted) {
+        await AppInfoDialog.show(context, "Не удалось приостановить запись. Пожалуйста, обратитесь в поддержку.");
+      }
     }
   }
 
@@ -141,9 +156,13 @@ class _VideoRecordScreenState extends State<VideoRecordScreen> with WidgetsBindi
     try {
       await _controller!.resumeVideoRecording();
       _startTimer();
-      setState(() => _isPaused = false);
+      if (mounted) {
+        setState(() => _isPaused = false);
+      }
     } catch (e) {
-      debugPrint(e.toString());
+      if (mounted) {
+        await AppInfoDialog.show(context, "Не удалось возобновить запись. Пожалуйста, обратитесь в поддержку.");
+      }
     }
   }
 
@@ -153,24 +172,34 @@ class _VideoRecordScreenState extends State<VideoRecordScreen> with WidgetsBindi
       final file = await _controller!.stopVideoRecording();
 
       await _controller!.pausePreview();
-      setState(() {
-        _isRecording = false;
-        _isPaused = false;
-        _videoPath = file.path;
-        _isPreviewMode = true;
-      });
+      if (mounted) {
+        setState(() {
+          _isRecording = false;
+          _isPaused = false;
+          _videoPath = file.path;
+          _isPreviewMode = true;
+        });
+      } else {
+        return;
+      }
       _initVideoPlayer(File(file.path));
     } catch (e) {
-      debugPrint(e.toString());
+      if (mounted) {
+        await AppInfoDialog.show(context, "Не удалось остановить запись. Пожалуйста, обратитесь в поддержку.");
+      }
     }
   }
 
   void _startTimer() {
     _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 1), (t) {
-      setState(() {
-        _recordDuration++;
-      });
+      if (mounted) {
+        setState(() {
+          _recordDuration++;
+        });
+      } else {
+        return;
+      }
 
       // Теперь это условие проверяется каждую секунду!
       if (_recordDuration >= limitRecordVideoNoteInDiary) {
@@ -195,23 +224,34 @@ class _VideoRecordScreenState extends State<VideoRecordScreen> with WidgetsBindi
       if (_videoPlayerController!.value.position >= _videoPlayerController!.value.duration) {
         _videoPlayerController!.seekTo(Duration.zero);
         _videoPlayerController!.pause();
-        setState(() {});
+        if (mounted) {
+          setState(() {});
+        } else {
+          return;
+        }
       }
     });
 
     await _videoPlayerController!.play();
-    setState(() {});
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   void _reset() {
     _videoPlayerController?.dispose();
     _videoPlayerController = null;
     DiaryUtils.deleteFile(_videoPath);
-    setState(() {
-      _isPreviewMode = false;
-      _videoPath = null;
-      _recordDuration = 0;
-    });
+    if (mounted) {
+      setState(() {
+        _isPreviewMode = false;
+        _videoPath = null;
+        _recordDuration = 0;
+      });
+    } else {
+      return;
+    }
+
     if (_controller != null) {
       _onNewCameraSelected(_controller!.description);
     }
@@ -278,11 +318,21 @@ class _VideoRecordScreenState extends State<VideoRecordScreen> with WidgetsBindi
               if (_isPreviewMode)
                 _buildActionButton(Icons.send_rounded, context.ui.primaryColor, () async {
                   final file = File(_videoPath!);
-                  Navigator.pop(context, VideoRecordResult(
-                    path: _videoPath!,
-                    duration: Duration(seconds: _recordDuration),
-                    sizeInBytes: await file.length(),
-                  ));
+
+                  // 1. Сначала считываем размер файла (здесь происходит async gap)
+                  final int fileSize = await file.length();
+
+                  // Проверяем mounted строго ПЕРЕД использованием BuildContext
+                  if (context.mounted) {
+                    Navigator.pop(
+                      context,
+                      VideoRecordResult(
+                        path: _videoPath!,
+                        duration: Duration(seconds: _recordDuration),
+                        sizeInBytes: fileSize,
+                      ),
+                    );
+                  }
                 })
               else if (_isRecording)
                 _buildActionButton(
@@ -367,7 +417,9 @@ class _VideoRecordScreenState extends State<VideoRecordScreen> with WidgetsBindi
                 _videoPlayerController!.value.isPlaying
                     ? _videoPlayerController!.pause()
                     : _videoPlayerController!.play();
-                setState(() {});
+                if (mounted) {
+                  setState(() {});
+                }
               },
               icon: Icon(
                 _videoPlayerController!.value.isPlaying ? Icons.pause_circle_filled : Icons.play_circle_filled,
