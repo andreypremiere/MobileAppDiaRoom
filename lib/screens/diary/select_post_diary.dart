@@ -75,6 +75,7 @@ class _StateSelectPostDiary extends State<SelectPostDiary> {
       }
     } catch (e) {
       if (!mounted) return;
+      _errorMessage = "Ошибка в работе приложения";
       await AppInfoDialog.show(context, "Ошибка во время работы приложения. Пожалуйста, обратитесь в поддержку.");
     }
   }
@@ -97,51 +98,6 @@ class _StateSelectPostDiary extends State<SelectPostDiary> {
       ),
       // Прокручиваемая колонка с постами
       body: _buildBody()
-      // FutureBuilder<AuthResponse>(
-      //   future: _postsFuture,
-      //   builder: (context, snapshot) {
-      //     // 1. Состояние ожидания
-      //     if (snapshot.connectionState == ConnectionState.waiting) {
-      //       return const Center(child: CircularProgressIndicator());
-      //     }
-      //
-      //     // 2. Обработка ошибок
-      //     if (snapshot.hasError || (snapshot.hasData && !snapshot.data!.success)) {
-      //       return Center(child: Text('Ошибка загрузки: ${snapshot.error}'));
-      //     }
-      //
-      //     // 3. Данные получены
-      //     final List<PersonalPost> rawPosts = snapshot.data!.data!['listPosts'] ?? [];
-      //
-      //     final List<PersonalPost> posts = rawPosts.where((post) => post.status == 'published' && post.statusAi == "passed").toList();
-      //
-      //     if (posts.isEmpty) {
-      //       return const Center(child: Text('Постов пока нет'));
-      //     }
-      //
-      //     return GridView.builder(
-      //       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-      //       // Настройка сетки
-      //       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-      //         crossAxisCount: 2,
-      //         crossAxisSpacing: 10,
-      //         mainAxisSpacing: 10,
-      //         childAspectRatio: 0.95,
-      //       ),
-      //       itemCount: posts.length,
-      //       itemBuilder: (context, index) {
-      //         final post = posts[index];
-      //
-      //         return CompactPostCard(
-      //           post: post,
-      //           onTap: () {
-      //             context.pop(post.data.postId);
-      //           },
-      //         );
-      //       },
-      //     );
-      //   },
-      // ),
     );
   }
 

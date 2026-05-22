@@ -1,20 +1,16 @@
-import 'package:dia_room/api/auth_response.dart';
-import 'package:dia_room/api/diary_api.dart';
 import 'package:dia_room/api/post_api.dart';
-import 'package:dia_room/contracts/diary/response/getting_messages.dart';
+import 'package:dia_room/components/info_dialog_component.dart';
 import 'package:dia_room/contracts/global_search/responses/found_rooms.dart';
 import 'package:dia_room/contracts/posts/responses/found_posts.dart';
 import 'package:dia_room/models/enums/global_search/global_search_method.dart';
 import 'package:dia_room/models/post_view/feed_post.dart';
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-
-import '../../components/diary/message_card.dart';
 import '../../components/general/app_back_button.dart';
-import '../../models/enums/diary/message_action.dart';
 import '../api/account_api.dart';
 import '../components/global_search_screen/room_tile.dart';
+import '../components/loading_widget/error_widget.dart';
+import '../components/loading_widget/loader_widget.dart';
 import '../components/post_card/feed_card.dart';
 import '../models/global_search/room_info.dart';
 
@@ -31,12 +27,13 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
 
-  List<dynamic> _foundValues = [];
+  final List<dynamic> _foundValues = [];
   int _currentPage = 0;
   final int _limit = 20;
   bool _isLoading = false;
   bool _hasMore = true;
   GlobalSearchMethod _currentMethod = GlobalSearchMethod.room;
+  String? _errorMessage;
 
   @override
   void initState() {
@@ -49,17 +46,19 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 200) {
       if (!_isLoading && _hasMore) {
-        print('Выполнен запрос при скролле, данные page: $_currentPage');
         _fetchSearch();
       }
     }
   }
 
   void onTapMethod(GlobalSearchMethod method) {
-    'Нажата кнопка ${method.label}';
-    setState(() {
-      _currentMethod = method;
-    });
+    if (mounted) {
+      setState(() {
+        _currentMethod = method;
+      });
+    } else {
+      return;
+    }
     _searchValues();
   }
 
@@ -81,7 +80,6 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
               : BorderSide(color: context.ui.primaryColor, width: 2),
         ),
 
-        // Полезное дополнение: убирает тень, если она не нужна
         elevation: 0,
       ),
       child: Text(
@@ -119,70 +117,109 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
   }
 
   Future<void> _fetchSearch() async {
-    setState(() => _isLoading = true);
+    if (_searchController.text.trim().isEmpty) return;
+
+    if (mounted) {
+      setState(() {
+        _isLoading = true;
+        _errorMessage = null;
+      });
+    }
 
     try {
-      if (_searchController.text.trim().isEmpty) {
-        return;
-      }
+      int incomingLength = 0;
 
       switch (_currentMethod) {
         case GlobalSearchMethod.room:
-          final response = await searchRooms(page: _currentPage, limit: _limit, value: _searchController.text.trim());
+          final response = await searchRooms(
+            page: _currentPage,
+            limit: _limit,
+            value: _searchController.text.trim(),
+          );
+
+          if (!mounted) return;
 
           if (!response.success) {
-            print("Ошибка при комнат");
+            setState(() {
+              _errorMessage = response.message ?? "Не удалось выполнить поиск комнат.";
+            });
             return;
           }
 
-          final FoundRooms foundRooms= FoundRooms.fromMap(response.data);
+          final FoundRooms foundRooms = FoundRooms.fromMap(response.data);
+          incomingLength = foundRooms.rooms.length;
 
-          _foundValues.addAll(foundRooms.rooms);
-          print("пришло сообщений: ${foundRooms.rooms.length}");
+          setState(() {
+            _foundValues.addAll(foundRooms.rooms);
+          });
           break;
-        case GlobalSearchMethod.post:
-          print("Поиск по постам");
 
-          final response = await searchPosts(page: _currentPage, limit: _limit, value: _searchController.text.trim());
+        case GlobalSearchMethod.post:
+          final response = await searchPosts(
+            page: _currentPage,
+            limit: _limit,
+            value: _searchController.text.trim(),
+          );
+
+          if (!mounted) return;
 
           if (!response.success) {
-            print("Ошибка при получении постов");
+            setState(() {
+              _errorMessage = response.message ?? "Не выполнить поиск публикаций.";
+            });
             return;
           }
 
           final FoundPosts foundPosts = FoundPosts.fromMap(response.data);
+          incomingLength = foundPosts.posts.length;
 
-          _foundValues.addAll(foundPosts.posts);
-          print("пришло сообщений: ${foundPosts.posts.length}");
+          setState(() {
+            _foundValues.addAll(foundPosts.posts);
+          });
           break;
       }
 
-      setState(() {
-        _currentPage++;
-        // Если пришло меньше чем лимит, значит данных больше нет
-        if ([].length < _limit) _hasMore = false;
-      });
+      if (mounted) {
+        setState(() {
+          _currentPage++;
+          if (incomingLength < _limit) _hasMore = false;
+        });
+      }
     } catch (e) {
-      print('Возникла непредвиденная ошибка в парсинге $e');
+      if (mounted) {
+        _errorMessage = "Ошибка в работе приложения";
+        await AppInfoDialog.show(context, "Ошибка в работе приложения. Пожалуйста, сообщите в поддержку.");
+        return;
+      }
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
   void _clearText() {
-    setState(() {
-      _searchController.clear();
-      _foundValues.clear();
-      _currentPage = 0;
-      _hasMore = true;
-    });
-    FocusManager.instance.primaryFocus?.unfocus();
+    if (mounted) {
+      setState(() {
+        _searchController.clear();
+        _foundValues.clear();
+        _errorMessage = null;
+        _currentPage = 0;
+        _hasMore = true;
+      });
+      FocusManager.instance.primaryFocus?.unfocus();
+    }
   }
 
   void _searchValues() {
-    _hasMore = true;
-    _currentPage = 0;
-    _foundValues.clear();
+    if (mounted) {
+      setState(() {
+        _errorMessage = null;
+        _hasMore = true;
+        _currentPage = 0;
+        _foundValues.clear();
+      });
+    }
     _fetchSearch();
   }
 
@@ -229,36 +266,106 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
       body: Column(
         children: [
           _panelButtons(),
-          Expanded(
-            child: ListView.separated(
-              separatorBuilder: (context, index) => const SizedBox(height: 6),
-              controller: _scrollController,
-              itemCount: _searchController.text.trim().isEmpty
-                  ? 1
-                  : (_foundValues.length + (_isLoading ? 1 : 0)),
-              itemBuilder: (context, index) {
-                if (_searchController.text.trim().isEmpty) {
-                  return SizedBox.shrink();
-                } else {
-                  if (index == _foundValues.length) {
-                    return const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(8.0),
-                        child: CircularProgressIndicator(),
-                      ),
-                    );
-                  }
-                  switch (_currentMethod) {
-                    case GlobalSearchMethod.room:
-                      return RoomTile(room: _foundValues[index] as RoomInfo,);
-                    case GlobalSearchMethod.post:
-                      return FeedPostComponent(post: _foundValues[index] as FeedPost);
-                  }
-                }
-              },
-            ),
-          ),
+          _buildBody()
+          // Expanded(
+          //   child: ListView.separated(
+          //     separatorBuilder: (context, index) => const SizedBox(height: 6),
+          //     controller: _scrollController,
+          //     itemCount: _searchController.text.trim().isEmpty
+          //         ? 1
+          //         : (_foundValues.length + (_isLoading ? 1 : 0)),
+          //     itemBuilder: (context, index) {
+          //       if (_searchController.text.trim().isEmpty) {
+          //         return SizedBox.shrink();
+          //       } else {
+          //         if (index == _foundValues.length) {
+          //           return const Center(
+          //             child: Padding(
+          //               padding: EdgeInsets.all(8.0),
+          //               child: CircularProgressIndicator(),
+          //             ),
+          //           );
+          //         }
+          //         switch (_currentMethod) {
+          //           case GlobalSearchMethod.room:
+          //             return RoomTile(room: _foundValues[index] as RoomInfo,);
+          //           case GlobalSearchMethod.post:
+          //             return FeedPostComponent(post: _foundValues[index] as FeedPost);
+          //         }
+          //       }
+          //     },
+          //   ),
+          // ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildBody() {
+    // СОСТОЯНИЕ ОШИБКИ
+    if (_errorMessage != null && !_isLoading) {
+      return Expanded(
+        child: Center(
+          child: DiaRoomErrorView(
+            errorMessage: _errorMessage!,
+            onRefresh: _searchValues,
+          ),
+        ),
+      );
+    }
+
+    // ПЕРВОНАЧАЛЬНАЯ ЗАГРУЗКА
+    if (_isLoading && _foundValues.isEmpty) {
+      return const Expanded(
+        child: Center(
+          child: DiaRoomLoader(),
+        ),
+      );
+    }
+
+    // ПУСТОЙ ПОИСКОВОЙ ЗАПРОС
+    if (_searchController.text.trim().isEmpty) {
+      return const Expanded(
+        child: SizedBox.shrink(),
+      );
+    }
+
+    // ПУСТОЙ РЕЗУЛЬТАТ ПОИСКА
+    if (!_isLoading && _foundValues.isEmpty) {
+      return const Expanded(
+        child: Center(
+          child: Text(
+            "Ничего не найдено",
+            style: TextStyle(fontSize: 16, color: Colors.grey),
+          ),
+        ),
+      );
+    }
+
+    // ОСНОВНОЙ КОНТЕНТ (Данные успешно получены)
+    return Expanded(
+      child: ListView.separated(
+        controller: _scrollController,
+        separatorBuilder: (context, index) => const SizedBox(height: 6),
+        itemCount: _foundValues.length + (_isLoading ? 1 : 0),
+        itemBuilder: (context, index) {
+          // Индикатор пагинации в самом низу списка
+          if (index == _foundValues.length) {
+            return const Center(
+              child: Padding(
+                padding: EdgeInsets.all(8.0),
+                child: DiaRoomLoader(),
+              ),
+            );
+          }
+
+          switch (_currentMethod) {
+            case GlobalSearchMethod.room:
+              return RoomTile(room: _foundValues[index] as RoomInfo);
+            case GlobalSearchMethod.post:
+              return FeedPostComponent(post: _foundValues[index] as FeedPost);
+          }
+        },
       ),
     );
   }

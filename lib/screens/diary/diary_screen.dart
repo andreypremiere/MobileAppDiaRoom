@@ -143,6 +143,10 @@ class _DiaryScreenState extends State<DiaryScreen> {
         });
       }
     } catch (e) {
+      if (mounted) {
+        _errorMessage = "Ошибка в работе приложения";
+        await AppInfoDialog.show(context, "Возникла непредвиденная ошибка во время работы приложения. Пожалуйста, обратитесь в поддержку.");
+      }
       return;
     } finally {
       if (mounted) {

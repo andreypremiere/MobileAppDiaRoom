@@ -79,6 +79,7 @@ class _SelectFolderScreenState extends State<SelectFolderDiaryScreen> {
       }
     } catch (e) {
       if (!mounted) return;
+      _errorMessage = "Ошибка в работе приложения";
       await AppInfoDialog.show(context, "Ошибка во время работы приложения. Пожалуйста, обратитесь в поддержку.");
     }
   }

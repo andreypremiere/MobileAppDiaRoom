@@ -214,8 +214,8 @@ class _SearchMessagesScreenState extends State<SearchMessagesScreen> {
         });
       }
     } catch (e) {
-      print(e);
       if (mounted) {
+        _errorMessage = "Ошибка в работе приложения";
         await AppInfoDialog.show(context, "Возникла непредвиденная ошибка во время работы приложения. Пожалуйста, обратитесь в поддержку.");
       }
     } finally {

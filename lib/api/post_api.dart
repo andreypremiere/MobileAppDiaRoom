@@ -246,7 +246,7 @@ Future<AuthResponse> searchPosts(
       data: res.data,
     );
   } on DioException catch (e) {
-    return handleDioError(e, "Ошибка получения ленты");
+    return handleDioError(e, "Ошибка во время поиска");
   } catch (e) {
     return handleSystemError(e);
   }
