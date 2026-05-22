@@ -31,7 +31,7 @@ import '../../models/enums/diary/message_type.dart';
 import '../../models/post_view/author.dart';
 import '../../services/diary/diary_utils.dart';
 import '../../services/diary/upload_manager.dart';
-import '../../services/diary/video_record_screen.dart';
+import 'video_record_screen.dart';
 import '../../utils/auth_service.dart';
 import 'audio_record_screen.dart';
 
@@ -503,6 +503,14 @@ class _DiaryScreenState extends State<DiaryScreen> {
 
     String? thumb;
     if (type == AttachmentType.video) {
+      final fileSize = await DiaryUtils.getFileSize(path);
+      if (fileSize > limitSizeVideoInMessageDiary) {
+        if (mounted) {
+          AppInfoDialog.show(context, "К сожалению, пока что нельзя прикрепить видео размером более ${limitSizeVideoInMessageDiary / (1024 * 1024)} мб. Они не будут прикреплены.");
+        }
+        return;
+      }
+
       thumb = await DiaryUtils.generatePreview(path);
 
       if (thumb == null) {
@@ -543,7 +551,8 @@ class _DiaryScreenState extends State<DiaryScreen> {
             }
           }
 
-          media = media.sublist(0, limitPhotosDiaryInMessage);
+          final int takeCount = media.length <= limitPhotosDiaryInMessage ? media.length : limitPhotosDiaryInMessage;
+          media = media.sublist(0, takeCount);
 
           for (int i = 0; i < media.length; i++) {
             await _addMedia(media[i].path);
@@ -558,7 +567,8 @@ class _DiaryScreenState extends State<DiaryScreen> {
             }
           }
 
-          media = media.sublist(0, limitVideosDiaryInMessage);
+          final int takeCount = media.length <= limitVideosDiaryInMessage ? media.length : limitVideosDiaryInMessage;
+          media = media.sublist(0, takeCount);
 
           for (int i = 0; i < media.length; i++) {
             await _addMedia(media[i].path);

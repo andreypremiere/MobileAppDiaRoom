@@ -8,7 +8,7 @@ import 'package:dia_room/models/enums/diary/attachment_type.dart';
 import 'package:dia_room/models/enums/diary/message_status.dart';
 import 'package:dia_room/models/enums/diary/message_type.dart';
 import 'package:dia_room/services/diary/diary_utils.dart';
-import 'package:dia_room/services/diary/video_record_screen.dart';
+import 'package:dia_room/screens/diary/video_record_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 

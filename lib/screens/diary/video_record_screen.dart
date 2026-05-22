@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:video_player/video_player.dart';
 import '../../components/general/app_back_button.dart';
+import '../../configuration/constants.dart';
 
 class VideoRecordResult {
   final String path;
@@ -166,7 +167,16 @@ class _VideoRecordScreenState extends State<VideoRecordScreen> with WidgetsBindi
 
   void _startTimer() {
     _timer?.cancel();
-    _timer = Timer.periodic(const Duration(seconds: 1), (t) => setState(() => _recordDuration++));
+    _timer = Timer.periodic(const Duration(seconds: 1), (t) {
+      setState(() {
+        _recordDuration++;
+      });
+
+      // Теперь это условие проверяется каждую секунду!
+      if (_recordDuration >= limitRecordVideoNoteInDiary) {
+        _stopRecording();
+      }
+    });
   }
 
   void _stopTimer() {
