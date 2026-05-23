@@ -12,6 +12,7 @@ import 'package:dia_room/contracts/room/requests/updating_text_field_request.dar
 import 'package:dia_room/contracts/room/responses/room_response.dart';
 import 'package:dia_room/contracts/room/responses/updating_avatar_response.dart';
 import 'package:dia_room/contracts/room/responses/updating_background_response.dart';
+import 'package:dia_room/models/enums/file_type.dart';
 import 'package:dia_room/models/enums/room/action_image_settings_screen.dart';
 import 'package:dia_room/services/diary/diary_utils.dart';
 import 'package:dia_room/utils/app_theme.dart';
@@ -19,6 +20,8 @@ import 'package:dia_room/utils/compress_image_service.dart';
 import 'package:dia_room/utils/picker_image_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:go_router/go_router.dart';
+import 'package:http/http.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
@@ -730,56 +733,77 @@ class _SettingsScreenState extends State<SettingsScreen> {
     // Проверяем, есть ли ссылка
     bool hasImage = _backgroundPath != null && _backgroundPath!.isNotEmpty;
 
-    return SizedBox(
+    return GestureDetector(onTap: _backgroundPath != null && _backgroundPath!.isNotEmpty ? () {
+      context.push(
+        '/full_image_screen',
+        extra: {
+          'urls': [_backgroundPath.toString()],
+          'index': 0,
+          'type': FileType.network,
+        },
+      );
+    } : () {},
+    child: SizedBox(
       height: 160,
       width: double.infinity,
       child: hasImage
           ? CachedNetworkImage(
-              key: ValueKey('$_backgroundPath-$_backgroundVersion'),
-              imageUrl: _backgroundPath!,
-              imageBuilder: (context, imageProvider) => Container(
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF0F0F0),
-                  borderRadius: BorderRadius.circular(16),
-                  image: DecorationImage(
-                    image: imageProvider,
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              ),
-              placeholder: (context, url) => Container(
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF0F0F0),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: const Center(child: CupertinoActivityIndicator()),
-              ),
-              errorWidget: (context, url, error) => Container(
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF0F0F0),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: const Center(
-                  child: Icon(Icons.error, color: Colors.grey),
-                ),
-              ),
-            )
-          : Container(
-              decoration: BoxDecoration(
-                color: const Color(0xFFF0F0F0),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: const Center(
-                child: Icon(Icons.wallpaper, color: Colors.grey, size: 40),
-              ),
+        key: ValueKey('$_backgroundPath-$_backgroundVersion'),
+        imageUrl: _backgroundPath!,
+        imageBuilder: (context, imageProvider) => Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFFF0F0F0),
+            borderRadius: BorderRadius.circular(16),
+            image: DecorationImage(
+              image: imageProvider,
+              fit: BoxFit.cover,
             ),
-    );
+          ),
+        ),
+        placeholder: (context, url) => Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFFF0F0F0),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: const Center(child: CupertinoActivityIndicator()),
+        ),
+        errorWidget: (context, url, error) => Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFFF0F0F0),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: const Center(
+            child: Icon(Icons.error, color: Colors.grey),
+          ),
+        ),
+      )
+          : Container(
+        decoration: BoxDecoration(
+          color: const Color(0xFFF0F0F0),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: const Center(
+          child: Icon(Icons.wallpaper, color: Colors.grey, size: 40),
+        ),
+      ),
+    ),);
   }
 
   Widget _buildAvatarContainer() {
     bool hasImage = _avatarPath != null && _avatarPath!.isNotEmpty;
 
-    return Container(
+
+    return GestureDetector(onTap: _avatarPath != null && _avatarPath!.isNotEmpty ? () {
+      context.push(
+        '/full_image_screen',
+        extra: {
+          'urls': [_avatarPath.toString()],
+          'index': 0,
+          'type': FileType.network,
+        },
+      );
+    } : () {},
+    child: Container(
       height: 100,
       width: 100,
       decoration: BoxDecoration(
@@ -796,20 +820,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
       child: hasImage
           ? ClipOval(
-              child: CachedNetworkImage(
-                key: ValueKey('$_avatarPath-$_avatarVersion'),
-                imageUrl: _avatarPath!,
-                fit: BoxFit.cover,
-                placeholder: (context, url) =>
-                    const Center(child: CupertinoActivityIndicator()),
-                errorWidget: (context, url, error) =>
-                    const Icon(Icons.error, color: Colors.grey),
-              ),
-            )
+        child: CachedNetworkImage(
+          key: ValueKey('$_avatarPath-$_avatarVersion'),
+          imageUrl: _avatarPath!,
+          fit: BoxFit.cover,
+          placeholder: (context, url) =>
+          const Center(child: CupertinoActivityIndicator()),
+          errorWidget: (context, url, error) =>
+          const Icon(Icons.error, color: Colors.grey),
+        ),
+      )
           : const Center(
-              child: Icon(Icons.person, color: Colors.grey, size: 40),
-            ),
-    );
+        child: Icon(Icons.person, color: Colors.grey, size: 40),
+      ),
+    ),);
   }
 
   Widget _buildEditButton({required VoidCallback onTap}) {
