@@ -89,7 +89,6 @@ class AuthProvider extends ChangeNotifier {
       // Нужен, чтобы не было второго notify
       return;
     }
-    print("Завершение обновления");
     // _isLoading = false;
     notifyListeners();
   }
@@ -117,9 +116,9 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void saveStatusConfigure(bool status) {
+  Future<void> saveStatusConfigure(bool status) async {
     _isConfigured = status;
-    AuthService.saveStatusConfigured(status: status);
+    await AuthService.saveStatusConfigured(status: status);
     notifyListeners();
   }
 

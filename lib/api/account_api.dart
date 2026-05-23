@@ -100,11 +100,12 @@ Future<AuthResponse> requestGetRoom(String roomId) async {
   }
 }
 
-Future<AuthResponse> requestUpdateRoom(BuildContext context, SaveRoomRequest room) async {
+Future<AuthResponse> requestUpdateRoom(SaveRoomRequest room) async {
   try {
     final res = await ApiService.post('/account/updateRoom', data: room.toMap());
     return AuthResponse(success: true, data: res.data);
   } on DioException catch (e) {
+    if (e.response?.statusCode == 409 && e.response?.data['error_code'] == "ALREADY_EXISTS") return AuthResponse(success: false, message: "Комната с таким id уже существует. Выберите другой.");
     return handleDioError(e, "Не удалось обновить комнату");
   } catch (e) {
     return handleSystemError(e);
