@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dia_room/api/account_api.dart';
 import 'package:dia_room/api/diary_api.dart';
 import 'package:dia_room/components/general/app_back_button.dart';
+import 'package:dia_room/components/general/app_enum_picker.dart';
 import 'package:dia_room/components/general/dialog_button.dart';
 import 'package:dia_room/components/loading_widget/loader_widget.dart';
 import 'package:dia_room/components/room_screen/app_dialogs.dart';
@@ -11,6 +12,7 @@ import 'package:dia_room/contracts/room/requests/updating_text_field_request.dar
 import 'package:dia_room/contracts/room/responses/room_response.dart';
 import 'package:dia_room/contracts/room/responses/updating_avatar_response.dart';
 import 'package:dia_room/contracts/room/responses/updating_background_response.dart';
+import 'package:dia_room/models/enums/room/action_image_settings_screen.dart';
 import 'package:dia_room/services/diary/diary_utils.dart';
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:dia_room/utils/compress_image_service.dart';
@@ -103,54 +105,86 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _handleUpdateAvatar() async {
-    final path = await PickerImageService.pickAndCropAvatar();
-
-    if (path == null || path.isEmpty) {
-      return;
-    }
-
-    final compressedPath = await CompressImageService.compressForPreview(
-      XFile(path),
-    );
-    if (compressedPath == null) {
-      return;
-    }
-
-    final mimeType = DiaryUtils.getSupportedMimeType(compressedPath);
-    if (mimeType == null) {
-      return;
-    }
-
-    final UpdatingAvatarRequest request = UpdatingAvatarRequest(
-      mimeType: mimeType,
+    final ActionImageSettings? result = await showDialog<ActionImageSettings>(
+      context: context,
+      barrierDismissible: true, // Закрыть при нажатии на пустую область
+      builder: (context) => const AppEnumPicker(values: ActionImageSettings.values),
     );
 
-    final response = await updateAvatar(request);
-
-    if (!response.success) {
+    if (result == null) {
       return;
     }
 
-    final UpdatingAvatarResponse data = UpdatingAvatarResponse.fromMap(
-      response.data,
-    );
+    switch (result) {
+      case ActionImageSettings.edit:
+        final path = await PickerImageService.pickAndCropAvatar();
 
-    final resultUpload = await uploadSingleMediaFile(
-      compressedPath,
-      data.uploadUrl,
-      mimeType,
-    );
-    if (resultUpload == false) {
-      return;
-    }
+        if (path == null || path.isEmpty) {
+          return;
+        }
 
-    await CachedNetworkImage.evictFromCache(data.publicUrl);
+        final compressedPath = await CompressImageService.compressForPreview(
+          XFile(path),
+        );
+        if (compressedPath == null) {
+          return;
+        }
 
-    if (mounted) {
-      setState(() {
-        _avatarPath = data.publicUrl;
-        _avatarVersion++;
-      });
+        final mimeType = DiaryUtils.getSupportedMimeType(compressedPath);
+        if (mimeType == null) {
+          return;
+        }
+
+        final UpdatingAvatarRequest request = UpdatingAvatarRequest(
+          mimeType: mimeType,
+        );
+
+        final response = await updateAvatar(request);
+
+        if (!response.success) {
+          if (mounted) {
+            await AppInfoDialog.show(context, "Не удалось обновить аватар комнаты. ${response.message ?? ""}");
+          }
+          return;
+        }
+
+        final UpdatingAvatarResponse data = UpdatingAvatarResponse.fromMap(
+          response.data,
+        );
+
+        final resultUpload = await uploadSingleMediaFile(
+          compressedPath,
+          data.uploadUrl,
+          mimeType,
+        );
+        if (resultUpload == false) {
+          return;
+        }
+
+        await CachedNetworkImage.evictFromCache(data.publicUrl);
+
+        if (mounted) {
+          setState(() {
+            _avatarPath = data.publicUrl;
+            _avatarVersion++;
+          });
+        }
+      case ActionImageSettings.delete:
+        final response = await deleteAvatar();
+
+        if (!response.success) {
+          if (mounted) {
+            await AppInfoDialog.show(context, response.message ?? "Не удалось удалить аватар комнаты");
+          }
+          return;
+        }
+
+        if (mounted) {
+          setState(() {
+            _avatarPath = "";
+            _avatarVersion++;
+          });
+        }
     }
   }
 
@@ -159,53 +193,89 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _handleUpdateBackground() async {
-    final path = await PickerImageService.pickAndCropBackground();
+    final ActionImageSettings? result = await showDialog<ActionImageSettings>(
+      context: context,
+      barrierDismissible: true, // Закрыть при нажатии на пустую область
+      builder: (context) => const AppEnumPicker(values: ActionImageSettings.values),
+    );
 
-    if (path == null || path.isEmpty) {
+    if (result == null) {
       return;
     }
 
-    final compressedPath = await CompressImageService.compressForPreview(
-      XFile(path),
-    );
-    if (compressedPath == null) {
-      return;
+    switch (result) {
+      case ActionImageSettings.edit:
+        final path = await PickerImageService.pickAndCropBackground();
+
+        if (path == null || path.isEmpty) {
+          return;
+        }
+
+        final compressedPath = await CompressImageService.compressForPreview(
+          XFile(path),
+        );
+        if (compressedPath == null) {
+          return;
+        }
+
+        final mimeType = DiaryUtils.getSupportedMimeType(compressedPath);
+        if (mimeType == null) {
+          return;
+        }
+
+        final UpdatingBackgroundRequest request = UpdatingBackgroundRequest(
+          mimeType: mimeType,
+        );
+
+        final response = await updateBackground(request);
+
+        if (!response.success) {
+          if (mounted) {
+            await AppInfoDialog.show(context, "Не удалось обновить фон комнаты. ${response.message ?? ""}");
+          }
+          return;
+        }
+
+        final UpdatingBackgroundResponse data = UpdatingBackgroundResponse.fromMap(
+          response.data,
+        );
+
+        final resultUpload = await uploadSingleMediaFile(
+          compressedPath,
+          data.uploadUrl,
+          mimeType,
+        );
+        if (resultUpload == false) {
+          return;
+        }
+
+        await CachedNetworkImage.evictFromCache(data.publicUrl);
+
+        if (mounted) {
+          setState(() {
+            _backgroundPath = data.publicUrl;
+            _backgroundVersion++;
+          });
+        }
+      case ActionImageSettings.delete:
+        final response = await deleteBackground();
+
+        if (!response.success) {
+          if (mounted) {
+            await AppInfoDialog.show(context, response.message ?? "Не удалось удалить фон комнаты");
+          }
+          return;
+        }
+
+        if (mounted) {
+          setState(() {
+            _backgroundPath = "";
+            _backgroundVersion++;
+          });
+        }
     }
 
-    final mimeType = DiaryUtils.getSupportedMimeType(compressedPath);
-    if (mimeType == null) {
-      return;
-    }
 
-    final UpdatingBackgroundRequest request = UpdatingBackgroundRequest(
-      mimeType: mimeType,
-    );
-
-    final response = await updateBackground(request);
-
-    if (!response.success) {}
-
-    final UpdatingBackgroundResponse data = UpdatingBackgroundResponse.fromMap(
-      response.data,
-    );
-
-    final resultUpload = await uploadSingleMediaFile(
-      compressedPath,
-      data.uploadUrl,
-      mimeType,
-    );
-    if (resultUpload == false) {
-      return;
-    }
-
-    await CachedNetworkImage.evictFromCache(data.publicUrl);
-
-    if (mounted) {
-      setState(() {
-        _backgroundPath = data.publicUrl;
-        _backgroundVersion++;
-      });
-    }
   }
 
   Future<void> _handleUpdateUniqueId(String newValue) async {
@@ -758,7 +828,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ],
         ),
-        child: const Icon(Icons.edit, size: 16, color: Color(0xFF525252)),
+        child: const Icon(Icons.more_vert_rounded, size: 16, color: Color(0xFF525252)),
       ),
     );
   }

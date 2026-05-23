@@ -364,3 +364,29 @@ Future<AuthResponse> updateCategories(UpdatingCategoriesRequest request) async {
   }
 }
 
+Future<AuthResponse> deleteBackground() async {
+  try {
+    await ApiService.delete(
+      '/account/delete/background',
+    );
+    return AuthResponse(success: true);
+  } on DioException catch (e) {
+    return handleDioError(e, "Не удалось удалить фон комнаты.");
+  } catch (e) {
+    return handleSystemError(e);
+  }
+}
+
+
+Future<AuthResponse> deleteAvatar() async {
+  try {
+    await ApiService.delete(
+      '/account/delete/avatar',
+    );
+    return AuthResponse(success: true);
+  } on DioException catch (e) {
+    return handleDioError(e, "Не удалось удалить аватар комнаты.");
+  } catch (e) {
+    return handleSystemError(e);
+  }
+}
