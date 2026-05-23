@@ -2,10 +2,9 @@ import 'dart:io';
 import 'package:dia_room/contracts/room/requests/save_room_request.dart';
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:dia_room/utils/auth_service.dart';
+import 'package:dia_room/utils/picker_image_service.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:image_cropper/image_cropper.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 import '../../api/account_api.dart';
@@ -25,7 +24,6 @@ class _RoomSettingsScreenState extends State<RoomSettingsScreen> {
   final TextEditingController _idController = TextEditingController();
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _bioController = TextEditingController();
-  final ImagePicker _picker = ImagePicker();
 
   String? _avatarPath;
   String? _backgroundPath;
@@ -41,86 +39,27 @@ class _RoomSettingsScreenState extends State<RoomSettingsScreen> {
 
   // --- ОБРАБОТКА ИЗОБРАЖЕНИЙ ---
 
-  Future<void> _deletePhysicalFile(String? path) async {
-    if (path == null || path.isEmpty) return;
 
-    try {
-      final file = File(path);
-      if (await file.exists()) {
-        await file.delete();
-        print("Файл удален: $path");
-      }
-    } catch (e) {
-      print("Ошибка при удалении файла: $e");
-    }
-  }
 
-  Future<void> _pickAndCropAvatar() async {
-    final XFile? pickedFile = await _picker.pickImage(
-      source: ImageSource.gallery,
-    );
-
-    if (pickedFile != null) {
-      final croppedFile = await ImageCropper().cropImage(
-        sourcePath: pickedFile.path,
-        // cropStyle: CropStyle.circle, // Круглый шаблон для аватара
-        uiSettings: [
-          AndroidUiSettings(
-            cropStyle: CropStyle.circle,
-            toolbarTitle: 'Обрежьте аватар',
-            toolbarColor: const Color(0xFFB4B4B4),
-            toolbarWidgetColor: Colors.white,
-            activeControlsWidgetColor: const Color(0xFF525252),
-            backgroundColor: const Color(0xFFF5F5F5),
-            initAspectRatio: CropAspectRatioPreset.square,
-            lockAspectRatio: true,
-          ),
-          IOSUiSettings(title: 'Обрежьте аватар', aspectRatioLockEnabled: true),
-        ],
-      );
-
-      if (croppedFile != null) {
-        setState(() => _avatarPath = croppedFile.path);
+  Future<void> _handlePickAndCropAvatar() async {
+    final croppedImage = await PickerImageService.pickAndCropAvatar();
+    if (croppedImage != null) {
+      if (mounted) {
+        setState(() => _avatarPath = croppedImage);
       }
     }
   }
 
-  Future<void> _pickAndCropBackground() async {
-    final XFile? pickedFile = await _picker.pickImage(
-      source: ImageSource.gallery,
-    );
+  Future<void> _handlePickAndCropBackground() async {
+    final croppedImage = await PickerImageService.pickAndCropBackground();
 
-    if (pickedFile != null) {
-      final croppedFile = await ImageCropper().cropImage(
-        sourcePath: pickedFile.path,
-        // cropStyle: CropStyle.rectangle,
-        uiSettings: [
-          AndroidUiSettings(
-            cropStyle: CropStyle.rectangle,
-            toolbarTitle: 'Обрежьте фон 16:9',
-            toolbarColor: const Color(0xFFB4B4B4),
-            toolbarWidgetColor: Colors.white,
-            activeControlsWidgetColor: const Color(0xFF525252),
-            backgroundColor: const Color(0xFFF5F5F5),
-            initAspectRatio: CropAspectRatioPreset.ratio16x9,
-            lockAspectRatio: true,
-          ),
-          IOSUiSettings(
-            title: 'Обрежьте фон 16:9',
-            aspectRatioLockEnabled: true,
-          ),
-        ],
-        aspectRatio: const CropAspectRatio(
-          ratioX: 16,
-          ratioY: 9,
-        ), // 16:9 для фона
-      );
-
-      if (croppedFile != null) {
-        setState(() => _backgroundPath = croppedFile.path);
+    if (croppedImage != null) {
+      if (mounted) {
+        setState(() => _backgroundPath = croppedImage);
       }
     }
   }
+
 
   // --- ОБРАБОТКА КАТЕГОРИЙ ---
 
@@ -426,7 +365,7 @@ class _RoomSettingsScreenState extends State<RoomSettingsScreen> {
       return Align(
         alignment: Alignment.center,
         child: InkWell(
-          onTap: _pickAndCropAvatar,
+          onTap: _handlePickAndCropAvatar,
           borderRadius: BorderRadius.circular(50),
           child: Container(
             height: 100,
@@ -463,9 +402,8 @@ class _RoomSettingsScreenState extends State<RoomSettingsScreen> {
             top: -10,
             child: Row(
               children: [
-                // _buildCircleBtn(Icons.edit, _pickAndCropAvatar),
                 _buildCircleBtn(Icons.delete_outline, () async {
-                  await _deletePhysicalFile(_avatarPath);
+                  await PickerImageService.deletePhysicalFile(_avatarPath);
 
                   setState(() {
                     _avatarPath = null;
@@ -482,7 +420,7 @@ class _RoomSettingsScreenState extends State<RoomSettingsScreen> {
   Widget _buildBackgroundPicker() {
     if (_backgroundPath == null) {
       return InkWell(
-        onTap: _pickAndCropBackground,
+        onTap: _handlePickAndCropBackground,
         child: Container(
           height: 150,
           decoration: BoxDecoration(
@@ -526,7 +464,7 @@ class _RoomSettingsScreenState extends State<RoomSettingsScreen> {
               // _buildCircleBtn(Icons.edit, _pickAndCropBackground),
               // const SizedBox(width: 8),
               _buildCircleBtn(Icons.delete_outline, () async {
-                await _deletePhysicalFile(_backgroundPath);
+                await PickerImageService.deletePhysicalFile(_backgroundPath);
 
                 setState(() {
                   _backgroundPath = null;

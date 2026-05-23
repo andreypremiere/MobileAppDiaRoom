@@ -15,6 +15,8 @@ class DialogButton extends StatelessWidget {
   /// Кастомный фоновый цвет для стандартного режима
   final Color? backgroundColor;
 
+  final EdgeInsets padding;
+
   const DialogButton({
     super.key,
     required this.text,
@@ -22,6 +24,7 @@ class DialogButton extends StatelessWidget {
     this.isTransparent = false,
     this.textColor,
     this.backgroundColor,
+    this.padding = const EdgeInsets.symmetric(vertical: 10, horizontal: 24)
   });
 
   @override
@@ -45,7 +48,7 @@ class DialogButton extends StatelessWidget {
         foregroundColor: effectiveForegroundColor,
         elevation: 0,
         minimumSize: Size.zero,
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 24),
+        padding: padding,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
         ),

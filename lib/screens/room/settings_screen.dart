@@ -1,8 +1,10 @@
-import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dia_room/api/account_api.dart';
 import 'package:dia_room/api/diary_api.dart';
 import 'package:dia_room/components/general/app_back_button.dart';
+import 'package:dia_room/components/general/dialog_button.dart';
+import 'package:dia_room/components/loading_widget/loader_widget.dart';
+import 'package:dia_room/components/room_screen/app_dialogs.dart';
 import 'package:dia_room/contracts/room/requests/updating_avatar_request.dart';
 import 'package:dia_room/contracts/room/requests/updating_background_request.dart';
 import 'package:dia_room/contracts/room/requests/updating_text_field_request.dart';
@@ -12,13 +14,14 @@ import 'package:dia_room/contracts/room/responses/updating_background_response.d
 import 'package:dia_room/services/diary/diary_utils.dart';
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:dia_room/utils/compress_image_service.dart';
+import 'package:dia_room/utils/picker_image_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 import '../../components/info_dialog_component.dart';
+import '../../components/loading_widget/error_widget.dart';
 import '../../contracts/room/requests/updating_categories_request.dart';
 import '../../models/enums/categories.dart';
 import '../../utils/auth_service.dart';
@@ -32,9 +35,7 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  final ImagePicker _picker = ImagePicker();
-
-  late RoomResponse room;
+  RoomResponse? room;
 
   late String _roomId;
   late String _roomName;
@@ -42,17 +43,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
   String? _backgroundPath;
   String? _avatarPath;
 
-  bool _compressMedia = true;
+  // bool _compressMedia = true;
 
   bool _isLoading = true;
-  bool _isError = false;
+  String? _errorMessage;
 
   int _avatarVersion = 0;
   int _backgroundVersion = 0;
 
   // Новые переменные состояния
   final List<Categories> _selectedCategories = [];
-  double _fontSizeLevel = 2.0; // 1.0 - мелкий, 2.0 - средний, 3.0 - крупный
+
+  // double _fontSizeLevel = 2.0; // 1.0 - мелкий, 2.0 - средний, 3.0 - крупный
 
   @override
   void initState() {
@@ -61,188 +63,207 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _loadData() async {
-    setState(() {
-      _isLoading = true;
-      _isError = false;
-    });
+    if (mounted) {
+      setState(() {
+        _isLoading = true;
+        _errorMessage = null;
+      });
+    }
 
     try {
       final response = await getRoomForSettings();
 
       if (!response.success) {
-        print('Не удалось получить данные комнаты');
-        _isError = true;
+        _errorMessage =
+            response.message ??
+            "Непредвиденная ошибка при получении данных. Попробуйте обновить.";
         return;
       }
 
       room = RoomResponse.fromMap(response.data);
 
-      _roomId = room.roomUniqueId;
-      _roomName = room.roomName;
+      _roomId = room!.roomUniqueId;
+      _roomName = room!.roomName;
       _selectedCategories.clear();
-      _selectedCategories.addAll(room.listCategory);
-      _bio = room.bio;
-      _backgroundPath = room.backgroundPath;
-      _avatarPath = room.avatarPath;
-
-      print("Полученные данные ${room.toMap()}");
-
+      _selectedCategories.addAll(room!.listCategory);
+      _bio = room!.bio;
+      _backgroundPath = room!.backgroundPath;
+      _avatarPath = room!.avatarPath;
     } catch (e) {
-      print("Возникла ошибка при подргрузке данных : $e");
-      _isError = true;
+      _errorMessage =
+          "Возникла ошибка в работе приложения. Пожалуйста, обратитесь в поддержку.";
       return;
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
   Future<void> _handleUpdateAvatar() async {
-    final path = await _pickAndCropAvatar();
+    final path = await PickerImageService.pickAndCropAvatar();
 
     if (path == null || path.isEmpty) {
-      print("Путь равен нулю");
       return;
     }
 
-    print("Сжатие");
-    final compressedPath = await CompressImageService.compressForPreview(XFile(path));
+    final compressedPath = await CompressImageService.compressForPreview(
+      XFile(path),
+    );
     if (compressedPath == null) {
-      print("Не удалось сжать изображение");
       return;
     }
 
     final mimeType = DiaryUtils.getSupportedMimeType(compressedPath);
     if (mimeType == null) {
-      print('Не удалось получить mimeType');
       return;
     }
-    print("Полученный mimeType: $mimeType");
 
-    print("Обновление");
-    final UpdatingAvatarRequest request = UpdatingAvatarRequest(mimeType: mimeType);
+    final UpdatingAvatarRequest request = UpdatingAvatarRequest(
+      mimeType: mimeType,
+    );
 
     final response = await updateAvatar(request);
 
     if (!response.success) {
-      print("Ошибка при обновлении на сервере");
+      return;
     }
 
-    final UpdatingAvatarResponse data = UpdatingAvatarResponse.fromMap(response.data);
+    final UpdatingAvatarResponse data = UpdatingAvatarResponse.fromMap(
+      response.data,
+    );
 
-    print("Загрузка");
-    final resultUpload = await uploadSingleMediaFile(compressedPath, data.uploadUrl, mimeType);
+    final resultUpload = await uploadSingleMediaFile(
+      compressedPath,
+      data.uploadUrl,
+      mimeType,
+    );
     if (resultUpload == false) {
-      print("Не удалось загрузить фотографию в хранилище");
       return;
     }
 
     await CachedNetworkImage.evictFromCache(data.publicUrl);
 
-    setState(() {
-      _avatarPath = data.publicUrl;
-      _avatarVersion++;
-    });
+    if (mounted) {
+      setState(() {
+        _avatarPath = data.publicUrl;
+        _avatarVersion++;
+      });
+    }
+  }
+
+  void _onRefresh() {
+    _loadData();
   }
 
   Future<void> _handleUpdateBackground() async {
-    final path = await _pickAndCropBackground();
+    final path = await PickerImageService.pickAndCropBackground();
 
     if (path == null || path.isEmpty) {
-      print("Путь равен нулю");
       return;
     }
 
-    print("Сжатие");
-    final compressedPath = await CompressImageService.compressForPreview(XFile(path));
+    final compressedPath = await CompressImageService.compressForPreview(
+      XFile(path),
+    );
     if (compressedPath == null) {
-      print("Не удалось сжать изображение");
       return;
     }
 
     final mimeType = DiaryUtils.getSupportedMimeType(compressedPath);
     if (mimeType == null) {
-      print('Не удалось получить mimeType');
       return;
     }
-    print("Полученный mimeType: $mimeType");
 
-    print("Обновление");
-    final UpdatingBackgroundRequest request = UpdatingBackgroundRequest(mimeType: mimeType);
+    final UpdatingBackgroundRequest request = UpdatingBackgroundRequest(
+      mimeType: mimeType,
+    );
 
     final response = await updateBackground(request);
 
-    if (!response.success) {
-      print("Ошибка при обновлении на сервере");
-    }
+    if (!response.success) {}
 
-    final UpdatingBackgroundResponse data = UpdatingBackgroundResponse.fromMap(response.data);
+    final UpdatingBackgroundResponse data = UpdatingBackgroundResponse.fromMap(
+      response.data,
+    );
 
-    print("Загрузка");
-    final resultUpload = await uploadSingleMediaFile(compressedPath, data.uploadUrl, mimeType);
+    final resultUpload = await uploadSingleMediaFile(
+      compressedPath,
+      data.uploadUrl,
+      mimeType,
+    );
     if (resultUpload == false) {
-      print("Не удалось загрузить фотографию в хранилище");
       return;
     }
 
     await CachedNetworkImage.evictFromCache(data.publicUrl);
 
-    setState(() {
-      _backgroundPath = data.publicUrl;
-      _backgroundVersion++;
-    });
+    if (mounted) {
+      setState(() {
+        _backgroundPath = data.publicUrl;
+        _backgroundVersion++;
+      });
+    }
   }
 
   Future<void> _handleUpdateUniqueId(String newValue) async {
     final resultCheck = isValidRoomId(newValue);
     if (resultCheck != null) {
-      print("Проверка не пройдена");
       return;
     }
 
-    final response = await updateRoomUniqueId(UpdatingTextFieldRequest(value: newValue));
+    final response = await updateRoomUniqueId(
+      UpdatingTextFieldRequest(value: newValue),
+    );
 
     if (!response.success) {
-      print("Не удалось обновить");
       return;
     }
 
-    setState(() {
-      _roomId = newValue;
-    });
+    if (mounted) {
+      setState(() {
+        _roomId = newValue;
+      });
+    }
   }
 
   Future<void> _handleUpdateRoomName(String newValue) async {
     final resultCheck = isValidRoomName(newValue);
     if (!resultCheck) {
-      print("Проверка не пройдена");
       return;
     }
 
-    final response = await updateRoomName(UpdatingTextFieldRequest(value: newValue));
+    final response = await updateRoomName(
+      UpdatingTextFieldRequest(value: newValue),
+    );
 
     if (!response.success) {
-      print("Не удалось обновить");
       return;
     }
 
-    setState(() {
-      _roomName = newValue;
-    });
+    if (mounted) {
+      setState(() {
+        _roomName = newValue;
+      });
+    }
   }
 
   Future<void> _handleUpdateBio(String newValue) async {
-    final response = await updateRoomBio(UpdatingTextFieldRequest(value: newValue));
+    final response = await updateRoomBio(
+      UpdatingTextFieldRequest(value: newValue),
+    );
 
     if (!response.success) {
-      print("Не удалось обновить");
       return;
     }
 
-    setState(() {
-      _bio = newValue;
-    });
+    if (mounted) {
+      setState(() {
+        _bio = newValue;
+      });
+    }
   }
 
   Future<bool> _handleUpdateCategories(List<Categories> newCategories) async {
@@ -256,16 +277,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (response.success) {
       return true; // Успех
     } else {
-      // // Показываем ошибку пользователю (если handleDioError возвращает errorMessage)
-      // // Либо просто дефолтный текст
-      // if (mounted) {
-      //   ScaffoldMessenger.of(context).showSnackBar(
-      //     SnackBar(
-      //       content: Text("Ошибка: не удалось обновить категории"),
-      //       backgroundColor: Colors.redAccent,
-      //     ),
-      //   );
-      // }
+      // Показать ошибку?
       return false; // Ошибка
     }
   }
@@ -284,141 +296,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
         }
       } else {
         if (context.mounted) {
-          await AppInfoDialog.show(context, result.message ?? "Не удалось выйти из приложения");
+          await AppInfoDialog.show(
+            context,
+            result.message ?? "Не удалось выйти из приложения",
+          );
         }
       }
     }
-  }
-
-  // --- ОБРАБОТКА ИЗОБРАЖЕНИЙ ---
-
-  Future<String?> _pickAndCropAvatar() async {
-    final XFile? pickedFile = await _picker.pickImage(
-      source: ImageSource.gallery,
-    );
-
-    if (pickedFile != null) {
-      final croppedFile = await ImageCropper().cropImage(
-        sourcePath: pickedFile.path,
-        uiSettings: [
-          AndroidUiSettings(
-            cropStyle: CropStyle.circle,
-            toolbarTitle: 'Обрежьте аватар',
-            toolbarColor: const Color(0xFFB4B4B4),
-            toolbarWidgetColor: Colors.white,
-            activeControlsWidgetColor: const Color(0xFF525252),
-            backgroundColor: const Color(0xFFF5F5F5),
-            initAspectRatio: CropAspectRatioPreset.square,
-            lockAspectRatio: true,
-          ),
-          IOSUiSettings(title: 'Обрежьте аватар', aspectRatioLockEnabled: true),
-        ],
-      );
-
-      if (croppedFile != null) {
-        return croppedFile.path;
-      }
-    }
-
-    return null;
-  }
-
-  Future<String?> _pickAndCropBackground() async {
-    final XFile? pickedFile = await _picker.pickImage(
-      source: ImageSource.gallery,
-    );
-
-    if (pickedFile != null) {
-      final croppedFile = await ImageCropper().cropImage(
-        sourcePath: pickedFile.path,
-        uiSettings: [
-          AndroidUiSettings(
-            cropStyle: CropStyle.rectangle,
-            toolbarTitle: 'Обрежьте фон 16:9',
-            toolbarColor: const Color(0xFFB4B4B4),
-            toolbarWidgetColor: Colors.white,
-            activeControlsWidgetColor: const Color(0xFF525252),
-            backgroundColor: const Color(0xFFF5F5F5),
-            initAspectRatio: CropAspectRatioPreset.ratio16x9,
-            lockAspectRatio: true,
-          ),
-          IOSUiSettings(
-            title: 'Обрежьте фон 16:9',
-            aspectRatioLockEnabled: true,
-          ),
-        ],
-        aspectRatio: const CropAspectRatio(ratioX: 16, ratioY: 9),
-      );
-
-      if (croppedFile != null) {
-        return croppedFile.path;
-      }
-    }
-    return null;
-  }
-
-  // --- МОДАЛЬНОЕ ОКНО ДЛЯ РЕДАКТИРОВАНИЯ ТЕКСТА ---
-
-  void _showEditDialog(String title, String currentValue, Function(String) onSave, {int? stroke = 1}) {
-    final TextEditingController controller = TextEditingController(text: currentValue);
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          backgroundColor: const Color(0xFFF8F8F8),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: Text(
-            title,
-            style: const TextStyle(fontFamily: 'SNPro', fontSize: 20, fontWeight: FontWeight.w600),
-          ),
-          content: TextField(
-            minLines: 1,
-            maxLines: stroke,
-            controller: controller,
-            style: const TextStyle(fontFamily: 'SNPro', fontSize: 16),
-            decoration: InputDecoration(
-
-              filled: true,
-              fillColor: Colors.white,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Color(0xFFD1D1D1)),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Color(0xFFB4B4B4), width: 1.5),
-              ),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text(
-                "Отмена",
-                style: TextStyle(color: Colors.grey, fontFamily: 'SNPro', fontSize: 16),
-              ),
-            ),
-            TextButton(
-              onPressed: () async {
-                await onSave(controller.text.trim());
-                Navigator.pop(context);
-              },
-              child: const Text(
-                "Сохранить",
-                style: TextStyle(
-                  color: Color(0xFF525252),
-                  fontFamily: 'SNPro',
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
   }
 
   // --- МОДАЛЬНОЕ ОКНО ВЫБОРА КАТЕГОРИЙ ---
@@ -443,10 +327,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
             return AlertDialog(
               backgroundColor: const Color(0xFFF8F8F8),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
               title: const Text(
                 "Категории комнаты",
-                style: TextStyle(fontFamily: 'SNPro', fontSize: 20, fontWeight: FontWeight.w600),
+                style: TextStyle(
+                  fontFamily: 'SNPro',
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               content: SizedBox(
                 width: double.maxFinite,
@@ -457,8 +347,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     Padding(
                       padding: const EdgeInsets.only(bottom: 8.0, left: 4.0),
                       child: Text(
-                        "Выбрано: ${tempSelectedCategories.length}/3", // Используем временный список
-                        style: const TextStyle(fontFamily: 'SNPro', fontSize: 14, color: Colors.grey),
+                        "Выбрано: ${tempSelectedCategories.length}/3",
+                        // Используем временный список
+                        style: const TextStyle(
+                          fontFamily: 'SNPro',
+                          fontSize: 14,
+                          color: Colors.grey,
+                        ),
                       ),
                     ),
                     Flexible(
@@ -468,12 +363,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         itemBuilder: (context, index) {
                           final category = categoriesToDisplay[index];
                           // Проверяем временный список
-                          final isSelected = tempSelectedCategories.contains(category);
+                          final isSelected = tempSelectedCategories.contains(
+                            category,
+                          );
 
                           return CheckboxListTile(
                             title: Text(
                               category.label,
-                              style: const TextStyle(fontFamily: 'SNPro', fontSize: 16),
+                              style: const TextStyle(
+                                fontFamily: 'SNPro',
+                                fontSize: 16,
+                              ),
                             ),
                             value: isSelected,
                             activeColor: const Color(0xFF525252),
@@ -482,15 +382,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             // Отключаем чекбоксы, пока идет отправка данных
                             enabled: !isLoading,
                             onChanged: (bool? checked) {
-                              setStateDialog(() {
-                                if (checked == true) {
-                                  if (tempSelectedCategories.length < 3) {
-                                    tempSelectedCategories.add(category);
+                              if (mounted) {
+                                setStateDialog(() {
+                                  if (checked == true) {
+                                    if (tempSelectedCategories.length < 3) {
+                                      tempSelectedCategories.add(category);
+                                    }
+                                  } else {
+                                    tempSelectedCategories.remove(category);
                                   }
-                                } else {
-                                  tempSelectedCategories.remove(category);
-                                }
-                              });
+                                });
+                              }
                             },
                           );
                         },
@@ -500,58 +402,70 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ),
               actions: [
-                // Кнопка отмены (чтобы можно было выйти без сохранения)
-                TextButton(
-                  onPressed: isLoading ? null : () => Navigator.pop(context),
-                  child: const Text(
-                    "Отмена",
-                    style: TextStyle(color: Colors.grey, fontFamily: 'SNPro', fontSize: 16),
-                  ),
-                ),
-                // Кнопка сохранения
-                TextButton(
-                  onPressed: isLoading
-                      ? null
-                      : () async {
-                    // 1. Показываем лоадер
-                    setStateDialog(() => isLoading = true);
+                Row(
+                  children: [
+                    DialogButton(
+                      text: "Отмена",
+                      onPressed: () {
+                        if (isLoading) return;
 
-                    // 2. Отправляем запрос
-                    final success = await _handleUpdateCategories(tempSelectedCategories);
-
-                    // 3. Скрываем лоадер
-                    setStateDialog(() => isLoading = false);
-
-                    // 4. Если всё хорошо — обновляем ГЛАВНЫЙ стейт экрана и закрываем диалог
-                    if (success) {
-                      setState(() {
-                        _selectedCategories.clear();
-                        _selectedCategories.addAll(tempSelectedCategories);
-                      });
-
-                      if (context.mounted) {
-                        Navigator.pop(context);
-                      }
-                    }
-                  },
-                  child: isLoading
-                      ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Color(0xFF525252)
+                        if (context.mounted) {
+                          Navigator.pop(context);
+                        }
+                      },
+                      textColor: context.ui.fontColorHint,
+                      isTransparent: true,
+                      padding: EdgeInsets.symmetric(
+                        vertical: 8,
+                        horizontal: 10,
+                      ),
                     ),
-                  )
-                      : const Text(
-                    "Готово",
-                    style: TextStyle(
-                      color: Color(0xFF525252),
-                      fontFamily: 'SNPro',
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                    const Spacer(),
+                    _isLoading
+                        ? DiaRoomLoader()
+                        : DialogButton(
+                            text: "Сохранить",
+                            onPressed: () async {
+                              if (isLoading) {
+                                return;
+                              }
+
+                              if (mounted) {
+                                setStateDialog(() => isLoading = true);
+                              }
+
+                              // 2. Отправляем запрос
+                              final success = await _handleUpdateCategories(
+                                tempSelectedCategories,
+                              );
+
+                              // 3. Скрываем лоадер
+                              if (mounted) {
+                                setStateDialog(() => isLoading = false);
+                              }
+
+                              // 4. Если всё хорошо — обновляем ГЛАВНЫЙ стейт экрана и закрываем диалог
+                              if (success) {
+                                if (mounted) {
+                                  setState(() {
+                                    _selectedCategories.clear();
+                                    _selectedCategories.addAll(
+                                      tempSelectedCategories,
+                                    );
+                                  });
+                                }
+
+                                if (context.mounted) {
+                                  Navigator.pop(context);
+                                }
+                              }
+                            },
+                            padding: EdgeInsets.symmetric(
+                              vertical: 8,
+                              horizontal: 10,
+                            ),
+                          ),
+                  ],
                 ),
               ],
             );
@@ -573,6 +487,46 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_errorMessage != null && !_isLoading) {
+      return Scaffold(
+        appBar: AppBar(
+          backgroundColor: context.ui.appBarColor,
+          elevation: 0,
+          leading: const AppBackButton(),
+          centerTitle: false,
+          title: const Text("Ошибка"),
+        ),
+        body: Center(
+          child: DiaRoomErrorView(
+            errorMessage: _errorMessage!,
+            onRefresh: _onRefresh,
+          ),
+        ),
+      );
+    }
+
+    // ПЕРВОНАЧАЛЬНАЯ ЗАГРУЗКА: Пока данных нет, крутим фирменный лоадер
+    if (_isLoading && room == null) {
+      return const Scaffold(body: Center(child: DiaRoomLoader()));
+    }
+
+    // 3. ПРЕДОХРАНИТЕЛЬ: Если загрузка завершилась, но данных почему-то нет
+    if (room == null) {
+      return Scaffold(
+        appBar: AppBar(
+          backgroundColor: context.ui.appBarColor,
+          elevation: 0,
+          leading: const AppBackButton(),
+        ),
+        body: const Center(
+          child: Text(
+            "Данные комнаты отсутствуют",
+            style: TextStyle(fontFamily: 'SNPro', fontSize: 16),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -591,18 +545,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         iconTheme: const IconThemeData(color: Colors.black),
       ),
-      body: _buildBody()
-    );
-  }
-
-
-  Widget _buildBody() {
-    if (_isLoading && !_isError) {
-      return Center(child: CircularProgressIndicator());
-    } else if (!_isLoading && _isError) {
-      return Center(child: Text("Не удалось загрузить данные"),);
-    } else if (!_isLoading && !_isError) {
-      return SingleChildScrollView(
+      body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -615,21 +558,37 @@ class _SettingsScreenState extends State<SettingsScreen> {
               title: "ID комнаты",
               subtitle: _roomId,
               onTap: () {
-                _showEditDialog("Изменить ID", _roomId, _handleUpdateUniqueId);
+                AppDialogs.showEditDialog(
+                  context,
+                  title: "Изменить ID",
+                  currentValue: _roomId,
+                  onSave: _handleUpdateUniqueId,
+                );
               },
             ),
             _buildListTile(
               title: "Название",
               subtitle: _roomName,
               onTap: () {
-                _showEditDialog("Изменить название", _roomName, _handleUpdateRoomName);
+                AppDialogs.showEditDialog(
+                  context,
+                  title: "Изменить название",
+                  currentValue: _roomName,
+                  onSave: _handleUpdateRoomName,
+                );
               },
             ),
             _buildListTile(
               title: "Описание",
               subtitle: _bio,
               onTap: () {
-                _showEditDialog("Изменить описание", _bio, _handleUpdateBio, stroke: 4);
+                AppDialogs.showEditDialog(
+                  context,
+                  title: "Изменить описание",
+                  currentValue: _bio,
+                  onSave: _handleUpdateBio,
+                  stroke: 4,
+                );
               },
             ),
             _buildListTile(
@@ -637,30 +596,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
               subtitle: _getCategoriesSubtitle(),
               onTap: _showCategoriesDialog,
             ),
-            // const SizedBox(height: 24),
-            //
-            // // Секция Интерфейс (Новый раздел с трехпозиционным ползунком)
-            // _buildSectionHeader("Интерфейс"),
-            // _buildDiscreteSliderTile(
-            //   title: "Крупность шрифта",
-            //   value: _fontSizeLevel,
-            //   onChanged: (double newValue) {
-            //     setState(() {
-            //       _fontSizeLevel = newValue;
-            //     });
-            //   },
-            // ),
-            // const SizedBox(height: 24),
-            //
-            // // Секция Оптимизация
-            // _buildSectionHeader("Оптимизация"),
-            // _buildSwitchTile(
-            //   title: "Сжимать медиа",
-            //   value: _compressMedia,
-            //   onChanged: (val) {
-            //     setState(() => _compressMedia = val);
-            //   },
-            // ),
             const SizedBox(height: 24),
 
             // Секция Аккаунт
@@ -676,12 +611,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(height: 40),
           ],
         ),
-      );
-    }
-    return SizedBox.shrink();
+      ),
+    );
   }
-
-  // --- UI КОМПОНЕНТЫ ---
 
   // Шапка: Фон + Аватар
   Widget _buildHeader() {
@@ -727,31 +659,44 @@ class _SettingsScreenState extends State<SettingsScreen> {
       width: double.infinity,
       child: hasImage
           ? CachedNetworkImage(
-        key: ValueKey('$_backgroundPath-$_backgroundVersion'),
-        imageUrl: _backgroundPath!,
-        imageBuilder: (context, imageProvider) => Container(
-          decoration: BoxDecoration(
-            color: const Color(0xFFF0F0F0),
-            borderRadius: BorderRadius.circular(16),
-            image: DecorationImage(image: imageProvider, fit: BoxFit.cover),
-          ),
-        ),
-        placeholder: (context, url) => Container(
-          decoration: BoxDecoration(color: const Color(0xFFF0F0F0), borderRadius: BorderRadius.circular(16)),
-          child: const Center(child: CupertinoActivityIndicator()),
-        ),
-        errorWidget: (context, url, error) => Container(
-          decoration: BoxDecoration(color: const Color(0xFFF0F0F0), borderRadius: BorderRadius.circular(16)),
-          child: const Center(child: Icon(Icons.error, color: Colors.grey)),
-        ),
-      )
+              key: ValueKey('$_backgroundPath-$_backgroundVersion'),
+              imageUrl: _backgroundPath!,
+              imageBuilder: (context, imageProvider) => Container(
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF0F0F0),
+                  borderRadius: BorderRadius.circular(16),
+                  image: DecorationImage(
+                    image: imageProvider,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+              placeholder: (context, url) => Container(
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF0F0F0),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: const Center(child: CupertinoActivityIndicator()),
+              ),
+              errorWidget: (context, url, error) => Container(
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF0F0F0),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: const Center(
+                  child: Icon(Icons.error, color: Colors.grey),
+                ),
+              ),
+            )
           : Container(
-        decoration: BoxDecoration(
-          color: const Color(0xFFF0F0F0),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: const Center(child: Icon(Icons.wallpaper, color: Colors.grey, size: 40)),
-      ),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF0F0F0),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: const Center(
+                child: Icon(Icons.wallpaper, color: Colors.grey, size: 40),
+              ),
+            ),
     );
   }
 
@@ -766,20 +711,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
         shape: BoxShape.circle,
         border: Border.all(color: Colors.white, width: 4),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 8, offset: const Offset(0, 4))
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
         ],
       ),
       child: hasImage
           ? ClipOval(
-        child: CachedNetworkImage(
-          key:ValueKey('$_avatarPath-$_avatarVersion'),
-          imageUrl: _avatarPath!,
-          fit: BoxFit.cover,
-          placeholder: (context, url) => const Center(child: CupertinoActivityIndicator()),
-          errorWidget: (context, url, error) => const Icon(Icons.error, color: Colors.grey),
-        ),
-      )
-          : const Center(child: Icon(Icons.person, color: Colors.grey, size: 40)),
+              child: CachedNetworkImage(
+                key: ValueKey('$_avatarPath-$_avatarVersion'),
+                imageUrl: _avatarPath!,
+                fit: BoxFit.cover,
+                placeholder: (context, url) =>
+                    const Center(child: CupertinoActivityIndicator()),
+                errorWidget: (context, url, error) =>
+                    const Icon(Icons.error, color: Colors.grey),
+              ),
+            )
+          : const Center(
+              child: Icon(Icons.person, color: Colors.grey, size: 40),
+            ),
     );
   }
 
@@ -820,7 +773,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _buildListTile({required String title, required String subtitle, required VoidCallback onTap}) {
+  Widget _buildListTile({
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
     return InkWell(
       onTap: onTap,
       child: Padding(
@@ -830,14 +787,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
           children: [
             Text(
               title,
-              style: const TextStyle(fontFamily: 'SNPro', fontSize: 16, fontWeight: FontWeight.w500),
+              style: const TextStyle(
+                fontFamily: 'SNPro',
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
             ),
             const SizedBox(width: 16),
             Expanded(
               child: Text(
                 subtitle,
                 textAlign: TextAlign.right,
-                style: const TextStyle(fontFamily: 'SNPro', fontSize: 16, color: Colors.grey),
+                style: const TextStyle(
+                  fontFamily: 'SNPro',
+                  fontSize: 16,
+                  color: Colors.grey,
+                ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -850,76 +815,112 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _buildSwitchTile({required String title, required bool value, required ValueChanged<bool> onChanged}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            title,
-            style: const TextStyle(fontFamily: 'SNPro', fontSize: 16, fontWeight: FontWeight.w500),
-          ),
-          CupertinoSwitch(
-            value: value,
-            activeColor: context.ui.primaryColor,
-            onChanged: onChanged,
-          ),
-        ],
-      ),
-    );
-  }
+  // Widget _buildSwitchTile({
+  //   required String title,
+  //   required bool value,
+  //   required ValueChanged<bool> onChanged,
+  // }) {
+  //   return Padding(
+  //     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+  //     child: Row(
+  //       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //       children: [
+  //         Text(
+  //           title,
+  //           style: const TextStyle(
+  //             fontFamily: 'SNPro',
+  //             fontSize: 16,
+  //             fontWeight: FontWeight.w500,
+  //           ),
+  //         ),
+  //         CupertinoSwitch(
+  //           value: value,
+  //           activeColor: context.ui.primaryColor,
+  //           onChanged: onChanged,
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   // Кастомный элемент списка с трехпозиционным ползунком
-  Widget _buildDiscreteSliderTile({
-    required String title,
-    required double value,
-    required ValueChanged<double> onChanged,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: const TextStyle(fontFamily: 'SNPro', fontSize: 16, fontWeight: FontWeight.w500),
-          ),
-          const SizedBox(height: 4),
-          Row(
-            children: [
-              const Text("1", style: TextStyle(fontFamily: 'SNPro', color: Colors.grey, fontSize: 12)),
-              Expanded(
-                child: SliderTheme(
-                  data: SliderTheme.of(context).copyWith(
-                    activeTrackColor: const Color(0xFF525252),
-                    inactiveTrackColor: const Color(0xFFE8E8E8),
-                    trackHeight: 3.0,
-                    thumbColor: const Color(0xFF525252),
-                    thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8.0),
-                    overlayColor: const Color(0xFF525252).withAlpha(30),
-                    tickMarkShape: const RoundSliderTickMarkShape(tickMarkRadius: 2.0),
-                    activeTickMarkColor: const Color(0xFF525252),
-                    inactiveTickMarkColor: const Color(0xFFB4B4B4),
-                  ),
-                  child: Slider(
-                    value: value,
-                    min: 1.0,
-                    max: 3.0,
-                    divisions: 2, // Разделяет слайдер ровно на 3 точки: 1.0, 2.0 и 3.0
-                    onChanged: onChanged,
-                  ),
-                ),
-              ),
-              const Text("3", style: TextStyle(fontFamily: 'SNPro', color: Colors.grey, fontSize: 12)),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
+  // Widget _buildDiscreteSliderTile({
+  //   required String title,
+  //   required double value,
+  //   required ValueChanged<double> onChanged,
+  // }) {
+  //   return Padding(
+  //     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+  //     child: Column(
+  //       crossAxisAlignment: CrossAxisAlignment.start,
+  //       children: [
+  //         Text(
+  //           title,
+  //           style: const TextStyle(
+  //             fontFamily: 'SNPro',
+  //             fontSize: 16,
+  //             fontWeight: FontWeight.w500,
+  //           ),
+  //         ),
+  //         const SizedBox(height: 4),
+  //         Row(
+  //           children: [
+  //             const Text(
+  //               "1",
+  //               style: TextStyle(
+  //                 fontFamily: 'SNPro',
+  //                 color: Colors.grey,
+  //                 fontSize: 12,
+  //               ),
+  //             ),
+  //             Expanded(
+  //               child: SliderTheme(
+  //                 data: SliderTheme.of(context).copyWith(
+  //                   activeTrackColor: const Color(0xFF525252),
+  //                   inactiveTrackColor: const Color(0xFFE8E8E8),
+  //                   trackHeight: 3.0,
+  //                   thumbColor: const Color(0xFF525252),
+  //                   thumbShape: const RoundSliderThumbShape(
+  //                     enabledThumbRadius: 8.0,
+  //                   ),
+  //                   overlayColor: const Color(0xFF525252).withAlpha(30),
+  //                   tickMarkShape: const RoundSliderTickMarkShape(
+  //                     tickMarkRadius: 2.0,
+  //                   ),
+  //                   activeTickMarkColor: const Color(0xFF525252),
+  //                   inactiveTickMarkColor: const Color(0xFFB4B4B4),
+  //                 ),
+  //                 child: Slider(
+  //                   value: value,
+  //                   min: 1.0,
+  //                   max: 3.0,
+  //                   divisions: 2,
+  //                   // Разделяет слайдер ровно на 3 точки: 1.0, 2.0 и 3.0
+  //                   onChanged: onChanged,
+  //                 ),
+  //               ),
+  //             ),
+  //             const Text(
+  //               "3",
+  //               style: TextStyle(
+  //                 fontFamily: 'SNPro',
+  //                 color: Colors.grey,
+  //                 fontSize: 12,
+  //               ),
+  //             ),
+  //           ],
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
-  Widget _buildActionTile({required String title, required IconData icon, required Color color, required VoidCallback onTap}) {
+  Widget _buildActionTile({
+    required String title,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
     return InkWell(
       onTap: onTap,
       child: Padding(
