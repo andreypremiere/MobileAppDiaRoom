@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dia_room/api/account_api.dart';
 import 'package:dia_room/api/diary_api.dart';
+import 'package:dia_room/components/general/app_avatar.dart';
 import 'package:dia_room/components/general/app_back_button.dart';
 import 'package:dia_room/components/general/app_enum_picker.dart';
 import 'package:dia_room/components/general/dialog_button.dart';
@@ -790,22 +791,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildAvatarContainer() {
-    bool hasImage = _avatarPath != null && _avatarPath!.isNotEmpty;
-
-
-    return GestureDetector(onTap: _avatarPath != null && _avatarPath!.isNotEmpty ? () {
-      context.push(
-        '/full_image_screen',
-        extra: {
-          'urls': [_avatarPath.toString()],
-          'index': 0,
-          'type': FileType.network,
-        },
-      );
-    } : () {},
-    child: Container(
-      height: 100,
-      width: 100,
+    return Container(
       decoration: BoxDecoration(
         color: Colors.white,
         shape: BoxShape.circle,
@@ -818,22 +804,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ],
       ),
-      child: hasImage
-          ? ClipOval(
-        child: CachedNetworkImage(
-          key: ValueKey('$_avatarPath-$_avatarVersion'),
-          imageUrl: _avatarPath!,
-          fit: BoxFit.cover,
-          placeholder: (context, url) =>
-          const Center(child: CupertinoActivityIndicator()),
-          errorWidget: (context, url, error) =>
-          const Icon(Icons.error, color: Colors.grey),
-        ),
-      )
-          : const Center(
-        child: Icon(Icons.person, color: Colors.grey, size: 40),
-      ),
-    ),);
+      child: AppAvatar(avatarPath: _avatarPath, radius: 50,),);
   }
 
   Widget _buildEditButton({required VoidCallback onTap}) {

@@ -32,7 +32,7 @@ class AuthorTile extends StatelessWidget {
           children: [
             // Аватар комнаты
             AppAvatar(
-              imageUrl: author.avatar,
+              avatarPath: author.avatar,
               radius: 18,
             ),
             const SizedBox(width: 10),

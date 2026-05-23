@@ -73,7 +73,7 @@ class RoomHeader extends StatelessWidget {
                     mainAxisAlignment:
                     MainAxisAlignment.spaceBetween,
                     children: [
-                      AppAvatar(imageUrl: avatarUrl, radius: 40,)
+                      AppAvatar(avatarPath: avatarUrl, radius: 40,)
                     ],
                   ),
                 ),

@@ -95,7 +95,7 @@ class _ShowingPostScreenState extends State<ShowingPostScreen> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      AppAvatar(imageUrl: post.author.avatar, radius: 18,),
+                      AppAvatar(avatarPath: post.author.avatar, radius: 18,),
                       const SizedBox(width: 10),
                       // Никнейм автора
                       Text(

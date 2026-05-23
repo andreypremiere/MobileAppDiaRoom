@@ -143,7 +143,7 @@ class _StatePersonalPostsScreen extends State<PersonalPostsScreen> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      AppAvatar(imageUrl: roomInfo.avatar, radius: 18,),
+                      AppAvatar(avatarPath: roomInfo.avatar, radius: 18,),
                       const SizedBox(width: 10),
                       Text(
                         roomInfo.roomName,

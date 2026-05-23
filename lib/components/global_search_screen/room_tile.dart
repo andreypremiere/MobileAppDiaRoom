@@ -15,7 +15,7 @@ class RoomTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       onTap: () => context.push('/room/${room.id}'),
-      leading: AppAvatar(imageUrl: room.avatarUrl),
+      leading: AppAvatar(avatarPath: room.avatarUrl, radius: 22,),
       title: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

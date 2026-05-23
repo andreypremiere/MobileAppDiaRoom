@@ -37,7 +37,7 @@ class FeedPostComponent extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        AppAvatar(imageUrl: post.author.avatar, radius: 12,),
+        AppAvatar(radius: 12, avatarPath: post.author.avatar,),
         const SizedBox(width: 8),
         Text(
           post.author.roomName,
