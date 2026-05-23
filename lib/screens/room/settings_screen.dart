@@ -605,7 +605,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
               icon: Icons.logout,
               color: Colors.redAccent,
               onTap: () async {
-                await _handleLogout(context);
+                final bool? result = await AppDialogs.showConfirmDialog(context, text: "Вы уверены, что хотите выйти?", cancelText: "Отмена", confirmText: "Выйти");
+
+                if (result != null && result) {
+                  if (context.mounted) {
+                    await _handleLogout(context);
+                  }
+                }
               },
             ),
             const SizedBox(height: 40),

@@ -15,7 +15,7 @@ import 'package:provider/provider.dart';
 
 import '../../api/account_api.dart';
 import '../../api/diary_api.dart';
-import '../../components/diary/diary_link_picker.dart';
+import '../../components/general/app_enum_picker.dart';
 import '../../components/diary/input_panel.dart';
 import '../../components/diary/message_card.dart';
 import '../../components/diary/tag_picker_window.dart';
@@ -280,7 +280,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
     final LinkAction? result = await showDialog<LinkAction>(
       context: context,
       barrierDismissible: true, // Закрыть при нажатии на пустую область
-      builder: (context) => const DiaryLinkPicker(),
+      builder: (context) => const AppEnumPicker(values: LinkAction.values),
     );
 
     if (result != null) {
