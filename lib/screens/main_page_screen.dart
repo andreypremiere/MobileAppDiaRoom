@@ -208,7 +208,7 @@ class _StateMainPageScreen extends State<MainPageScreen> {
                           child: Padding(
                             padding: const EdgeInsets.symmetric(vertical: 20),
                             child: Center(
-                              child: CircularProgressIndicator(
+                              child: DiaRoomLoader(
                                 color: context.ui.primaryColor,
                               ),
                             ),
@@ -247,7 +247,7 @@ class _StateMainPageScreen extends State<MainPageScreen> {
         ),
 
         // Нижнее меню
-        bottomNavigationBar: (!_isLoading && _errorMessage != null) || (_isLoading) ? null : AnimatedSlide(
+        bottomNavigationBar: AnimatedSlide(
           duration: const Duration(milliseconds: 300),
           offset: _isBottomMenuVisible ? Offset.zero : const Offset(0, 2),
           child: AnimatedOpacity(
