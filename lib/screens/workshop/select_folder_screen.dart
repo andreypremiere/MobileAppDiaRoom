@@ -9,17 +9,20 @@ import '../../components/general/app_back_button.dart';
 import '../../components/general/full_width_button.dart';
 import '../../components/workshop/folder_grid_view.dart';
 import '../../contracts/workshop/responses/content.dart';
+import '../../models/workshop/folder.dart';
 
 class SelectFolderScreen extends StatefulWidget {
   final String roomId;
   final String? currentFolderId;
   final String targetId;
+  final bool filterFolders;
 
   const SelectFolderScreen({
     super.key,
     required this.roomId,
     this.currentFolderId,
     required this.targetId,
+    required this.filterFolders,
   });
 
   @override
@@ -46,11 +49,7 @@ class _SelectFolderScreenState extends State<SelectFolderScreen> {
         automaticallyImplyLeading: false,
         backgroundColor: context.ui.appBarColor,
         title: Text('Выберите место', style: TextStyle(color: context.ui.fontColorPrimary),),
-        leading: widget.currentFolderId != null ? AppBackButton(onPressed: () => context.pop()) : null,
-        actions: [
-          if (widget.currentFolderId == null)
-            AppBarButton(text: "Отмена", onPressed: () => context.pop('cancel'), backgroundColor: context.ui.toolbarContainerColor,)
-        ],
+        leading: AppBackButton(onPressed: () => context.pop()),
       ),
       // Кнопка подтверждения
       bottomNavigationBar: SafeArea(
@@ -58,7 +57,11 @@ class _SelectFolderScreenState extends State<SelectFolderScreen> {
           padding: const EdgeInsets.all(16.0),
           child:
           FullWidthButton(text: 'Переместить сюда', onPressed: () {
-            context.pop(widget.currentFolderId);
+            if (widget.currentFolderId == null) {
+              context.pop('root');
+            } else {
+              context.pop(widget.currentFolderId);
+            }
           },),
         ),
       ),
@@ -70,8 +73,8 @@ class _SelectFolderScreenState extends State<SelectFolderScreen> {
 
           final Content root = Content.fromMap(snapshot.data!.data);
 
-          // ВАЖНО: Фильтруем список, чтобы нельзя было переместить папку саму в себя
-          final safeFolders = root.folders.where((f) => f.id != widget.targetId).toList();
+          List<Folder> safeFolders;
+          safeFolders = widget.filterFolders ? root.folders.where((f) => f.id != widget.targetId).toList() : root.folders;
 
           // Переиспользуем твой грид, но отключаем контекстные меню!
           return FolderGridView(
@@ -79,8 +82,14 @@ class _SelectFolderScreenState extends State<SelectFolderScreen> {
             isMyRoom: false,
             onActionSelected: (_, __) {},
             onFolderTap: (folder) {
-              context.push<String?>('/select-folder/${widget.roomId}/${widget.targetId}/${folder.id}').then((result) {
-                if (result != null) context.pop(result);
+              final url = Uri(
+                path: '/select-folder/${widget.roomId}/${widget.targetId}/${folder.id}',
+                queryParameters: {
+                  'filterFolders': widget.filterFolders.toString(),
+                },
+              ).toString();
+              context.push<String?>(url).then((result) {
+                if (context.mounted && result != null) context.pop(result);
               });
             },
           );

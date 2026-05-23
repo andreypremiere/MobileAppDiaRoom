@@ -44,8 +44,10 @@ void main() async {
   ApiService.init(authProvider);
   await authProvider.loadSession();
 
-  print('Пользователь аутентифицирован?\nuserId: ${authProvider.userId}\nroomId: ${authProvider.roomId}\n'
-      'isAuthenticated: ${authProvider.isAuthenticated}\nisConfigured: ${authProvider.isConfigured} ');
+  print(
+    'Пользователь аутентифицирован?\nuserId: ${authProvider.userId}\nroomId: ${authProvider.roomId}\n'
+    'isAuthenticated: ${authProvider.isAuthenticated}\nisConfigured: ${authProvider.isConfigured} ',
+  );
 
   print(authProvider.accessToken);
 
@@ -78,13 +80,14 @@ class App extends StatelessWidget {
         return AnnotatedRegion<SystemUiOverlayStyle>(
           value: SystemUiOverlayStyle(
             statusBarColor: Colors.transparent,
-            statusBarIconBrightness:
-            isDark ? Brightness.light : Brightness.dark,
-            statusBarBrightness:
-            isDark ? Brightness.dark : Brightness.light,
+            statusBarIconBrightness: isDark
+                ? Brightness.light
+                : Brightness.dark,
+            statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
             systemNavigationBarColor: Colors.transparent,
-            systemNavigationBarIconBrightness:
-            isDark ? Brightness.light : Brightness.dark,
+            systemNavigationBarIconBrightness: isDark
+                ? Brightness.light
+                : Brightness.dark,
             systemNavigationBarDividerColor: Colors.transparent,
             systemNavigationBarContrastEnforced: false,
             systemStatusBarContrastEnforced: false,
@@ -100,9 +103,13 @@ class App extends StatelessWidget {
           final location = state.uri.path;
           final publicRoutes = ['/login', '/registration', '/verifyCode'];
 
-          final bool isPublicPage = publicRoutes.any((route) => location.startsWith(route));
+          final bool isPublicPage = publicRoutes.any(
+            (route) => location.startsWith(route),
+          );
 
-          print('Текущий location: $location, Публичная: $isPublicPage, Авторизован: $loggedIn');
+          print(
+            'Текущий location: $location, Публичная: $isPublicPage, Авторизован: $loggedIn',
+          );
 
           if (!loggedIn && !isPublicPage) {
             return '/login';
@@ -120,10 +127,7 @@ class App extends StatelessWidget {
         },
         routes: [
           // Главный экран ленты
-          GoRoute(
-            path: '/',
-            builder: (context, state) => MainPageScreen(),
-          ),
+          GoRoute(path: '/', builder: (context, state) => MainPageScreen()),
           GoRoute(
             path: '/settings',
             builder: (context, state) {
@@ -171,17 +175,21 @@ class App extends StatelessWidget {
               return VerifyCode(userId: userId, email: email);
             },
           ),
-          GoRoute(path: '/post_preview',
+          GoRoute(
+            path: '/post_preview',
             builder: (context, state) {
               PostDraft? draft = context.read<DraftProvider>().currentDraft;
               // Если вдруг зашли сюда напрямую без черновика — редирект на начало
               if (draft == null) return NewPublicPostScreen();
               return PostPreviewScreen(postDraft: draft);
-            },),
-          GoRoute(path: '/configureRoom',
+            },
+          ),
+          GoRoute(
+            path: '/configureRoom',
             builder: (context, state) {
               return RoomSettingsScreen();
-            }),
+            },
+          ),
 
           // Экраны регистрации и входа
           GoRoute(
@@ -189,7 +197,11 @@ class App extends StatelessWidget {
             path: '/registration',
             builder: (context, state) => const Registration(),
           ),
-          GoRoute(name: 'login', path: '/login', builder: (context, state) => const Login()),
+          GoRoute(
+            name: 'login',
+            path: '/login',
+            builder: (context, state) => const Login(),
+          ),
 
           // Экран просмотра конкретного поста
           GoRoute(
@@ -234,14 +246,17 @@ class App extends StatelessWidget {
           ),
 
           // Новый пост для витрины
-          GoRoute(path: '/newPublicPost',
-          builder: (context, state) => const NewPublicPostScreen()),
+          GoRoute(
+            path: '/newPublicPost',
+            builder: (context, state) => const NewPublicPostScreen(),
+          ),
 
           GoRoute(
             path: '/full_image_screen',
             builder: (context, state) {
               // Достаем параметры из extra
-              final Map<String, dynamic> params = state.extra as Map<String, dynamic>;
+              final Map<String, dynamic> params =
+                  state.extra as Map<String, dynamic>;
               final List<String> paths = params['urls'] as List<String>;
               final int initIdx = params['index'] as int;
               final FileType fileType = params['type'];
@@ -261,10 +276,11 @@ class App extends StatelessWidget {
               final String videoUrl = extra['url'] as String;
               final FileType type = extra['type'] as FileType;
 
-              return FullScreenVideoScreen(videoUrl: videoUrl, type: type,);
+              return FullScreenVideoScreen(videoUrl: videoUrl, type: type);
             },
           ),
-          GoRoute(path: '/select_post_diary',
+          GoRoute(
+            path: '/select_post_diary',
             builder: (context, state) {
               return SelectPostDiary();
             },
@@ -277,7 +293,8 @@ class App extends StatelessWidget {
             },
             routes: [
               GoRoute(
-                path: ':folderId', // Дочерний маршрут: /workshop/:roomId/:folderId
+                path: ':folderId',
+                // Дочерний маршрут: /workshop/:roomId/:folderId
                 builder: (context, state) {
                   final String roomId = state.pathParameters['roomId']!;
                   final String? folderId = state.pathParameters['folderId'];
@@ -288,19 +305,33 @@ class App extends StatelessWidget {
           ),
           GoRoute(
             path: '/select-folder/:roomId/:targetId',
-            builder: (context, state) => SelectFolderScreen(
-              roomId: state.pathParameters['roomId']!,
-              targetId: state.pathParameters['targetId']!,
-              currentFolderId: null,
-            ),
+            builder: (context, state) {
+              final filterFoldersStr =
+                  state.uri.queryParameters['filterFolders'] ?? 'false';
+              final filterFolders = filterFoldersStr == 'true';
+
+              return SelectFolderScreen(
+                roomId: state.pathParameters['roomId']!,
+                targetId: state.pathParameters['targetId']!,
+                currentFolderId: null,
+                filterFolders: filterFolders,
+              );
+            },
             routes: [
               GoRoute(
                 path: ':currentFolderId',
-                builder: (context, state) => SelectFolderScreen(
-                  roomId: state.pathParameters['roomId']!,
-                  targetId: state.pathParameters['targetId']!,
-                  currentFolderId: state.pathParameters['currentFolderId'],
-                ),
+                builder: (context, state) {
+                  final filterFoldersStr =
+                      state.uri.queryParameters['filterFolders'] ?? 'false';
+                  final filterFolders = filterFoldersStr == 'true';
+
+                  return SelectFolderScreen(
+                    roomId: state.pathParameters['roomId']!,
+                    targetId: state.pathParameters['targetId']!,
+                    currentFolderId: state.pathParameters['currentFolderId'],
+                    filterFolders: filterFolders,
+                  );
+                },
               ),
             ],
           ),

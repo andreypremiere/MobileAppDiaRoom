@@ -1,4 +1,6 @@
 import 'package:dia_room/api/auth_response.dart';
+import 'package:dia_room/components/info_dialog_component.dart';
+import 'package:dia_room/components/room_screen/app_dialogs.dart';
 import 'package:dia_room/models/enums/workshop/creating_workshop.dart';
 import 'package:dia_room/models/workshop/folder.dart';
 import 'package:dia_room/models/workshop/item.dart';
@@ -36,8 +38,12 @@ class WorkshopScreen extends StatefulWidget {
 }
 
 class _WorkshopScreenState extends State<WorkshopScreen> {
-  late Future<AuthResponse> _workshopFuture;
   bool isMyRoom = false;
+
+  bool _isLoading = true;
+  String? _errorMessage;
+  List<dynamic> _allContent = [];
+  List<Item> _photos = [];
 
   @override
   void initState() {
@@ -48,32 +54,64 @@ class _WorkshopScreenState extends State<WorkshopScreen> {
     _loadData();
   }
 
-  void _loadData() {
-    setState(() {
-      if (widget.folderId == null) {
-        _workshopFuture = getRootContent(roomId: widget.roomId);
+  Future<void> _loadData() async {
+    if (mounted) {
+      setState(() {
+        _isLoading = true;
+        _errorMessage = null;
+      });
+    }
+
+    try {
+      final AuthResponse response = widget.folderId == null
+          ? await getRootContent(roomId: widget.roomId)
+          : await getContentFolder(roomId: widget.roomId, folderId: widget.folderId!);
+
+      if (response.success && response.data != null) {
+        final Content root = Content.fromMap(response.data!);
+        final folders = root.folders;
+        final videos = root.items.where((i) => i.itemType == ItemType.video).toList();
+        final photos = root.items.where((i) => i.itemType == ItemType.photo).toList();
+
+        if (mounted) {
+          setState(() {
+            _photos = photos;
+            _allContent = [...folders, ...videos, ...photos];
+            _isLoading = false;
+          });
+        }
       } else {
-        _workshopFuture = getContentFolder(
-          roomId: widget.roomId,
-          folderId: widget.folderId!,
-        );
+        if (mounted) {
+          setState(() {
+            _errorMessage = response.message ?? "Не удалось загрузить данные";
+            _isLoading = false;
+          });
+        }
       }
-    });
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = "Ошибка в работе приложения. Пожалуйста, обратитесь в поддержку.";
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   Future<void> _handleRefresh() async {
-    _loadData();
-    await _workshopFuture;
+    await _loadData();
   }
 
   Future<List<XFile>> _handleAddPhotos() async {
     final ImagePicker picker = ImagePicker();
     List<XFile> images;
     try {
-      images = await picker.pickMultiImage(limit: 20);
+      images = await picker.pickMultiImage();
       return images;
     } catch (e) {
-      print("Ошибка при выборе нескольких изображений: $e");
+      if (mounted) {
+        await AppInfoDialog.show(context, "Возникла ошибка в работе сервиса выбора фотографий. Пожалуйста, обратитесь в поддержку.");
+      }
       return [];
     }
   }
@@ -85,7 +123,9 @@ class _WorkshopScreenState extends State<WorkshopScreen> {
       videos = await picker.pickMultiVideo(limit: 5);
       return videos;
     } catch (e) {
-      print("Ошибка при выборе нескольких изображений: $e");
+      if (mounted) {
+        await AppInfoDialog.show(context, "Возникла ошибка в работе сервиса выбора видео. Пожалуйста, обратитесь в поддержку.");
+      }
       return [];
     }
   }
@@ -104,63 +144,66 @@ class _WorkshopScreenState extends State<WorkshopScreen> {
           if (result.success) {
             _handleRefresh();
           } else {
-            if (!mounted) return;
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(result.message ?? "Ошибка при сохранении")),
-            );
+            if (mounted) {
+              await AppInfoDialog.show(context, result.message ?? "Не удалось переименовать папку.");
+            }
           }
         }
         break;
 
       case FolderAction.move:
-        final destinationId = await context.push<String?>(
-          '/select-folder/${widget.roomId}/${folder.id}',
-        );
+        final url = Uri(
+          path: '/select-folder/${widget.roomId}/${folder.id}',
+          queryParameters: {
+            'filterFolders': true,
+          },
+        ).toString();
 
-        if (destinationId != 'cancel') {
+        final destinationId = await context.push<String?>(url);
+
+        if (destinationId != null) {
           if (destinationId == widget.folderId) {
-            if (!mounted) return;
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Папка уже находится здесь')),
-            );
-            break;
+            if (mounted) {
+              await AppInfoDialog.show(context, "Нельзя переместить папку в саму себя.");
+            }
+            return;
+          }
+
+          String? destId;
+          if (destinationId == "root") {
+            destId = null;
+          } else {
+            destId = destinationId;
           }
 
           final result = await moveFolder(
             targetId: folder.id,
-            destinationId: destinationId,
+            destinationId: destId,
           );
           if (result.success) {
             _handleRefresh();
+          } else {
+            if (mounted) {
+              await AppInfoDialog.show(context, result.message ?? "Не удалось переместить папку.");
+            }
           }
         }
         break;
 
       case FolderAction.delete:
-        final confirm = await showDialog<bool>(
-          context: context,
-          builder: (context) => AlertDialog(
-            backgroundColor: Color(0xFFFFFFFF),
-            content: Text('Вы уверены, что хотите удалить папку? Все вложенные папки и элементы будут удалены!'),
-            actions: [
-              TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Отмена', style: TextStyle(color: Colors.black),)),
-              TextButton(
-                onPressed: () => Navigator.pop(context, true),
-                child: const Text('Удалить', style: TextStyle(color: Colors.red)),
-              ),
-            ],
-          ),
-        );
+        bool? confirm;
+        if (mounted) {
+          confirm = await AppDialogs.showConfirmDialog(context, text: "Вы уверены, что хотите безвозвратно удалить папку и все ее содержимое? Это необратимая операция!", cancelText: "Отмена", confirmText: "Подтвердить");
+        }
 
         if (confirm == true) {
           final result = await deleteFolder(folderId: folder.id);
           if (result.success) {
             _handleRefresh();
           } else {
-            if (!mounted) return;
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text("Ошибка при удалении")),
-            );
+            if (mounted) {
+              await AppInfoDialog.show(context, result.message ?? "Не удалось удалить папку.");
+            }
           }
         }
         break;
@@ -170,54 +213,58 @@ class _WorkshopScreenState extends State<WorkshopScreen> {
   Future<void> _onItemActionSelected(ItemAction action, Item item) async {
     switch (action) {
       case ItemAction.move:
-        final destinationId = await context.push<String?>(
-          '/select-folder/${widget.roomId}/${item.id}',
-        );
+        final url = Uri(
+          path: '/select-folder/${widget.roomId}/${item.id}',
+          queryParameters: {
+            'filterFolders': false,
+          },
+        ).toString();
 
-        if (destinationId != 'cancel') {
+        final destinationId = await context.push<String?>(url);
+
+        if (destinationId != null) {
           if (destinationId == widget.folderId) {
-            if (!mounted) return;
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Папка уже находится здесь')),
-            );
-            break;
+            if (mounted) {
+              await AppInfoDialog.show(context, "Значение уже находится в этой папке.");
+            }
+            return;
+          }
+
+          String? destId;
+          if (destinationId == "root") {
+            destId = null;
+          } else {
+            destId = destinationId;
           }
 
           final result = await moveItem(
             targetId: item.id!,
-            destinationId: destinationId,
+            destinationId: destId,
           );
           if (result.success) {
             _handleRefresh();
+          } else {
+            if (mounted) {
+              await AppInfoDialog.show(context, result.message ?? "Не удалось переместить значение.");
+            }
           }
         }
         break;
 
       case ItemAction.delete:
-        final confirm = await showDialog<bool>(
-          context: context,
-          builder: (context) => AlertDialog(
-            backgroundColor: Color(0xFFFFFFFF),
-            content: Text('Вы уверены, что хотите удалить файл?'),
-            actions: [
-              TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Отмена', style: TextStyle(color: Colors.black),)),
-              TextButton(
-                onPressed: () => Navigator.pop(context, true),
-                child: const Text('Удалить', style: TextStyle(color: Colors.red)),
-              ),
-            ],
-          ),
-        );
+        bool? confirm;
+        if (mounted) {
+          confirm = await AppDialogs.showConfirmDialog(context, text: "Вы уверены, что хотите удалить?", cancelText: "Отмена", confirmText: "Подтвердить");
+        }
 
         if (confirm == true) {
           final result = await deleteItem(itemId: item.id!);
           if (result.success) {
             _handleRefresh();
           } else {
-            if (!mounted) return;
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text("Ошибка при удалении")),
-            );
+            if (mounted) {
+              await AppInfoDialog.show(context, result.message ?? "Не удалось удалить значение.");
+            }
           }
         }
         break;
