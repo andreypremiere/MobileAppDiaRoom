@@ -2,6 +2,7 @@ import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 
 import '../../api/workshop_api.dart';
+import '../general/dialog_button.dart';
 
 Future<void> showCreateFolderDialog(
     BuildContext context, {
@@ -31,13 +32,36 @@ Future<void> showCreateFolderDialog(
         ),
       ),
       actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text('Отмена', style: TextStyle(color: context.ui.fontColorPrimary)),
-        ),
-        TextButton(
-          onPressed: () => Navigator.pop(context, controller.text.trim()),
-          child: Text('Создать', style: TextStyle(color: context.ui.primaryColor, fontWeight: FontWeight.w600)),
+        Row(
+          children: [
+            DialogButton(
+              text: "Отмена",
+              onPressed: () {
+                if (context.mounted) {
+                  Navigator.pop(context);
+                }
+              },
+              textColor: context.ui.fontColorHint,
+              isTransparent: true,
+              padding: EdgeInsets.symmetric(
+                vertical: 8,
+                horizontal: 10,
+              ),
+            ),
+            const Spacer(),
+            DialogButton(
+              text: "Сохранить",
+              onPressed: () {
+                if (context.mounted) {
+                  Navigator.pop(context, controller.text.trim());
+                }
+              },
+              padding: EdgeInsets.symmetric(
+                vertical: 8,
+                horizontal: 10,
+              ),
+            ),
+          ],
         ),
       ],
     ),

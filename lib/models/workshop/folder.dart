@@ -47,4 +47,22 @@ class Folder {
   String toString() {
     return 'Folder(id: $id, name: $name, parentId: $parentId)';
   }
+
+  Folder copyWith({
+    String? id,
+    String? roomId,
+    String? parentId,
+    String? name,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) {
+    return Folder(
+      id: id ?? this.id,
+      roomId: roomId ?? this.roomId,
+      parentId: parentId ?? this.parentId,
+      name: name ?? this.name,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
 }

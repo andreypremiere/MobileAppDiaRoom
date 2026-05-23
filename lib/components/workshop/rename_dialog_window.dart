@@ -10,7 +10,7 @@ Future<String?> showRenameDialog(BuildContext context, String currentName) async
     context: context,
     builder: (context) => AlertDialog(
       backgroundColor: context.ui.containerColor,
-      // title: Text('Переименование', style: TextStyle(color: context.ui.fontColorPrimary)),
+      title: Text('Новое название', style: TextStyle(color: context.ui.fontColorPrimary)),
       content: TextField(
         controller: controller,
         autofocus: true,
