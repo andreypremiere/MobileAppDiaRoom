@@ -1,3 +1,5 @@
+import 'package:dia_room/components/room_screen/app_dialogs.dart';
+import 'package:dia_room/configuration/constants.dart';
 import 'package:dia_room/models/post_creator/block_video.dart';
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
@@ -36,9 +38,11 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
   void _focusBlock(int index) {
     if (_focusedIndex == index) return;
 
-    setState(() {
-      _focusedIndex = index;
-    });
+    if (mounted) {
+      setState(() {
+        _focusedIndex = index;
+      });
+    }
 
     final block = postDraft.blocks[index];
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -71,6 +75,13 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
     FocusManager.instance.primaryFocus?.unfocus();
     FocusScope.of(context).unfocus();
 
+    if (postDraft.blocks.length >= limitGeneralCountBlockInPost) {
+      if (context.mounted) {
+        AppInfoDialog.show(context, "Можно добавить только $limitGeneralCountBlockInPost блоков.");
+      }
+      return;
+    }
+
     if (type == BlockType.text) {
       _addTextBlock();
     } else if (type == BlockType.photos) {
@@ -81,8 +92,8 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
         }
       }
 
-      if (countPhotoBlock >= 4) {
-        AppInfoDialog.show(context, "Пока что можно добавить только 4 блока фотографий :(");
+      if (countPhotoBlock >= limitCountPhotoBlockInPost) {
+        AppInfoDialog.show(context, "Пока что можно добавить только $limitCountPhotoBlockInPost блока фотографий.");
         return;
       }
 
@@ -96,8 +107,8 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
         }
       }
 
-      if (countVideoBlock >= 4) {
-        AppInfoDialog.show(context, "Пока что можно добавить только 4 блока видео :(");
+      if (countVideoBlock >= limitCountVideoBlockInPost) {
+        AppInfoDialog.show(context, "Пока что можно добавить только $limitCountVideoBlockInPost блока видео.");
         return;
       }
 
@@ -107,28 +118,40 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
 
   /// Изменение порядка: перемещение блока вверх по списку
   void _moveUpBlock(int targetIndex) {
-    setState(() {
-      if (targetIndex == 0) return;
-      BlockPost targetValue = postDraft.blocks[targetIndex - 1];
-      postDraft.blocks[targetIndex - 1] = postDraft.blocks[targetIndex];
-      postDraft.blocks[targetIndex] = targetValue;
-      _focusBlock(targetIndex - 1);
-    });
+    if (mounted) {
+      setState(() {
+        if (targetIndex == 0) return;
+        BlockPost targetValue = postDraft.blocks[targetIndex - 1];
+        postDraft.blocks[targetIndex - 1] = postDraft.blocks[targetIndex];
+        postDraft.blocks[targetIndex] = targetValue;
+        _focusBlock(targetIndex - 1);
+      });
+    }
   }
 
   /// Изменение порядка: перемещение блока вниз по списку
   void _moveDownBlock(int targetIndex) {
-    setState(() {
-      if (targetIndex >= postDraft.blocks.length - 1) return;
-      BlockPost targetValue = postDraft.blocks[targetIndex + 1];
-      postDraft.blocks[targetIndex + 1] = postDraft.blocks[targetIndex];
-      postDraft.blocks[targetIndex] = targetValue;
-      _focusBlock(targetIndex + 1);
-    });
+    if (mounted) {
+      setState(() {
+        if (targetIndex >= postDraft.blocks.length - 1) return;
+        BlockPost targetValue = postDraft.blocks[targetIndex + 1];
+        postDraft.blocks[targetIndex + 1] = postDraft.blocks[targetIndex];
+        postDraft.blocks[targetIndex] = targetValue;
+        _focusBlock(targetIndex + 1);
+      });
+    }
   }
 
   /// Удаление блока из черновика
   Future<void> _deleteBlock(int index) async {
+    bool? confirm;
+    if (mounted) {
+      confirm = await AppDialogs.showConfirmDialog(context,
+          text: "Вы уверены, что хотите удалить блок?", cancelText: "Отмена", confirmText: "Подтвердить");
+    }
+
+    if (confirm == null || !confirm) return;
+
     final block = postDraft.blocks[index];
 
     // 1. Проверяем тип блока и вызываем очистку ресурсов
@@ -152,10 +175,12 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
     final newController = TextEditingController();
     final newBlock = BlockTextCreating(controller: newController);
 
-    setState(() {
-      postDraft.blocks.add(newBlock);
-      _focusedIndex = postDraft.blocks.length - 1;
-    });
+    if (mounted) {
+      setState(() {
+        postDraft.blocks.add(newBlock);
+        _focusedIndex = postDraft.blocks.length - 1;
+      });
+    }
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       newBlock.focusNode.requestFocus();
@@ -164,10 +189,12 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
 
   void _addPhotosBlock() {
     final newBlock = BlockPhotosCreating(listPhoto: [], methodView: MethodViewPhoto.tiles);
-    setState(() {
-      postDraft.blocks.add(newBlock);
-      _focusedIndex = postDraft.blocks.length - 1;
-    });
+    if (mounted) {
+      setState(() {
+        postDraft.blocks.add(newBlock);
+        _focusedIndex = postDraft.blocks.length - 1;
+      });
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       FocusScope.of(context).unfocus();
     });
@@ -184,10 +211,13 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
         previewPublicUrl: '',
         fileSize: 0
         );
-    setState(() {
-      postDraft.blocks.add(newBlock);
-      _focusedIndex = postDraft.blocks.length - 1;
-    });
+    if (mounted) {
+      setState(() {
+        postDraft.blocks.add(newBlock);
+        _focusedIndex = postDraft.blocks.length - 1;
+      });
+    }
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       FocusScope.of(context).unfocus();
     });
@@ -200,9 +230,11 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
       onTap: () {
         FocusScope.of(context).unfocus();
         FocusManager.instance.primaryFocus?.unfocus();
-        setState(() {
-          _focusedIndex = null;
-        });
+        if (mounted) {
+          setState(() {
+            _focusedIndex = null;
+          });
+        }
       },
       behavior: HitTestBehavior.opaque,
       child: Scaffold(
@@ -257,7 +289,7 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
                   children: [
                     Text(
                       'Добавьте первое значение',
-                      style: TextStyle(fontFamily: 'SNPro', fontSize: 24, color: context.ui.fontColorPrimary, fontWeight: FontWeight.w600),
+                      style: TextStyle(fontFamily: 'SNPro', fontSize: 24, color: context.ui.appBarColor, fontWeight: FontWeight.w600),
                     ),
                     PopupMenuButton<BlockType>(
                       shape: RoundedRectangleBorder(
@@ -324,7 +356,11 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
                           onMoveUp: () => _moveUpBlock(index),
                           onMoveDown: () => _moveDownBlock(index),
                           onDelete: () async => await _deleteBlock(index),
-                          onChanged: () => setState(() {}),
+                          onChanged: () {
+                            if (mounted) {
+                              setState(() {});
+                            }
+                          } ,
                         );
                       },
                     ),

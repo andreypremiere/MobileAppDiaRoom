@@ -18,6 +18,7 @@ class TextBlockWidget extends StatelessWidget {
         fontSize: block.textType.size,
         fontWeight: block.textType.weight,
         color: context.ui.fontColorPrimary,
+        fontStyle: block.textType.style,
         height: 1.2,
       ),
     );

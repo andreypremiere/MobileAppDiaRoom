@@ -1,4 +1,5 @@
 import 'dart:io';
+import '../../configuration/constants.dart';
 import '../enums/block_type.dart';
 import '../enums/method_view_photo.dart';
 import 'block_post.dart';
@@ -28,13 +29,9 @@ class BlockPhotos extends BlockPost {
 }
 
 class BlockPhotosCreating extends BlockPhotos implements Validatable {
-  static const limitPhotos = 10;
-
-
-
   BlockPhotosCreating({required super.listPhoto, required super.methodView});
 
-  bool get isFull => listPhoto.length >= limitPhotos;
+  bool get isFull => listPhoto.length >= limitPhotosForBlockInPost;
 
   @override
   bool isEmpty() {
@@ -42,7 +39,7 @@ class BlockPhotosCreating extends BlockPhotos implements Validatable {
   }
 
   Future<bool> addPath(String path) async {
-    if (listPhoto.length >= limitPhotos) {
+    if (listPhoto.length > limitPhotosForBlockInPost) {
       return false;
     }
 

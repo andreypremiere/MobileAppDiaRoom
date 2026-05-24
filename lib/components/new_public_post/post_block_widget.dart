@@ -1,6 +1,7 @@
 import 'package:dia_room/models/post_creator/block_video.dart';
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
+import 'package:path/path.dart';
 import '../../models/post_creator/block_post.dart';
 import '../../models/post_creator/block_photos.dart';
 import '../../models/post_creator/block_text.dart';
@@ -31,6 +32,7 @@ class PostBlockWrapper extends StatelessWidget {
   });
 
   Widget _buildActionButton({
+    required BuildContext context,
     required IconData iconData,
     required Color iconColor,
     required VoidCallback onPressed,
@@ -39,8 +41,8 @@ class PostBlockWrapper extends StatelessWidget {
       margin: const EdgeInsets.only(left: 8),
       width: 36,
       height: 36,
-      decoration: const BoxDecoration(
-        color: Colors.white,
+      decoration: BoxDecoration(
+        color: context.ui.containerColor,
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2)),
@@ -92,8 +94,9 @@ class PostBlockWrapper extends StatelessWidget {
             Container(
               width: double.infinity,
               decoration: BoxDecoration(
+                color: context.ui.containerColor,
                 border: Border.all(
-                  color: isFocused ? context.ui.fontColorPrimary : context.ui.fontColorHint,
+                  color: isFocused ? context.ui.toolbarContainerColor : context.ui.fontColorHint,
                   width: 1,
                 ),
                 borderRadius: BorderRadius.circular(8),
@@ -108,17 +111,17 @@ class PostBlockWrapper extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    _buildActionButton(
+                    _buildActionButton(context: context,
                       iconData: Icons.arrow_circle_down,
-                      iconColor: const Color(0xFF797979),
+                      iconColor: context.ui.toolbarContainerColor,
                       onPressed: onMoveDown,
                     ),
-                    _buildActionButton(
+                    _buildActionButton(context: context,
                       iconData: Icons.arrow_circle_up,
-                      iconColor: const Color(0xFF797979),
+                      iconColor: context.ui.toolbarContainerColor,
                       onPressed: onMoveUp,
                     ),
-                    _buildActionButton(
+                    _buildActionButton(context: context,
                       iconData: Icons.delete_outline,
                       iconColor: Colors.redAccent,
                       onPressed: onDelete,

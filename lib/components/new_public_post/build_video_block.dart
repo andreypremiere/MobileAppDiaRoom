@@ -1,8 +1,10 @@
 import 'dart:io';
 
 import 'package:dia_room/components/info_dialog_component.dart';
+import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import '../../configuration/constants.dart';
 import '../../models/post_creator/block_video.dart';
 
 class VideoBlockWidget extends StatefulWidget {
@@ -16,65 +18,62 @@ class VideoBlockWidget extends StatefulWidget {
 }
 
 class _VideoBlockWidgetState extends State<VideoBlockWidget> {
-  // VideoPlayerController? _controller;
   bool _isProcessing = false;
 
-  // @override
-  // void initState() {
-  //   super.initState();
-  //   if (widget.block.path != null) {
-  //     _initController();
-  //   }
-  // }
-
-  // void _initController() {
-  //   _controller = VideoPlayerController.file(File(widget.block.path!))
-  //     ..initialize().then((_) => setState(() {}));
-  // }
-
   Future<void> _pickVideo(BuildContext context) async {
-    final ImagePicker picker = ImagePicker();
-    setState(() => _isProcessing = true);
-    final XFile? video = await picker.pickVideo(source: ImageSource.gallery);
+    try {
+      final ImagePicker picker = ImagePicker();
+      if (mounted) {
+        setState(() => _isProcessing = true);
+      }
+      final XFile? video = await picker.pickVideo(source: ImageSource.gallery);
 
-    if (video == null) {
-      setState(() => _isProcessing = false);
-      // Просто выходим из метода, ничего не делая
-      return;
-    }
+      if (video == null) {
+        if (mounted) {
+          setState(() => _isProcessing = false);
+        }
+        return;
+      }
 
-    final file = File(video.path);
-    final bytes = await file.length();
+      final file = File(video.path);
+      final bytes = await file.length();
 
-    // Проверка на 200 МБ
-    if (bytes > 200 * 1024 * 1024) {
+      // Проверка на размер
+      if (bytes > limitSizeVideoInPost) {
+        await widget.block.clearBlock();
+        if (context.mounted) {
+          AppInfoDialog.show(context, "Максимальный размер видео ${limitSizeVideoInPost / (1024 * 1024)} мб.");
+        }
+        if (mounted) {
+          setState(() => _isProcessing = false);
+        }
+        return;
+      }
+
+      final resultLoad = await widget.block.loadMetadata(video.path, bytes);
+      final resultPreview = await widget.block.generatePreview();
+
+      if (!resultPreview || !resultLoad) {
+        if (context.mounted) {
+          await AppInfoDialog.show(context, "Не удалось получить метаданные файла. Пожалуйста, сообщите в поддержку.");
+        }
+        await widget.block.clearBlock();
+      }
+      if (mounted) {
+        setState(() => _isProcessing = false);
+      }
+      widget.onChanged();
+    } catch (e) {
+      if (context.mounted) {
+        AppInfoDialog.show(context, "Возникла непредвиденная ошибка при добавлении видеоролика. Пожалуйста, сообщите в поддержку.");
+      }
       await widget.block.clearBlock();
-      AppInfoDialog.show(context, "Размер видео слишком большой :O. Максимальный размер 200 мб.");
-      setState(() => _isProcessing = false);
-      return;
     }
 
-    final resultLoad = await widget.block.loadMetadata(video.path, bytes);
-    final resultPreview = await widget.block.generatePreview();
-
-    if (!resultPreview || !resultLoad) {
-      AppInfoDialog.show(context, "Непредвиденная ошибка во время добавления видео :(");
-      await widget.block.clearBlock();
-    }
-    setState(() => _isProcessing = false);
-
-    widget.onChanged();
-    }
-
-  // @override
-  // void dispose() {
-  //   _controller?.dispose();
-  //   super.dispose();
-  // }
+  }
 
   @override
   Widget build(BuildContext context) {
-    // Если видео нет и оно не обрабатывается, показываем кнопку добавления
     if (widget.block.localPath.isEmpty && !_isProcessing) {
       return _buildAddButton();
     }
@@ -122,7 +121,7 @@ class _VideoBlockWidgetState extends State<VideoBlockWidget> {
             child: Container(
               width: 60, height: 60,
               decoration: BoxDecoration(
-                color: const Color(0xFFF5F5F5),
+                color: context.ui.containerColor,
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(color: const Color(0xFFC9C9C9)),
               ),

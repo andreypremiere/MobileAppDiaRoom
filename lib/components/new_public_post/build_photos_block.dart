@@ -1,7 +1,10 @@
 import 'dart:io';
 import 'package:dia_room/components/info_dialog_component.dart';
+import 'package:dia_room/configuration/constants.dart';
+import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:path/path.dart';
 import '../../models/post_creator/block_photos.dart';
 
 class PhotosBlockWidget extends StatelessWidget {
@@ -17,20 +20,24 @@ class PhotosBlockWidget extends StatelessWidget {
   Future<void> _pickImages(BuildContext context) async {
     try {
       if (block.isFull) {
-        AppInfoDialog.show(
-          context,
-          "Лимит фотографий для блока уже достигнут :(",
-        );
+        if (context.mounted) {
+          await AppInfoDialog.show(
+            context,
+            "Лимит фотографий ($limitPhotosForBlockInPost) для блока уже достигнут.",
+          );
+        }
         return;
       }
 
       final ImagePicker picker = ImagePicker();
-      final List<XFile> pickedFiles = await picker.pickMultiImage(limit: 10);
+      List<XFile> pickedFiles = await picker.pickMultiImage();
 
       if (pickedFiles.isNotEmpty) {
-        if (pickedFiles.length > BlockPhotosCreating.limitPhotos - block.listPhoto.length) {
-          AppInfoDialog.show(context, "Можно выбрать не больше 10 фото :(");
-          return;
+        if (pickedFiles.length > limitPhotosForBlockInPost - block.listPhoto.length) {
+          if (context.mounted) {
+            AppInfoDialog.show(context, "В блок можно добавить не более $limitPhotosForBlockInPost фотографий.");
+          }
+          pickedFiles = pickedFiles.sublist(0, limitPhotosForBlockInPost - block.listPhoto.length);
         }
 
         for (final file in pickedFiles) {
@@ -40,17 +47,19 @@ class PhotosBlockWidget extends StatelessWidget {
         onChanged(); // Сообщаем родителю, что список путей изменился
       }
     } catch (e) {
-      print("Ошибка при выборе изображений: $e");
+      if (context.mounted) {
+        await AppInfoDialog.show(context, messageErrorCatch);
+      }
     }
   }
 
-  Widget _buildDecoratedBox({required Widget child, Color? backgroundColor}) {
+  Widget _buildDecoratedBox(BuildContext context, {required Widget child}) {
     const double borderRadius = 8;
     return Container(
       width: 70,
       height: 70,
       decoration: BoxDecoration(
-        color: backgroundColor ?? Colors.white,
+        color: context.ui.containerColor,
         borderRadius: BorderRadius.circular(borderRadius),
         border: Border.all(color: const Color(0xFFC9C9C9), width: 1),
       ),
@@ -77,7 +86,7 @@ class PhotosBlockWidget extends StatelessWidget {
                 GestureDetector(
                   onTap: () => _pickImages(context),
                   child: _buildDecoratedBox(
-                    backgroundColor: const Color(0xFFF5F5F5),
+                    context,
                     child: const Icon(
                       Icons.add_a_photo_outlined,
                       color: Color(0xFF797979),
@@ -97,7 +106,7 @@ class PhotosBlockWidget extends StatelessWidget {
                   child: Stack(
                     clipBehavior: Clip.none,
                     children: [
-                      _buildDecoratedBox(
+                      _buildDecoratedBox(context,
                         child: Image.file(File(path), fit: BoxFit.cover),
                       ),
                       Positioned(

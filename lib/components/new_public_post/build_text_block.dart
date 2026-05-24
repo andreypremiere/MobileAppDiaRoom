@@ -1,3 +1,4 @@
+import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 import '../../models/post_creator/block_text.dart';
 
@@ -27,7 +28,8 @@ class TextBlockWidget extends StatelessWidget {
           fontFamily: 'SNPro',
           fontSize: block.textType.size,
           fontWeight: block.textType.weight,
-          color: Colors.black87,
+          color: context.ui.fontColorPrimary,
+          fontStyle: block.textType.style,
         ),
         decoration: InputDecoration(
           border: InputBorder.none,

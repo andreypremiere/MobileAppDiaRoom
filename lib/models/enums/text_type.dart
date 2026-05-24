@@ -5,7 +5,8 @@ enum TextType {
     label: 'Заголовок',
     slug: 'title',
     size: 22,
-    weight: FontWeight.w700,
+    weight: FontWeight.w800,
+    style: FontStyle.normal,
     icon: Icons.format_size, // Или Icons.title
   ),
   subtitle(
@@ -13,20 +14,31 @@ enum TextType {
     slug: 'subtitle',
     size: 20,
     weight: FontWeight.w600,
+    style: FontStyle.normal,
     icon: Icons.format_align_left,
   ),
   text(
     label: 'Текст',
     slug: 'text',
     size: 18,
-    weight: FontWeight.w500,
+    weight: FontWeight.w400,
+    style: FontStyle.normal,
     icon: Icons.notes,
+  ),
+  quote(
+    label: "Цитата",
+    slug: "quote",
+    size: 18,
+    weight: FontWeight.w400,
+    style: FontStyle.italic,
+    icon: Icons.format_quote
   );
 
   final String label;
   final String slug;
   final double size;
   final FontWeight weight;
+  final FontStyle style;
   final IconData icon; // Новое поле
 
   const TextType({
@@ -34,6 +46,7 @@ enum TextType {
     required this.slug,
     required this.size,
     required this.weight,
+    required this.style,
     required this.icon,
   });
 
