@@ -21,6 +21,7 @@ import '../../components/workshop/create_folder_dialog_window.dart';
 import '../../components/workshop/folder_widget.dart';
 import '../../components/workshop/item_widget.dart';
 import '../../components/workshop/rename_dialog_window.dart';
+import '../../configuration/constants.dart';
 import '../../contracts/workshop/responses/content.dart';
 import '../../models/enums/file_type.dart';
 import '../../models/enums/workshop/folder_actions.dart';
@@ -65,6 +66,21 @@ class _WorkshopScreenState extends State<WorkshopScreen> {
   //     _loadData();
   //   }
   // }
+
+  void addItem(Item item) {
+    int index = _allContent.length;
+    if (item.itemType == ItemType.video) {
+      index = _allContent.indexWhere((element) => element is Item && element.itemType == ItemType.photo);
+      if (index == -1) {
+        index = _allContent.length;
+      }
+    }
+    if (mounted) {
+      setState(() {
+        _allContent.insert(index, item);
+      });
+    }
+  }
 
   Future<void> _loadData() async {
     if (mounted) {
@@ -481,7 +497,7 @@ class _WorkshopScreenState extends State<WorkshopScreen> {
               onSelected: (action) async {
                 switch (action) {
                   case CreatingWorkshopAction.folder:
-                    showCreateFolderDialog(
+                    await showCreateFolderDialog(
                       context,
                       roomId: widget.roomId,
                       parentId: widget.folderId,
@@ -492,9 +508,23 @@ class _WorkshopScreenState extends State<WorkshopScreen> {
                   case CreatingWorkshopAction.photo:
                     final List<XFile> pathPhotos = await _handleAddPhotos();
                     if (pathPhotos.isNotEmpty) {
-                      final manager = context.read<UploaderManager>();
-                      await manager.uploadPhotos(files: pathPhotos, folderId: widget.folderId);
-                      _handleRefresh();
+                      List<XFile> filteredPhotos = pathPhotos;
+
+                      if (pathPhotos.length > limitPhotosForLoadInWorkshop) {
+                        filteredPhotos = pathPhotos.sublist(0, limitPhotosForLoadInWorkshop); // Используем правильную константу
+
+                        if (context.mounted) {
+                          await AppInfoDialog.show(
+                              context,
+                              "За раз можно загрузить не более $limitPhotosForLoadInWorkshop фотографий. Будут загружены ${limitPhotosForLoadInWorkshop} первых фотографий."
+                          );
+                        }
+                      }
+
+                      if (context.mounted) {
+                        final manager = context.read<UploaderManager>();
+                        manager.uploadPhotos(files: filteredPhotos, folderId: widget.folderId, addPhoto: addItem);
+                      }
                     }
                     break;
 

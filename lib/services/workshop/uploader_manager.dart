@@ -8,6 +8,7 @@ import 'package:dia_room/contracts/workshop/responses/creating_item_video.dart' 
 import 'package:dia_room/models/enums/workshop/item_status.dart';
 import 'package:dia_room/models/enums/workshop/item_type.dart';
 import 'package:dia_room/models/enums/workshop/mime_type.dart';
+import 'package:dia_room/models/workshop/item.dart';
 import 'package:dia_room/services/diary/diary_utils.dart';
 import 'package:dia_room/utils/compress_image_service.dart';
 import 'package:flutter/material.dart';
@@ -184,9 +185,10 @@ class UploaderManager extends ChangeNotifier{
     return true;
   }
 
-  Future<bool> uploadPhotos({
+  Future<void> uploadPhotos({
     required List<XFile> files,
-    required String? folderId
+    required String? folderId,
+    required Function(Item item) addPhoto
   }) async {
     progress = 0;
     isUploading = true;
@@ -201,15 +203,6 @@ class UploaderManager extends ChangeNotifier{
 
         final title = p.basenameWithoutExtension(file.name);
 
-        // Сжимаем изображение и контролируем размер
-        pathPreview = await CompressImageService
-            .compressForPreview(files[i]);
-        if (pathPreview == null) {
-          completedCount++;
-          progress = completedCount / files.length;
-          continue;
-        }
-
         pathOriginal = await CompressImageService
             .compressForOriginal(files[i]);
         if (pathOriginal == null) {
@@ -218,8 +211,17 @@ class UploaderManager extends ChangeNotifier{
           continue;
         }
 
-        // Формируем объект для запроса на создание item
+        pathPreview = await CompressImageService
+            .compressForPreview(XFile(pathOriginal));
+        if (pathPreview == null) {
+          completedCount++;
+          progress = completedCount / files.length;
+          continue;
+        }
+
         final size = await DiaryUtils.getFileSize(pathOriginal);
+
+        // Формируем объект для запроса на создание item
 
         final CreatingItemPhoto itemPhoto = CreatingItemPhoto(
             title: title,
@@ -257,8 +259,14 @@ class UploaderManager extends ChangeNotifier{
         }
 
         // Обновляем статус
-        await updateItem(item: UpdatingItemStatus(
+        final resultUpdatedStatus = await updateItem(item: UpdatingItemStatus(
             itemId: response.itemId, status: ItemStatus.ready));
+        
+        if (resultUpdatedStatus.success) {
+          response.item.status = ItemStatus.ready;
+          addPhoto(response.item);
+        }
+        
         completedCount++;
         progress = completedCount / files.length;
       } catch (e) {
@@ -282,6 +290,5 @@ class UploaderManager extends ChangeNotifier{
       }
     }
     isUploading = false;
-    return true;
   }
 }
