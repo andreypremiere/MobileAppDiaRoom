@@ -94,20 +94,7 @@ class _SelectFolderScreenState extends State<SelectFolderDiaryScreen> {
           'Выберите папку',
           style: TextStyle(color: context.ui.fontColorPrimary),
         ),
-        leading: widget.currentFolderId != null
-            ? AppBackButton(onPressed: () => context.pop())
-            : null,
-        actions: [
-          if (widget.currentFolderId == null)
-            Padding(
-              padding: const EdgeInsets.only(right: 4),
-              child: AppBarButton(
-                text: "Отмена",
-                onPressed: () => context.pop(),
-                backgroundColor: context.ui.toolbarContainerColor,
-              ),
-            ),
-        ],
+        leading: AppBackButton(onPressed: () => context.pop()),
       ),
       // Кнопка подтверждения
       bottomNavigationBar: SafeArea(

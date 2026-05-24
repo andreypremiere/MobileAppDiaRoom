@@ -6,9 +6,12 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
+import '../../components/diary/link_button.dart';
 import '../../components/general/app_back_button.dart';
 import '../../components/info_dialog_component.dart';
 import '../../models/enums/categories.dart';
+import '../../utils/auth_service.dart';
 
 
 class SetSettingsForPostScreen extends StatefulWidget {
@@ -213,7 +216,7 @@ class _SetSettingsForPostState extends State<SetSettingsForPostScreen> {
             ),
 
             const SizedBox(height: 24),
-            _buildSectionTitle("Содержание (на будущее)"),
+            _buildSectionTitle("Ссылка на мастерскую"),
             const SizedBox(height: 8),
             _buildWorkShopBinding(),
 
@@ -461,20 +464,75 @@ class _SetSettingsForPostState extends State<SetSettingsForPostScreen> {
     );
   }
 
+  Future<void> _handleBindLinkWorkshop() async {
+    String? roomId;
+    if (mounted) {
+      roomId = context.read<AuthProvider>().roomId;
+    }
+    if (roomId == null) {
+      if (mounted) {
+        await AppInfoDialog.show(context, "Не удалось получить текущую сессию. Пожалуйста, сообщите в поддержку.");
+      }
+      return;
+    }
+
+    final destinationId = await context.push<String?>(
+      '/select-folder-diary/$roomId',
+    );
+
+    if (destinationId != null) {
+      if (mounted) {
+        setState(() {
+          widget.postDraft.workshopLink.setId(destinationId);
+        });
+      }
+    }
+  }
+
+  void _onCloseLink() {
+    if (mounted) {
+      setState(() {
+        widget.postDraft.workshopLink.setEmpty();
+      });
+    }
+  }
+
   Widget _buildWorkShopBinding() {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.5),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: const Color(0xFFD1D1D1),
-          style: BorderStyle.none,
+    final bool isLinkSelected = widget.postDraft.workshopLink.isExist();
+
+    // Состояние 2: Ссылка выбрана
+    if (isLinkSelected) {
+      return CustomLinkButton(
+        icon: Icons.burst_mode_outlined,
+        label: "Связано с мастерской",
+        onClose: _onCloseLink,
+      );
+    }
+
+    // Состояние 1: Ссылка не выбрана (стиль как у селектора категории)
+    return InkWell(
+      onTap: _handleBindLinkWorkshop,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFFD1D1D1)),
         ),
-      ),
-      child: Text(
-        "Блоков контента: ${widget.postDraft.blocks.length}",
-        style: const TextStyle(fontFamily: 'SNPro', color: Colors.grey),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              "Связать с мастерской...",
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.black26,
+              ),
+            ),
+            const Icon(Icons.link, color: Colors.grey),
+          ],
+        ),
       ),
     );
   }
@@ -494,13 +552,12 @@ class _SetSettingsForPostState extends State<SetSettingsForPostScreen> {
           ),
           elevation: 0,
         ),
-        child: const Text(
+        child: Text(
           "Опубликовать",
           style: TextStyle(
-            color: Colors.white,
+            color: context.ui.fontColorLight,
             fontSize: 18,
             fontWeight: FontWeight.bold,
-            fontFamily: 'SNPro',
           ),
         ),
       ),

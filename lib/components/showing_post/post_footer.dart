@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 
 import '../../configuration/constants.dart';
 import '../../utils/auth_service.dart';
+import '../diary/link_button.dart';
 import '../diary/panel_link_buttons.dart';
 import '../room_screen/follow_button.dart';
 import 'like.dart';
@@ -55,11 +56,10 @@ class PostFooter extends StatelessWidget {
       children: [
         // const Divider(),
         if (workshopLink.isExist())
-          AttachedLinksBlock(
-            workshopLink: workshopLink.getLink(),
-            labelWorkshop: 'Ссылка в мастерской',
-            labelPost: 'Ссылка в публикациях',
-            onTapWorkshop: () => _handleOnTapWorkshop(context),
+          CustomLinkButton(
+            icon: Icons.burst_mode_outlined,
+            label: "Открыть в мастерской",
+            onTap: () => _handleOnTapWorkshop(context),
           ),
 
         // Хэштеги
