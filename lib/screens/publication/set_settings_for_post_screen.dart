@@ -361,22 +361,9 @@ class _SetSettingsForPostState extends State<SetSettingsForPostScreen> {
   }
 
   Widget _buildCategorySelector() {
-    return PopupMenuButton<Categories>(
-      color: Color(0xFFD0D0D0),
-      offset: const Offset(0, 50),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      onSelected: (val) => setState(() => widget.postDraft.category = val),
-      itemBuilder: (context) => Categories.values
-          .map(
-            (cat) => PopupMenuItem(
-              value: cat,
-              child: Text(
-                cat.label,
-                style: const TextStyle(fontFamily: 'SNPro'),
-              ),
-            ),
-          )
-          .toList(),
+    return InkWell(
+      onTap: _showCategoryDialog,
+      borderRadius: BorderRadius.circular(12),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
@@ -388,17 +375,89 @@ class _SetSettingsForPostState extends State<SetSettingsForPostScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              widget.postDraft.category.label,
+              // Если категория дефолтная — пишем заглушку, иначе — её название
+              widget.postDraft.category == Categories.defaultVal
+                  ? "Выберите категорию..."
+                  : widget.postDraft.category.label,
               style: TextStyle(
                 fontFamily: 'SNPro',
                 fontSize: 16,
-                color: Colors.black,
+                color: widget.postDraft.category == Categories.defaultVal
+                    ? Colors.black26
+                    : Colors.black,
               ),
             ),
             const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
           ],
         ),
       ),
+    );
+  }
+
+  void _showCategoryDialog() {
+    // Прячем клавиатуру перед открытием диалога, чтобы UI не прыгал
+    FocusScope.of(context).unfocus();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.white,
+          surfaceTintColor: Colors.transparent,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: const Text(
+            "Выберите категорию",
+            style: TextStyle(
+              fontFamily: 'SNPro',
+              fontWeight: FontWeight.w600,
+              fontSize: 20,
+            ),
+          ),
+          content: SizedBox(
+            // Ограничиваем ширину, чтобы на планшетах не растягивалось во весь экран
+            width: double.maxFinite,
+            child: ListView.builder(
+              shrinkWrap: true, // Позволяет диалогу адаптироваться под размер контента
+              physics: const BouncingScrollPhysics(),
+              itemCount: Categories.values.length,
+              itemBuilder: (context, index) {
+                final category = Categories.values[index];
+
+                // Если в твоем enums есть дефолтное техническое значение (например, defaultVal),
+                // мы просто скрываем его из списка выбора, чтобы юзер не мог его кликнуть.
+                if (category == Categories.defaultVal) {
+                  return const SizedBox.shrink();
+                }
+
+                final bool isSelected = widget.postDraft.category == category;
+
+                return ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  title: Text(
+                    category.label,
+                    style: TextStyle(
+                      fontFamily: 'SNPro',
+                      fontSize: 16,
+                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                      color: isSelected ? context.ui.primaryColor : Colors.black87,
+                    ),
+                  ),
+                  trailing: isSelected
+                      ? Icon(Icons.check_circle, color: context.ui.primaryColor)
+                      : null,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  onTap: () {
+                    setState(() {
+                      widget.postDraft.category = category;
+                    });
+                    Navigator.of(context).pop(); // Закрываем диалог после выбора
+                  },
+                );
+              },
+            ),
+          ),
+        );
+      },
     );
   }
 

@@ -4,6 +4,7 @@
 
 import 'dart:io';
 
+import 'package:camera/camera.dart';
 import 'package:dia_room/api/auth_response.dart';
 import 'package:dia_room/models/post_creator/block_photos.dart';
 import 'package:dia_room/models/post_creator/block_post.dart';
@@ -12,6 +13,7 @@ import 'package:dia_room/models/post_creator/block_video.dart';
 import 'package:dia_room/models/post_creator/post_draft.dart';
 import 'package:dia_room/models/post_creator/publication_post.dart';
 import 'package:dia_room/models/post_creator/upload_file_info.dart';
+import 'package:dia_room/utils/compress_image_service.dart';
 import 'package:uuid/uuid.dart';
 import '../../api/post_api.dart';
 
@@ -25,7 +27,7 @@ class CreatingPostService {
         draft: post,
       );
 
-  List<BlockUpload> createUploadFiles(List<BlockPost> blocks) {
+  Future<List<BlockUpload>> createUploadFiles(List<BlockPost> blocks) async {
     List<BlockUpload> blocksUpload = [];
 
     for (final block in blocks) {
@@ -40,9 +42,21 @@ class CreatingPostService {
         final photoUpload = BlockPhotoUpload(methodView: block.methodView);
 
         for (var i = 0; i < block.listPhoto.length; i++) {
+          final path = block.listPhoto[i].filePath;
+          if (path.isEmpty) continue;
+
+          String? compressedImage;
+          try {
+            compressedImage = await CompressImageService.compressForPreview(XFile(path));
+          } catch (_) {
+            continue;
+          }
+
+          if (compressedImage == null) continue;
+
           photoUpload.listPhoto.add(
             PhotoInfo(
-              filePath: block.listPhoto[i].filePath,
+              filePath: compressedImage,
               uploadId: const Uuid().v4(),
               size: block.listPhoto[i].size,
               publicUrl: '',
@@ -52,9 +66,21 @@ class CreatingPostService {
         }
         blocksUpload.add(photoUpload);
       } else if (block is BlockVideoCreating) {
+        final previewPath = block.previewLocalPath;
+        if (previewPath.isEmpty) continue;
+
+        String? compressedImage;
+        try {
+          compressedImage = await CompressImageService.compressForPreview(XFile(previewPath));
+        } catch (_) {
+          continue;
+        }
+
+        if (compressedImage == null) continue;
+
         final videoUpload = BlockVideoUpload(
           filePath: block.localPath,
-          previewPath: block.previewLocalPath,
+          previewPath: compressedImage,
           fileSize: block.fileSize,
           duration: block.duration,
           uploadIdVideo: const Uuid().v4(),
@@ -189,24 +215,32 @@ class CreatingPostService {
 
   /// Метод, выполняющий полный цикл создания поста
   Future<void> startCreating() async {
+    String? compressedPreview;
     print("--- [START] Процесс создания поста запущен ---");
     /// Создаем модель превью
     Map<String, dynamic> modelPreview;
     try {
-      const _uuid = Uuid();
+      const uuid = Uuid();
 
       if (post.previewPath == null) {
         print("❌ [ШАГ 1: Превью] previewUrl отсутствует в post. Создание остановлено.");
         return;
       }
 
+      // Сжатие изображения
+      compressedPreview = await CompressImageService.compressForPreview(XFile(post.previewPath!));
+      if (compressedPreview == null) {
+        print("Не удалось сжать превью");
+        return;
+      }
+
       final fileName = post.previewPath!.split('/').last;
 
       modelPreview = {
-        "uploadId": _uuid.v4(),
+        "uploadId": uuid.v4(),
         "filename": fileName,
         "contentType": 'image/jpeg',
-        "size": await File(post.previewPath!).length(),
+        "size": await File(compressedPreview).length(),
       };
       print("✅ [ШАГ 1: Превью] Модель превью успешно сформирована: $modelPreview");
     } catch (e) {
@@ -223,6 +257,7 @@ class CreatingPostService {
         "title": publicationPost.title,
         "categorySlug": publicationPost.categorySlug.slug,
         "hashtags": publicationPost.hashtags,
+        "workshopLink": publicationPost.workshopLink.getLink(),
       };
 
       // postId , preview {publicUrl, presignedUrl}
@@ -249,7 +284,7 @@ class CreatingPostService {
     publicationPost.previewPublicURL = resultCreating.data!['preview']['publicUrl'];
     print("🔗 [ИНФО] Публичный URL превью получен: ${publicationPost.previewPublicURL}");
     final resultUploadPreview = await uploadSingleMediaFile(
-      post.previewPath!,
+      compressedPreview,
       resultCreating.data!['preview']['presignedUrl'],
       "image/jpeg",
     );
@@ -258,9 +293,9 @@ class CreatingPostService {
       print('Превью не было загружено, продолжаем создание поста');
     }
 
-    /// Формируем список для будущего payload поста
+    /// Формируем список для будущего payload поста (В createUploadFiles выполняется сжатие)
     print("🛠️ [ШАГ 3: Payload] Сбор файлов из блоков контента...");
-    publicationPost.payload = createUploadFiles(post.blocks);
+    publicationPost.payload = await createUploadFiles(post.blocks);
 
     List<UploadFileInfo> uploadFiles = collectUploadFiles(
       publicationPost.payload!,
@@ -285,7 +320,7 @@ class CreatingPostService {
     applyPresignedResponse(publicationPost.payload!, responseUrls.data!['files']);
 
     print("📡 [ШАГ 6: Canvas] Отправка финального холста (Canvas) на сервер...");
-    final resultCreatingCanvas = savePostCanvas(
+    final resultCreatingCanvas = await savePostCanvas(
       postId: resultCreating.data!['postId'],
       canvasPayload: publicationPost.payloadToJson(),
     );

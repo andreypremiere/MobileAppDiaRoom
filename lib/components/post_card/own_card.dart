@@ -171,7 +171,7 @@ class OwnPostComponent extends StatelessWidget {
       title: post.data.title,
       previewUrl: post.data.preview,
       category: post.data.category,
-      onTap: () => context.push("/showPost/${post.data.postId}"),
+      onTap: () => context.push("/showPost/${post.data.roomId}/${post.data.postId}"),
       bottomPanel: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [

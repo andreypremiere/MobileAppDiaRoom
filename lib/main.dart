@@ -205,10 +205,11 @@ class App extends StatelessWidget {
 
           // Экран просмотра конкретного поста
           GoRoute(
-            path: "/showPost/:postId",
+            path: "/showPost/:roomId/:postId",
             builder: (context, state) {
+              final roomId = state.pathParameters['roomId']!;
               final postId = state.pathParameters['postId']!;
-              return ShowingPostScreen(postId: postId);
+              return ShowingPostScreen(postId: postId, roomId: roomId,);
             },
           ),
           GoRoute(
