@@ -172,6 +172,7 @@ class _ShowingPostScreenState extends State<ShowingPostScreen> {
         likesCount: _post!.stats.likes,
         viewsCount: _post!.stats.views,
         hashtags: _post!.hashtags,
+        workshopLink: _post!.workshopLink,
       ),
     );
   }

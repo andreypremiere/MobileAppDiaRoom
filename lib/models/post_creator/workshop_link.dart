@@ -22,7 +22,7 @@ class WorkshopLink {
   }
 
   bool isExist() {
-    return _workshopLink == null;
+    return _workshopLink != null;
   }
 
   String? getLink() {
