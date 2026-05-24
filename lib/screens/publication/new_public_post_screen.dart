@@ -345,8 +345,12 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
                   Positioned.fill(
                     child: ListView.builder(
                       padding: EdgeInsets.symmetric(vertical: 4, horizontal: 4),
-                      itemCount: postDraft.blocks.length,
+                      itemCount: postDraft.blocks.length + 1,
                       itemBuilder: (context, index) {
+                        if (index == postDraft.blocks.length) {
+                          return const SizedBox(height: 80);
+                        }
+
                         /// Обертка блока, отвечающая за его отрисовку и контекстное меню действий
                         return PostBlockWrapper(
                           key: ValueKey(postDraft.blocks[index]),

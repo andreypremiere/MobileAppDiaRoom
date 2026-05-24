@@ -54,7 +54,7 @@ class _SetSettingsForPostState extends State<SetSettingsForPostScreen> {
           if (!widget.postDraft.hashtags.contains(tag)) {
             widget.postDraft.hashtags.add(tag);
           }} else {
-            AppInfoDialog.show(context, "Можно добавить только 6 хештегов :(");
+            AppInfoDialog.show(context, "Можно добавить только 6 хештегов.");
           }
           _tagsController.clear(); // Очищаем поле для нового ввода
         });
@@ -71,21 +71,20 @@ class _SetSettingsForPostState extends State<SetSettingsForPostScreen> {
   void _startPublication() {
     if (widget.postDraft.name.isEmpty) {
       // Вызываем статический метод, а не просто создаем виджет
-      AppInfoDialog.show(context, "Название поста не должно быть пустым :(");
+      AppInfoDialog.show(context, "Название поста не должно быть пустым.");
       return;
     }
 
     if (widget.postDraft.previewPath == null || widget.postDraft.previewPath!.isEmpty) {
-      AppInfoDialog.show(context, "Необходимо выбрать превью :(");
+      AppInfoDialog.show(context, "Необходимо выбрать превью.");
       return;
     }
 
     if (widget.postDraft.category == Categories.defaultVal) {
-      AppInfoDialog.show(context, "Необходимо выбрать категорию публикации :(");
+      AppInfoDialog.show(context, "Необходимо выбрать категорию публикации.");
       return;
     }
 
-    print("Публикация разрешена!");
     CreatingPostService service = CreatingPostService(post: widget.postDraft);
     service.startCreating();
     context.go('/');
@@ -216,10 +215,11 @@ class _SetSettingsForPostState extends State<SetSettingsForPostScreen> {
             const SizedBox(height: 24),
             _buildSectionTitle("Содержание (на будущее)"),
             const SizedBox(height: 8),
-            _buildContentSummary(),
+            _buildWorkShopBinding(),
 
             const SizedBox(height: 40),
             _buildPublishButton(),
+            SizedBox(height: MediaQuery.of(context).padding.bottom,)
           ],
         ),
       ),
@@ -402,7 +402,7 @@ class _SetSettingsForPostState extends State<SetSettingsForPostScreen> {
     );
   }
 
-  Widget _buildContentSummary() {
+  Widget _buildWorkShopBinding() {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
