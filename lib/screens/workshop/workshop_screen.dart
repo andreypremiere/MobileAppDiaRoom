@@ -78,6 +78,10 @@ class _WorkshopScreenState extends State<WorkshopScreen> {
     if (mounted) {
       setState(() {
         _allContent.insert(index, item);
+
+        if (item.itemType == ItemType.photo) {
+          _photos.add(item);
+        }
       });
     }
   }
