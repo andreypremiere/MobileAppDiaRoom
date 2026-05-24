@@ -114,6 +114,20 @@ class _WorkshopScreenState extends State<WorkshopScreen> {
     await _loadData();
   }
 
+  void addFolder(Folder newFolder) {
+    int insertIndex = _allContent.indexWhere((element) => element is! Folder);
+
+    if (insertIndex == -1) {
+      insertIndex = _allContent.length;
+    }
+
+    if (mounted) {
+      setState(() {
+        _allContent.insert(insertIndex, newFolder);
+      });
+    }
+  }
+
   Future<List<XFile>> _handleAddPhotos() async {
     final ImagePicker picker = ImagePicker();
     List<XFile> images;
@@ -471,7 +485,7 @@ class _WorkshopScreenState extends State<WorkshopScreen> {
                       context,
                       roomId: widget.roomId,
                       parentId: widget.folderId,
-                      onSuccess: _handleRefresh,
+                      onSuccess: addFolder,
                     );
                     break;
 

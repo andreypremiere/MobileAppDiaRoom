@@ -52,11 +52,11 @@ Future<AuthResponse> createFolder({
   required String name,
 }) async {
   try {
-    await ApiService.post('/workshop/createFolder', data: {
+    final result = await ApiService.post('/workshop/createFolder', data: {
       'parentId': parentId,
       'folderName': name,
     });
-    return AuthResponse(success: true);
+    return AuthResponse(success: true, data: result.data);
   } on DioException catch (e) {
     return handleDioError(e, "Ошибка при создании папки");
   }
