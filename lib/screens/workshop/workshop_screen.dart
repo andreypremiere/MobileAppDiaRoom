@@ -59,15 +59,6 @@ class _WorkshopScreenState extends State<WorkshopScreen> {
     _loadData();
   }
 
-  // @override
-  // void didUpdateWidget(covariant WorkshopScreen oldWidget) {
-  //   super.didUpdateWidget(oldWidget);
-  //
-  //   // Если изменился folderId или roomId — принудительно перезагружаем данные
-  //   if (oldWidget.folderId != widget.folderId || oldWidget.roomId != widget.roomId) {
-  //     _loadData();
-  //   }
-  // }
 
   void addItem(Item item) {
     int index = _allContent.length;
@@ -362,7 +353,7 @@ class _WorkshopScreenState extends State<WorkshopScreen> {
 
   Widget _buildBody() {
     // Ошибка (сеть/сервер) при пустом списке
-    if (!_isLoading && _errorMessage != null) {
+    if (!_isLoading && _errorMessage != null && _allContent.isEmpty) {
       return DiaRoomErrorView(
         errorMessage: _errorMessage!,
         onRefresh: _handleRefresh,
