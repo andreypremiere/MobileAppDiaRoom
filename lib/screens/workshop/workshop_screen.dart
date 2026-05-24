@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:dia_room/api/auth_response.dart';
 import 'package:dia_room/components/info_dialog_component.dart';
 import 'package:dia_room/components/room_screen/app_dialogs.dart';
@@ -518,9 +520,9 @@ class _WorkshopScreenState extends State<WorkshopScreen> {
                         filteredPhotos = pathPhotos.sublist(0, limitPhotosForLoadInWorkshop); // Используем правильную константу
 
                         if (context.mounted) {
-                          await AppInfoDialog.show(
+                          AppInfoDialog.show(
                               context,
-                              "За раз можно загрузить не более $limitPhotosForLoadInWorkshop фотографий. Будут загружены ${limitPhotosForLoadInWorkshop} первых фотографий."
+                              "За раз можно загрузить не более $limitPhotosForLoadInWorkshop фотографий. Будут загружены $limitPhotosForLoadInWorkshop первых фотографий."
                           );
                         }
                       }
@@ -535,10 +537,44 @@ class _WorkshopScreenState extends State<WorkshopScreen> {
                   case CreatingWorkshopAction.video:
                     final List<XFile> pathVideos = await _handleAddVideos();
                     if (pathVideos.isNotEmpty) {
-                      final manager = context.read<UploaderManager>();
-                      await manager.uploadVideos(files: pathVideos, folderId: widget.folderId);
-                      _handleRefresh();
+                      List<XFile> filteredVideos = pathVideos;
+
+                      if (pathVideos.length > limitVideosForLoadInWorkshop) {
+                        filteredVideos = pathVideos.sublist(0, limitVideosForLoadInWorkshop); // Используем правильную константу
+
+                        if (context.mounted) {
+                          AppInfoDialog.show(
+                              context,
+                              "За раз можно загрузить не более $limitVideosForLoadInWorkshop видео. Будут загружены $limitVideosForLoadInWorkshop первых видео."
+                          );
+                        }
+                      }
+
+                      bool hasLargeVideos = false;
+
+                      for (var file in filteredVideos) {
+                        final size = await File(file.path).length();
+                        if (size > limitSizeForVideoInWorkshop) {
+                          hasLargeVideos = true;
+                          break;
+                        }
+                      }
+
+                      if (hasLargeVideos) {
+                        if (context.mounted) {
+                          AppInfoDialog.show(
+                              context,
+                              "Видео с размером больше ${limitSizeForVideoInWorkshop / (1024 *1024)} МБ. не будут загружены."
+                          );
+                        }
+                      }
+
+                      if (context.mounted) {
+                        final manager = context.read<UploaderManager>();
+                        manager.uploadVideos(files: filteredVideos, folderId: widget.folderId, addItem: addItem);
+                      }
                     }
+
                     break;
                 }
               },

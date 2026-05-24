@@ -71,7 +71,8 @@ class UploaderManager extends ChangeNotifier{
 
   Future<bool> uploadVideos({
     required List<XFile> files,
-    required String? folderId
+    required String? folderId,
+    required Function(Item item) addItem,
 }) async {
     progress = 0;
     isUploading = true;
@@ -87,7 +88,7 @@ class UploaderManager extends ChangeNotifier{
 
         // Получаем размер видео
         final size = await DiaryUtils.getFileSize(file.path);
-        if (size > MAX_SIZE_VIDEO_WORKSHOP) {
+        if (size > limitSizeForVideoInWorkshop) {
           completedCount++;
           progress = completedCount / files.length;
           continue;
@@ -155,8 +156,13 @@ class UploaderManager extends ChangeNotifier{
         }
 
         // Обноавляем статус
-        await updateItem(item: UpdatingItemStatus(
+        final resultUpdatedStatus = await updateItem(item: UpdatingItemStatus(
             itemId: responseData.itemId, status: ItemStatus.ready));
+
+        if (resultUpdatedStatus.success) {
+          responseData.item.status = ItemStatus.ready;
+          addItem(responseData.item);
+        }
 
         completedCount++;
         progress = completedCount / files.length;
