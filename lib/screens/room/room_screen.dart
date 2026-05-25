@@ -10,6 +10,7 @@ import '../../api/account_api.dart';
 import '../../components/loading_widget/error_widget.dart';
 import '../../components/loading_widget/loader_widget.dart';
 import '../../components/room_screen/category_chip.dart';
+import '../../components/room_screen/diary_button_widget.dart';
 import '../../components/room_screen/room_header.dart';
 import '../../components/room_screen/section_action_button.dart';
 import '../../components/room_screen/statistic_card.dart';
@@ -367,27 +368,20 @@ class _RoomState extends State<RoomScreen> {
                                     ],
                                   ),
                                   const SizedBox(height: 10),
-                                  RoomActionButton(
-                                    title: 'Дневник',
-                                    onPressed: () =>
-                                        context.push('/diary/${widget.roomId}'),
+                                  // Новая сетка кнопок
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: DiaryButtonWidget(roomId: widget.roomId),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: ShowcaseButtonWidget(roomId: widget.roomId),
+                                      ),
+                                    ],
                                   ),
-                                  const SizedBox(height: 10),
-                                  RoomActionButton(
-                                    title: 'Витрина',
-                                    onPressed: () => context.push(
-                                      '/personalRoomPosts/${widget.roomId}',
-                                    ),
-                                  ),
-                                  const SizedBox(height: 10),
-                                  RoomActionButton(
-                                    title: 'Мастерская',
-                                    onPressed: () {
-                                      context.push(
-                                        '/workshop/${widget.roomId}',
-                                      );
-                                    },
-                                  ),
+                                  const SizedBox(height: 12),
+                                  WorkshopButtonWidget(roomId: widget.roomId),
                                   const SizedBox(height: 10),
                                 ],
                               ),

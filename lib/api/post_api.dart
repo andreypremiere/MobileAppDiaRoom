@@ -251,3 +251,19 @@ Future<AuthResponse> searchPosts(
     return handleSystemError(e);
   }
 }
+
+Future<AuthResponse> getCountPosts(
+    {required String roomId}
+    ) async {
+  try {
+    final res = await ApiService.get('/post/count/posts/$roomId');
+    return AuthResponse(
+      success: true,
+      data: res.data,
+    );
+  } on DioException catch (e) {
+    return handleDioError(e, "Ошибка получения количества постов");
+  } catch (e) {
+    return handleSystemError(e);
+  }
+}
