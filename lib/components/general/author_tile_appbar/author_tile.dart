@@ -34,6 +34,7 @@ class AuthorTile extends StatelessWidget {
             AppAvatar(
               avatarPath: author.avatar,
               radius: 18,
+              enableFullScreenPreview: false,
             ),
             const SizedBox(width: 10),
             // Название комнаты

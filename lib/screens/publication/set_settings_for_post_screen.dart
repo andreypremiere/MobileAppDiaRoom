@@ -71,7 +71,7 @@ class _SetSettingsForPostState extends State<SetSettingsForPostScreen> {
     });
   }
 
-  void _startPublication() {
+  Future<void> _startPublication() async {
     if (widget.postDraft.name.isEmpty) {
       // Вызываем статический метод, а не просто создаем виджет
       AppInfoDialog.show(context, "Название поста не должно быть пустым.");
@@ -90,7 +90,20 @@ class _SetSettingsForPostState extends State<SetSettingsForPostScreen> {
 
     CreatingPostService service = CreatingPostService(post: widget.postDraft);
     service.startCreating();
-    context.go('/');
+
+    if (mounted) {
+      await AppInfoDialog.show(context, "Пожалуйста, не закрывайте приложение пока идет загрузка публикации.");
+    }
+
+    if (mounted) {
+      final roomId = context.read<AuthProvider>().roomId;
+
+      if (roomId != null) {
+        context.go('/personalRoomPosts/$roomId');
+      } else {
+        context.go('/');
+      }
+    }
   }
 
   Future<void> _pickAndCropImage() async {

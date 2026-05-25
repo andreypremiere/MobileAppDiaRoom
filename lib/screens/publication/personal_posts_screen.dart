@@ -164,9 +164,7 @@ class _StatePersonalPostsScreen extends State<PersonalPostsScreen> {
           : _author == null
           ? AuthorEmptyTile(onRetry: _loadRoomInfo)
           : AuthorTile(
-        author: _author!,
-        onTap: () => context.push('/room/${_author!.roomId}'),
-      ),
+        author: _author!),
       actions: _isMyRoom
           ? [
         IconButton(
@@ -225,9 +223,13 @@ class _StatePersonalPostsScreen extends State<PersonalPostsScreen> {
         // даже если постов мало и они не заполняют весь экран
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-        itemCount: _posts.length,
+        itemCount: _posts.length + 1,
         separatorBuilder: (context, index) => const SizedBox(height: 10),
         itemBuilder: (context, index) {
+          if (index == _posts.length) {
+            return SizedBox(height: MediaQuery.of(context).padding.bottom,);
+          }
+
           final post = _posts[index];
 
           if (_isMyRoom) {
@@ -245,7 +247,11 @@ class _StatePersonalPostsScreen extends State<PersonalPostsScreen> {
                   final result = await requestDeletePost(post.data.postId);
 
                   if (result.success) {
-                    _handleRefresh();
+                    if (context.mounted) {
+                      setState(() {
+                        _posts.removeWhere((p) => p.data.postId == post.data.postId);
+                      });
+                    }
                   } else {
                     if (context.mounted) {
                       await AppInfoDialog.show(
