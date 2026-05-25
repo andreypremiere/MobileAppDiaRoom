@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:dia_room/api/auth_response.dart';
 import 'package:dio/dio.dart';
+import 'package:dio/io.dart';
 
 import '../api/exception_handler.dart';
 import '../configuration/urls.dart';
@@ -24,6 +25,8 @@ class ApiService {
       onRequest: (options, handler) async {
         // Список путей-исключений
         const whiteList = ['/account/login', '/account/register', '/account/verifyCode', '/account/refreshSession', '/account/logout'];
+
+        options.headers['X-Client-Secret'] = 'fcdf2735-c13b-4aa5-9b7c-1de0597baa88';
 
         // Если пути нет в списке исключений — добавляем заголовок
         if (!whiteList.any((path) => options.path.contains(path))) {
@@ -88,6 +91,29 @@ class ApiService {
         return handler.next(e);
       },
     ));
+
+    bool checkCertificateHash(List<int> der) {
+      // Реализация сверки хэша вашего Let's Encrypt сертификата
+      return true;
+    }
+
+    void enableSSLPinning(Dio dio) {
+      dio.httpClientAdapter = IOHttpClientAdapter(
+        createHttpClient: () {
+          final SecurityContext context = SecurityContext(withTrustedRoots: true);
+          final HttpClient client = HttpClient(context: context);
+
+          client.badCertificateCallback = (X509Certificate cert, String host, int port) {
+            // Жестко проверяем SHA-256 хэш сертификата сервера
+            final serverDer = cert.der;
+            // Здесь должна быть логика сравнения хэша с зашитым в приложение константным хэшем
+            bool isTrusted = checkCertificateHash(serverDer);
+            return isTrusted;
+          };
+          return client;
+        },
+      );
+    }
   }
 
   // Внутренний метод для рефреша

@@ -16,6 +16,8 @@ AuthResponse handleDioError(DioException e, String defaultMessage) {
     message = "Нет соединения с интернетом";
   } else if (e.response != null) {
     message = e.response?.data['message'] ?? e.response?.data['error'] ?? "Ошибка на стороне сервера. Пожалуйста, сообщите в поддержку";
+  } else if (e.response?.statusCode == 429) {
+    message = "Вы отправляете запросы слишком часто, пожалуйста, подождите.";
   }
 
   return AuthResponse(
