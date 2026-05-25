@@ -519,6 +519,7 @@ class _WorkshopScreenState extends State<WorkshopScreen> {
                       }
 
                       if (context.mounted) {
+                        AppInfoDialog.show(context, "Пожалуйста, не закрывайте приложения во время загрузки.");
                         final manager = context.read<UploaderManager>();
                         manager.uploadPhotos(files: filteredPhotos, folderId: widget.folderId, addPhoto: addItem);
                       }
@@ -561,6 +562,7 @@ class _WorkshopScreenState extends State<WorkshopScreen> {
                       }
 
                       if (context.mounted) {
+                        AppInfoDialog.show(context, "Пожалуйста, не закрывайте приложения во время загрузки.");
                         final manager = context.read<UploaderManager>();
                         manager.uploadVideos(files: filteredVideos, folderId: widget.folderId, addItem: addItem);
                       }
