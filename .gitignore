@@ -48,3 +48,5 @@ linux/flutter/generated_plugin_registrant.cc
 linux/flutter/generated_plugins.cmake
 
 .env.json
+android/key.properties
+android/app/upload-keystore.p12
