@@ -7,8 +7,20 @@ import 'package:dio/io.dart';
 import '../api/exception_handler.dart';
 import '../configuration/urls.dart';
 import 'auth_service.dart';
+import 'package:crypto/crypto.dart';
+
 
 class ApiService {
+  static const String _expectedHash = String.fromEnvironment(
+    'SSL_EXPECTED_HASH',
+    defaultValue: '',
+  );
+
+  static const String _clientSecret = String.fromEnvironment(
+    'CLIENT_SECRET',
+    defaultValue: '',
+  );
+
   static final Dio _dio = Dio(
     BaseOptions(
       baseUrl: baseUrl,
@@ -18,6 +30,34 @@ class ApiService {
     ),
   );
 
+  static HttpClient _getSecureHttpClient() {
+    final SecurityContext context = SecurityContext(withTrustedRoots: true);
+    final HttpClient client = HttpClient(context: context);
+
+    client.badCertificateCallback = (X509Certificate cert, String host, int port) {
+      // Пингуем только наш домен, для остальных (если появятся сторонние API) оставляем дефолтную проверку
+      if (host == 'diaroom.me') {
+        final serverDer = cert.der;
+        return _checkCertificateHash(serverDer);
+      }
+      return false; // Запрещаем соединения с некорректными сертификатами на другие хосты
+    };
+    return client;
+  }
+
+  // Метод проверки хэша
+  static bool _checkCertificateHash(List<int> der) {
+    // Хэшируем DER-последовательность сертификата от Let's Encrypt
+    final sha256Hash = sha256.convert(der).toString();
+
+    if (sha256Hash == _expectedHash) {
+      return true; // Сертификаты совпадают, пропускаем запрос
+    }
+
+    print("SSL Pinning Error! Кэш сервера: $sha256Hash не совпадает с ожидаемым!");
+    return false; // Хэш изменился — блокируем запрос (защита от MitM)
+  }
+
   static void init(AuthProvider authProvider) {
     _dio.interceptors.clear();
     _dio.interceptors.add(QueuedInterceptorsWrapper(
@@ -26,7 +66,7 @@ class ApiService {
         // Список путей-исключений
         const whiteList = ['/account/login', '/account/register', '/account/verifyCode', '/account/refreshSession', '/account/logout'];
 
-        options.headers['X-Client-Secret'] = 'fcdf2735-c13b-4aa5-9b7c-1de0597baa88';
+        options.headers['X-Client-Secret'] = _clientSecret;
 
         // Если пути нет в списке исключений — добавляем заголовок
         if (!whiteList.any((path) => options.path.contains(path))) {
@@ -92,28 +132,9 @@ class ApiService {
       },
     ));
 
-    bool checkCertificateHash(List<int> der) {
-      // Реализация сверки хэша вашего Let's Encrypt сертификата
-      return true;
-    }
-
-    void enableSSLPinning(Dio dio) {
-      dio.httpClientAdapter = IOHttpClientAdapter(
-        createHttpClient: () {
-          final SecurityContext context = SecurityContext(withTrustedRoots: true);
-          final HttpClient client = HttpClient(context: context);
-
-          client.badCertificateCallback = (X509Certificate cert, String host, int port) {
-            // Жестко проверяем SHA-256 хэш сертификата сервера
-            final serverDer = cert.der;
-            // Здесь должна быть логика сравнения хэша с зашитым в приложение константным хэшем
-            bool isTrusted = checkCertificateHash(serverDer);
-            return isTrusted;
-          };
-          return client;
-        },
-      );
-    }
+    _dio.httpClientAdapter = IOHttpClientAdapter(
+      createHttpClient: _getSecureHttpClient,
+    );
   }
 
   // Внутренний метод для рефреша
@@ -126,7 +147,14 @@ class ApiService {
         baseUrl: baseUrl,
         connectTimeout: const Duration(seconds: 5),
         receiveTimeout: const Duration(seconds: 3),
+        headers: {
+          'X-Client-Secret': _clientSecret,
+        },
       ));
+
+      refreshDio.httpClientAdapter = IOHttpClientAdapter(
+        createHttpClient: _getSecureHttpClient,
+      );
 
       final response = await refreshDio.post(
         '/account/refreshSession',

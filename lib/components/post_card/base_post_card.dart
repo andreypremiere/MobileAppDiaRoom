@@ -91,10 +91,12 @@ class BasePostCard extends StatelessWidget {
       width: double.infinity,
       height: double.infinity,
       placeholder: (context, url) => Center(child: DiaRoomLoader()),
-      errorWidget: (context, url, error) => Container(
-        color: const Color(0xFFE0E0E0),
-        child: const Icon(Icons.broken_image_outlined, size: 40, color: Color(0xFF888888)),
-      ),
+      errorWidget: (context, url, error) {
+        return Container(
+          color: const Color(0xFFE0E0E0),
+          child: const Icon(Icons.broken_image_outlined, size: 40, color: Color(0xFF888888)),
+        );
+      },
     );
   }
 
