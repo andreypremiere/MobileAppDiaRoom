@@ -18,9 +18,7 @@ class AuthService {
     required bool configured
   }) async {
     await saveTokens(access: access, refresh: refresh);
-    await Future.wait([
-      _storage.write(key: _keyIsConfigured, value: configured.toString()),
-    ]);
+    await saveStatusConfigured(status: configured);
   }
 
   /// Сохранение токенов
@@ -63,7 +61,7 @@ class AuthProvider extends ChangeNotifier {
   String? _userId;
   String? _roomId;
   bool _isConfigured = false;
-  bool _isLoading = true;
+  // bool _isLoading = true;
 
   // Геттеры
   String? get userId => _userId;
@@ -71,34 +69,27 @@ class AuthProvider extends ChangeNotifier {
   String? get accessToken => _accessToken;
   bool get isAuthenticated => _accessToken != null;
   bool get isConfigured => _isConfigured;
-  bool get isLoading => _isLoading;
+  // bool get isLoading => _isLoading;
 
   /// Загрузка при старте приложения
   Future<void> loadSession() async {
-    _isLoading = true;
-    notifyListeners();
+    // _isLoading = true;
+    // notifyListeners();
 
     final data = await AuthService.getAuthData();
     final access = data['access_token'];
-    final String? refresh = await AuthService.getRefreshToken();
+    // final refresh = data['refresh_token'];
 
     _isConfigured = data['is_configured'] == 'true';
 
-    if (access != null && JwtManager.isTokenValid(access)) {
+    if (access != null) {
       _parseAndSetToken(access);
-      print("_isConfigured = data['is_configured'] == 'true'; ${data['is_configured']}");
-    } else if (refresh != null) {
-      final success = await refreshSession();
-      if (!success) {
-        await logout(); // Если даже рефреш не помог — чистим всё
-      }
-    }
-    // 3. Если ничего нет — выходим
-    else {
+    } else {
       await logout();
+      // Нужен, чтобы не было второго notify
+      return;
     }
-
-    _isLoading = false;
+    // _isLoading = false;
     notifyListeners();
   }
 
@@ -115,15 +106,19 @@ class AuthProvider extends ChangeNotifier {
 
   /// Вход / Подтверждение кода
   void login(String access, String refresh, bool configured) {
-    _parseAndSetToken(access);
-    _isConfigured = configured;
-    AuthService.saveAuthData(access: access, refresh: refresh, configured: configured);
+    final result = JwtManager.isTokenValid(access);
+
+    if (result) {
+      _parseAndSetToken(access);
+      _isConfigured = configured;
+      AuthService.saveAuthData(access: access, refresh: refresh, configured: configured);
+    }
     notifyListeners();
   }
 
-  void saveStatusConfigure(bool status) {
+  Future<void> saveStatusConfigure(bool status) async {
     _isConfigured = status;
-    AuthService.saveStatusConfigured(status: status);
+    await AuthService.saveStatusConfigured(status: status);
     notifyListeners();
   }
 
@@ -139,40 +134,15 @@ class AuthProvider extends ChangeNotifier {
     return await AuthService.getRefreshToken();
   }
 
-  Future<void> saveTokens(String accessToken, String refreshToken) async {
-    _parseAndSetToken(accessToken);
-    await AuthService.saveTokens(access: accessToken, refresh: refreshToken);
-    notifyListeners();
-  }
+  // Future<void> saveTokens(String accessToken, String refreshToken) async {
+  //   _parseAndSetToken(accessToken);
+  //   await AuthService.saveTokens(access: accessToken, refresh: refreshToken);
+  //   notifyListeners();
+  // }
 
   Future<void> saveTokensSilently(String accessToken, String refreshToken) async {
     _parseAndSetToken(accessToken);
     await AuthService.saveTokens(access: accessToken, refresh: refreshToken);
   }
 
-
-  /// Метод для обновления сессии через API
-  Future<bool> refreshSession() async {
-    try {
-      final String? refresh = await AuthService.getRefreshToken();
-      if (refresh == null) return false;
-
-      // Прямой вызов API (важно: здесь ApiService уже должен быть инициализирован)
-      final response = await ApiService.post(
-          '/account/refreshSession',
-          data: {'refreshToken': refresh}
-      );
-
-      if (response.statusCode == 200 && response.data != null) {
-        final access = response.data['accessToken'];
-        final newRefresh = response.data['refreshToken'];
-
-        await saveTokens(access, newRefresh);
-        return true;
-      }
-    } catch (e) {
-      print("Ошибка при автоматическом обновлении сессии: $e");
-    }
-    return false;
-  }
 }

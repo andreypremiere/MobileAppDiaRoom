@@ -4,21 +4,23 @@ import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:path_provider/path_provider.dart';
 
 class CompressImageService {
-  static Future<String?> compressForOriginal(XFile file) async {
-    return await _compressFile(file: file, postfix: "", minWidth: 4000, minHeight: 4000, quality: 100, targetSize: 4194304);
+  // Приведет к не более 1 мб
+  static Future<String?> compressForOriginal(XFile file, {targetSize = 1048576}) async {
+    return await _compressFile(file: file, postfix: "", minWidth: 1080, minHeight: 1080, quality: 100, targetSize: targetSize);
   }
 
-  static Future<String?> compressForPreview(XFile file) async {
-    return await _compressFile(file: file);
+  // Приведет к не более 0.25 мб
+  static Future<String?> compressForPreview(XFile file, {targetSize = 262144}) async {
+    return await _compressFile(file: file, targetSize: targetSize);
   }
 
   static Future<String?> _compressFile({
     required XFile file,
     String postfix = "_preview",
-    int minWidth = 1080, // для превью
-    int minHeight = 1080,
+    int minWidth = 720, // для превью
+    int minHeight = 720,
     int quality = 90,
-    int targetSize = 786432 // 0.75 мб для превью
+    int targetSize = 262144 // 0.4 мб для превью
   }) async {
 
     final dir = await getTemporaryDirectory();
@@ -33,7 +35,7 @@ class CompressImageService {
     }
 
     // Цикл сжатия
-    while (currentSize > targetSize && quality > 10) {
+    while (currentSize > targetSize && quality > 5) {
       result = await FlutterImageCompress.compressAndGetFile(
         file.path,
         targetPath,
@@ -48,8 +50,8 @@ class CompressImageService {
       currentSize = await result.length();
 
       quality -= 10;
-      minWidth = (minWidth * 0.9).toInt();
-      minHeight = (minHeight * 0.9).toInt();
+      minWidth = (minWidth * 0.8).toInt();
+      minHeight = (minHeight * 0.8).toInt();
     }
 
     return result?.path;

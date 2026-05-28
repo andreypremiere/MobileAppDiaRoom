@@ -73,7 +73,7 @@ class PostToolbar extends StatelessWidget {
             onChanged();
           },
           itemLabel: (type) => type.label,
-          iconBuilder: (type) => type == MethodViewPhoto.tiles ? Icons.grid_view : Icons.view_carousel,
+          iconBuilder: (type) => type.icon,
           isSelected: (type) => photoBlock.methodView == type,
         ),
       ],
@@ -103,7 +103,7 @@ class PostToolbar extends StatelessWidget {
         // width: 120,
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
         decoration: BoxDecoration(
-          color: context.ui.toolbarItemColor,
+          color: context.ui.toolbarContainerColor,
           borderRadius: BorderRadius.circular(20),
         ),
         child: Center(
@@ -111,7 +111,7 @@ class PostToolbar extends StatelessWidget {
             currentLabel,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(fontSize: 14, color: context.ui.fontColorPrimary),
+            style: TextStyle(fontSize: 16, color: context.ui.fontColorLight, fontWeight: FontWeight.w600),
           ),
         ),
       ),

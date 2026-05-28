@@ -1,0 +1,65 @@
+import 'package:dia_room/models/enums/diary/message_status.dart';
+
+import '../enums/diary/message_type.dart';
+
+class Message {
+  final String id;
+  final String roomId;
+  final MessageType msgType;
+  MessageStatus status;
+  final String? content;
+  final String? attachedObjectWorkshopId;
+  final String? attachedObjectPostId;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+
+  Message({
+    required this.id,
+    required this.roomId,
+    required this.msgType,
+    this.content,
+    required this.status,
+    this.attachedObjectWorkshopId,
+    this.attachedObjectPostId,
+    required this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'roomId': roomId,
+      'msgType': msgType.toJson(),
+      'status': status.toJson(),
+      'content': content,
+      'attachedObjectWorkshopId': attachedObjectWorkshopId,
+      'attachedObjectPostId': attachedObjectPostId,
+      'createdAt': createdAt.toIso8601String(),
+      'updatedAt': updatedAt.toIso8601String(),
+      'deletedAt': deletedAt?.toIso8601String(),
+    };
+  }
+
+  factory Message.fromMap(Map<String, dynamic> map) {
+    return Message(
+      id: map['id'] ?? '',
+      roomId: map['roomId'] ?? '',
+      msgType: MessageType.fromJson(map['msgType'] ?? ''),
+      status: MessageStatus.fromJson(map['status'] ?? ''),
+      content: map['content'],
+      attachedObjectWorkshopId: map['attachedObjectWorkshopId'],
+      attachedObjectPostId: map['attachedObjectPostId'],
+      createdAt: map['createdAt'] != null
+          ? DateTime.parse(map['createdAt'])
+          : DateTime.now(),
+      updatedAt: map['updatedAt'] != null
+          ? DateTime.parse(map['updatedAt'])
+          : DateTime.now(),
+      deletedAt: map['deletedAt'] != null
+          ? DateTime.parse(map['deletedAt'])
+          : null,
+    );
+  }
+}

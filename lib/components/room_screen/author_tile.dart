@@ -13,7 +13,7 @@ class AuthorListTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       onTap: () => context.push('/room/${author.roomId}'),
-      leading: AppAvatar(imageUrl: author.avatar),
+      leading: AppAvatar(avatarPath: author.avatar, radius: 22,),
       title: Text(
         author.roomName,
         style: TextStyle(

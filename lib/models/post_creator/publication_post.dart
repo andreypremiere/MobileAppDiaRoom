@@ -1,5 +1,6 @@
-import 'package:dia_room/models/enums/post_categories.dart';
+import 'package:dia_room/models/enums/categories.dart';
 import 'package:dia_room/models/post_creator/post_draft.dart';
+import 'package:dia_room/models/post_creator/workshop_link.dart';
 
 import 'block_post.dart';
 
@@ -8,8 +9,9 @@ class PublicationPost {
   String title;
   String? previewPublicURL;
   Map<String, dynamic> metadata;
+  WorkshopLink workshopLink = WorkshopLink();
 
-  PostCategory categorySlug;
+  Categories categorySlug;
 
   List<BlockUpload>? payload;
 
@@ -23,8 +25,9 @@ class PublicationPost {
     required this.categorySlug,
     this.payload,
     List<String>? hashtags,
+    WorkshopLink? workshopLink
   }) : metadata = metadata ?? {},
-       hashtags = hashtags ?? [];
+       hashtags = hashtags ?? [], workshopLink = workshopLink ?? WorkshopLink();
 
   factory PublicationPost.fromDraft({
     required PostDraft draft,
@@ -37,6 +40,7 @@ class PublicationPost {
       categorySlug: draft.category,
       hashtags: List.from(draft.hashtags),
       payload: null,
+      workshopLink: draft.workshopLink
     );
   }
 

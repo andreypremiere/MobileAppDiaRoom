@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:dia_room/components/loading_widget/loader_widget.dart';
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
@@ -119,7 +120,7 @@ class _FullScreenVideoScreenState extends State<FullScreenVideoScreen> {
                       aspectRatio: _controller.value.aspectRatio,
                       child: VideoPlayer(_controller),
                     )
-                  : CircularProgressIndicator(
+                  : DiaRoomLoader(
                       color: context.ui.elementsVideoPlayerColor,
                     ),
             ),

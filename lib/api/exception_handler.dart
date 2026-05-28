@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:dio/dio.dart';
 
 import 'auth_response.dart';
@@ -8,10 +10,14 @@ AuthResponse handleDioError(DioException e, String defaultMessage) {
 
   if (e.type == DioExceptionType.connectionTimeout || e.type == DioExceptionType.receiveTimeout) {
     message = "Сервер не отвечает, попробуйте позже";
+  } else if (e.error is SocketException && e.error.toString().contains("Failed host lookup")) {
+    message = "Доступ к серверу ограничен в вашем регионе или заблокирован. Попробуйте воспользоваться VPN";
   } else if (e.type == DioExceptionType.connectionError) {
     message = "Нет соединения с интернетом";
   } else if (e.response != null) {
-    message = e.response?.data['message'] ?? e.response?.data['error'] ?? "Ошибка сервера";
+    message = e.response?.data['message'] ?? e.response?.data['error'] ?? "Ошибка на стороне сервера. Пожалуйста, сообщите в поддержку";
+  } else if (e.response?.statusCode == 429) {
+    message = "Вы отправляете запросы слишком часто, пожалуйста, подождите.";
   }
 
   return AuthResponse(
@@ -22,5 +28,5 @@ AuthResponse handleDioError(DioException e, String defaultMessage) {
 
 // Вспомогательный метод для системных ошибок
 AuthResponse handleSystemError(Object e) {
-  return AuthResponse(success: false, message: "Непредвиденная ошибка: $e");
+  return AuthResponse(success: false, message: "Непредвиденная ошибка в работе приложения. Пожалуйста, сообщите в поддержку");
 }

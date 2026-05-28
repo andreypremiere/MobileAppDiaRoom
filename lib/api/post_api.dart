@@ -70,9 +70,11 @@ Future<AuthResponse> savePostCanvas({
   }
 }
 
-Future<AuthResponse> getAllPosts() async {
+Future<AuthResponse> getAllPosts(
+{required int page, required int limit}
+    ) async {
   try {
-    final res = await ApiService.get('/post/allPosts');
+    final res = await ApiService.get('/post/allPosts', queryParameters: {"page": page, "limit": limit});
     final List<dynamic> data = res.data;
     return AuthResponse(
       success: true,
@@ -229,6 +231,38 @@ Future<AuthResponse> requestDeletePost(String postId) async {
 
   } on DioException catch (e) {
     return handleDioError(e, "Ошибка получения комнат");
+  } catch (e) {
+    return handleSystemError(e);
+  }
+}
+
+Future<AuthResponse> searchPosts(
+    {required int page, required int limit, required String value}
+    ) async {
+  try {
+    final res = await ApiService.get('/post/search', queryParameters: {"page": page, "limit": limit, "value": value});
+    return AuthResponse(
+      success: true,
+      data: res.data,
+    );
+  } on DioException catch (e) {
+    return handleDioError(e, "Ошибка во время поиска");
+  } catch (e) {
+    return handleSystemError(e);
+  }
+}
+
+Future<AuthResponse> getCountPosts(
+    {required String roomId}
+    ) async {
+  try {
+    final res = await ApiService.get('/post/count/posts/$roomId');
+    return AuthResponse(
+      success: true,
+      data: res.data,
+    );
+  } on DioException catch (e) {
+    return handleDioError(e, "Ошибка получения количества постов");
   } catch (e) {
     return handleSystemError(e);
   }

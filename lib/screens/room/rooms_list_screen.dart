@@ -2,6 +2,8 @@ import 'package:dia_room/api/auth_response.dart';
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 import '../../components/general/app_back_button.dart';
+import '../../components/loading_widget/error_widget.dart';
+import '../../components/loading_widget/loader_widget.dart';
 import '../../components/room_screen/author_tile.dart';
 import '../../models/post_view/author.dart';
 
@@ -22,6 +24,7 @@ class RoomListScreen extends StatefulWidget {
 class _RoomListScreenState extends State<RoomListScreen> {
   final List<Author> _users = [];
   bool _isLoading = false;
+  String? _errorMessage;
   bool _hasMore = true;
   int _page = 1;
   final int _limit = 20;
@@ -41,7 +44,12 @@ class _RoomListScreenState extends State<RoomListScreen> {
   Future<void> _loadMore() async {
     if (_isLoading || !_hasMore) return;
 
-    setState(() => _isLoading = true);
+    if (mounted) {
+      setState(() {
+        _isLoading = true;
+        _errorMessage = null;
+      });
+    }
 
     try {
       final AuthResponse response = await widget.loadAction(_page, _limit);
@@ -53,17 +61,41 @@ class _RoomListScreenState extends State<RoomListScreen> {
             .map((item) => Author.fromMap(item as Map<String, dynamic>))
             .toList();
 
-        setState(() {
-          _page++;
-          _users.addAll(newUsers);
-          if (newUsers.length < _limit) _hasMore = false;
-        });
+        if (mounted) {
+          setState(() {
+            _page++;
+            _users.addAll(newUsers);
+            _isLoading = false;
+            if (newUsers.length < _limit) _hasMore = false;
+          });
+        }
+      } else {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+            _errorMessage = response.message ?? "Не удалось получить список комнат";
+          });
+        }
       }
     } catch (e) {
-      debugPrint("Ошибка загрузки списка (${widget.title}): $e");
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = "Ошибка в работе приложения. Пожалуйста, обратитесь в поддержку.";
+        });
+      }
     }
+  }
+
+  Future<void> _onRefresh() async {
+    if (mounted) {
+      setState(() {
+        _users.clear();
+        _page = 1;
+        _hasMore = true;
+      });
+    }
+    await _loadMore();
   }
 
   @override
@@ -82,32 +114,59 @@ class _RoomListScreenState extends State<RoomListScreen> {
           ),
         ),
       ),
-      body: RefreshIndicator(
-        onRefresh: () async {
-          setState(() {
-            _users.clear();
-            _page = 1;
-            _hasMore = true;
-          });
-          await _loadMore();
-        },
-        child: _users.isEmpty && _isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : ListView.builder(
-          controller: _scrollController,
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          itemCount: _users.length + (_hasMore ? 1 : 0),
-          itemBuilder: (context, index) {
-            if (index < _users.length) {
-              return AuthorListTile(author: _users[index]);
-            } else {
-              return const Padding(
-                padding: EdgeInsets.all(16.0),
-                child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
-              );
-            }
-          },
+      body: _buildBody()
+    );
+  }
+
+  Widget _buildBody() {
+    // 1. Сценарий: Первая загрузка пуста и прилетела ошибка (сеть/сервер) -> Полноэкранная ошибка
+    if (!_isLoading && _errorMessage != null && _users.isEmpty) {
+      return DiaRoomErrorView(
+        errorMessage: _errorMessage!,
+        onRefresh: _onRefresh,
+      );
+    }
+
+    // 2. Сценарий: Первая загрузка в процессе, данных ещё нет -> Полноэкранный лоадер
+    if (_isLoading && _users.isEmpty) {
+      return const Center(
+        child: DiaRoomLoader(),
+      );
+    }
+
+    // 3. Сценарий: Загрузка завершена успешно, но сервер вернул пустой список -> Заглушка
+    if (!_isLoading && _users.isEmpty) {
+      return Center(
+        child: Text(
+          _errorMessage ?? "Тут пусто.",
+          style: TextStyle(color: context.ui.fontColorHint),
         ),
+      );
+    }
+
+    // 4. Сценарий: Данные есть (или идет дозагрузка пагинации) -> Показываем список с RefreshIndicator
+    return RefreshIndicator(
+      color: context.ui.primaryColor,
+      onRefresh: _onRefresh,
+      child: ListView.builder(
+        controller: _scrollController,
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        physics: const AlwaysScrollableScrollPhysics(), // Важно, чтобы пулл-ту-рефреш работал даже на полупустом экране
+        itemCount: _users.length + (_hasMore ? 1 : 0),
+        itemBuilder: (context, index) {
+          if (index < _users.length) {
+            return AuthorListTile(author: _users[index]);
+          } else {
+            return Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Center(
+                child: _isLoading
+                    ? DiaRoomLoader()
+                    : const SizedBox.shrink(),
+              ),
+            );
+          }
+        },
       ),
     );
   }

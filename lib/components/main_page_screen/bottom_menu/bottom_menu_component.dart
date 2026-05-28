@@ -1,30 +1,14 @@
-import 'package:dia_room/components/info_dialog_component.dart';
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:dia_room/utils/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import '../../../api/account_api.dart';
 import 'bottom_menu_item.dart';
 
 // BottomMenu представляет собой навигационную панель в нижней части экрана
 class BottomMenu extends StatelessWidget {
   const BottomMenu({super.key});
-
-  Future<void> _handleLogout(BuildContext context) async {
-    // Выполнить запрос выхода
-    final result = await requestLogout(context);
-    if (result == null) {
-      context.read<AuthProvider>().logout();
-    } else {
-      if (result.success) {
-        context.read<AuthProvider>().logout();
-      } else {
-        AppInfoDialog.show(context, "${result.message}");
-      }
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -56,12 +40,14 @@ class BottomMenu extends StatelessWidget {
           BottomMenuItem(
             icon: Icons.search_rounded,
             onPressed: () {
-              // Будущая логика поиска
+              context.push('/search');
             },
           ),
           BottomMenuItem(
             icon: Icons.settings_rounded,
-            onPressed: () => _handleLogout(context),
+            onPressed: () {
+              context.push('/settings');
+            },
           ),
         ],
       ),

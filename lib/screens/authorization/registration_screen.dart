@@ -40,28 +40,28 @@ class _RegistrationState extends State<Registration> {
     final passwordAgain = _passwordAgainController.text;
 
     if (email.isEmpty) {
-      AppInfoDialog.show(context, "Поле email не должно быть пустым :(");
+      AppInfoDialog.show(context, "Поле Email не должно быть пустым.");
       return;
     }
     if (!RegExp(
       r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+",
     ).hasMatch(email)) {
-      AppInfoDialog.show(context, "Введите корректный email адрес :(");
+      AppInfoDialog.show(context, "Введите корректный email адрес.");
       return;
     }
 
     if (password.isEmpty) {
-      AppInfoDialog.show(context, "Поле пароля не должно быть пустым:(");
+      AppInfoDialog.show(context, "Поле пароля не должно быть пустым.");
       return;
     }
 
     if (passwordAgain.isEmpty) {
-      AppInfoDialog.show(context, "Второе поле пароля не должно быть пустым:(");
+      AppInfoDialog.show(context, "Введите пароль повторно.");
       return;
     }
 
     if (password != passwordAgain) {
-      AppInfoDialog.show(context, "Пароли должны совпадать :(");
+      AppInfoDialog.show(context, "Пароли не совпадают.");
       return;
     }
 
@@ -69,7 +69,6 @@ class _RegistrationState extends State<Registration> {
 
     if (response.success) {
       String userId = response.data!['userId'];
-      print("Полученный userId от сервера: $userId");
       if (mounted) {
         context.push(
           Uri(
@@ -78,11 +77,13 @@ class _RegistrationState extends State<Registration> {
           ).toString(),
         );
       } else {
-        print("mounted is not true");
+        return;
       }
     } else {
       if (mounted) {
-        AppInfoDialog.show(context, "${response.message} :(");
+        await AppInfoDialog.show(context, "${response.message}.");
+      } else {
+        return;
       }
     }
   }

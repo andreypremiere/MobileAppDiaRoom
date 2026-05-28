@@ -1,3 +1,5 @@
+import 'package:dia_room/components/general/dialog_button.dart';
+import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 
 class AppInfoDialog extends StatelessWidget {
@@ -22,7 +24,7 @@ class AppInfoDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      backgroundColor: Colors.white,
+      backgroundColor: context.ui.containerColor,
       child: Padding(
         padding: const EdgeInsets.all(24.0),
         child: Column(
@@ -31,33 +33,14 @@ class AppInfoDialog extends StatelessWidget {
             Text(
               message,
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 16,
-                color: Colors.black87,
+                color: context.ui.fontColorPrimary,
                 fontWeight: FontWeight.w500,
               ),
             ),
             const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              child: TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                style: TextButton.styleFrom(
-                  backgroundColor: Colors.grey[200],
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: Text(
-                  buttonText,
-                  style: const TextStyle(
-                    color: Colors.black54,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ),
+            DialogButton(text: buttonText, onPressed: () => Navigator.of(context).pop())
           ],
         ),
       ),

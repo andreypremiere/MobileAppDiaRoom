@@ -1,5 +1,9 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:dia_room/contracts/room/requests/updating_avatar_request.dart';
+import 'package:dia_room/contracts/room/requests/updating_background_request.dart';
+import 'package:dia_room/contracts/room/requests/updating_categories_request.dart';
+import 'package:dia_room/contracts/room/requests/updating_text_field_request.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
@@ -96,11 +100,12 @@ Future<AuthResponse> requestGetRoom(String roomId) async {
   }
 }
 
-Future<AuthResponse> requestUpdateRoom(BuildContext context, SaveRoomRequest room) async {
+Future<AuthResponse> requestUpdateRoom(SaveRoomRequest room) async {
   try {
     final res = await ApiService.post('/account/updateRoom', data: room.toMap());
     return AuthResponse(success: true, data: res.data);
   } on DioException catch (e) {
+    if (e.response?.statusCode == 409 && e.response?.data['error_code'] == "ALREADY_EXISTS") return AuthResponse(success: false, message: "Комната с таким id уже существует. Выберите другой.");
     return handleDioError(e, "Не удалось обновить комнату");
   } catch (e) {
     return handleSystemError(e);
@@ -124,12 +129,15 @@ Future<AuthResponse> requestUploadImage(String presignedUrl, File file) async {
 
 Future<AuthResponse?> requestLogout(BuildContext context) async {
   try {
+    // Извлекает refresh token из провайдера
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final String? token = await authProvider.getRefreshToken();
+
+    // Если токена нет, то возвращаем null
     if (token == null) return null;
 
-    final res = await ApiService.post('/account/logout', data: {"refreshToken": token});
-    return AuthResponse(success: true, data: res.data);
+    await ApiService.post('/account/logout', data: {"refreshToken": token});
+    return AuthResponse(success: true);
   } on DioException catch (e) {
     return handleDioError(e, "Ошибка при выходе");
   } catch (e) {
@@ -198,6 +206,21 @@ Future<AuthResponse> getRoomByRoomId(String roomId) async {
   }
 }
 
+Future<AuthResponse> getRoomForSettings() async {
+  try {
+    final res = await ApiService.get('/account/room-settings');
+
+    return AuthResponse(
+      success: true,
+      data: res.data,
+    );
+  } on DioException catch (e) {
+    return handleDioError(e, "Ошибка загрузки данных комнаты");
+  } catch (e) {
+    return handleSystemError(e);
+  }
+}
+
 Future<AuthResponse> checkSubscription(String roomId) async {
   try {
     final res = await ApiService.get('/account/checkRoomSubscription/$roomId');
@@ -236,6 +259,134 @@ Future<AuthResponse> unfollowRoom(String roomId) async {
     return AuthResponse(success: true);
   } on DioException catch (e) {
     return handleDioError(e, "Не удалось отписаться");
+  } catch (e) {
+    return handleSystemError(e);
+  }
+}
+
+Future<AuthResponse> searchRooms({
+  required int limit,
+  required int page,
+  required String value}) async {
+  try {
+    final response = await ApiService.get(
+      '/account/search',
+      queryParameters: {"limit": limit, "page": page, "value": value,}
+    );
+    return AuthResponse(success: true, data: response.data);
+  } on DioException catch (e) {
+    return handleDioError(e, "Не удалось выполнить поиск по комнатам");
+  } catch (e) {
+    return handleSystemError(e);
+  }
+}
+
+Future<AuthResponse> updateAvatar(UpdatingAvatarRequest request) async {
+  try {
+    final response = await ApiService.post(
+      '/account/update/avatar',
+      data: request.toMap(),
+    );
+    return AuthResponse(success: true, data: response.data);
+  } on DioException catch (e) {
+    return handleDioError(e, "Не удалось обновить аватарку");
+  } catch (e) {
+    return handleSystemError(e);
+  }
+}
+
+Future<AuthResponse> updateBackground(UpdatingBackgroundRequest request) async {
+  try {
+    final response = await ApiService.post(
+      '/account/update/background',
+      data: request.toMap(),
+    );
+    return AuthResponse(success: true, data: response.data);
+  } on DioException catch (e) {
+    return handleDioError(e, "Не удалось обновить фон комнаты");
+  } catch (e) {
+    return handleSystemError(e);
+  }
+}
+
+Future<AuthResponse> updateRoomUniqueId(UpdatingTextFieldRequest request) async {
+  try {
+    await ApiService.post(
+      '/account/update/roomUniqueId',
+      data: request.toMap(),
+    );
+    return AuthResponse(success: true);
+  } on DioException catch (e) {
+    return handleDioError(e, "Не удалось обновить ID комнаты");
+  } catch (e) {
+    return handleSystemError(e);
+  }
+}
+
+Future<AuthResponse> updateRoomName(UpdatingTextFieldRequest request) async {
+  try {
+    final response = await ApiService.post(
+      '/account/update/roomName',
+      data: request.toMap(),
+    );
+    return AuthResponse(success: true, data: response.data);
+  } on DioException catch (e) {
+    return handleDioError(e, "Не удалось обновить название комнаты");
+  } catch (e) {
+    return handleSystemError(e);
+  }
+}
+
+Future<AuthResponse> updateRoomBio(UpdatingTextFieldRequest request) async {
+  try {
+    await ApiService.post(
+      '/account/update/bio',
+      data: request.toMap(),
+    );
+    return AuthResponse(success: true);
+  } on DioException catch (e) {
+    return handleDioError(e, "Не удалось обновить описание комнаты");
+  } catch (e) {
+    return handleSystemError(e);
+  }
+}
+
+Future<AuthResponse> updateCategories(UpdatingCategoriesRequest request) async {
+  try {
+    await ApiService.post(
+      '/account/update/categories',
+      data: request.toMap(),
+    );
+    return AuthResponse(success: true);
+  } on DioException catch (e) {
+    return handleDioError(e, "Не удалось обновить категории");
+  } catch (e) {
+    return handleSystemError(e);
+  }
+}
+
+Future<AuthResponse> deleteBackground() async {
+  try {
+    await ApiService.delete(
+      '/account/delete/background',
+    );
+    return AuthResponse(success: true);
+  } on DioException catch (e) {
+    return handleDioError(e, "Не удалось удалить фон комнаты.");
+  } catch (e) {
+    return handleSystemError(e);
+  }
+}
+
+
+Future<AuthResponse> deleteAvatar() async {
+  try {
+    await ApiService.delete(
+      '/account/delete/avatar',
+    );
+    return AuthResponse(success: true);
+  } on DioException catch (e) {
+    return handleDioError(e, "Не удалось удалить аватар комнаты.");
   } catch (e) {
     return handleSystemError(e);
   }

@@ -1,44 +1,83 @@
-import 'package:dia_room/utils/app_theme.dart';
+import 'package:dia_room/components/loading_widget/loader_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../models/enums/file_type.dart';
 
 class AppAvatar extends StatelessWidget {
-  final String imageUrl;
+  final String? avatarPath;
+  final int? avatarVersion;
   final double radius;
-  final IconData errorIcon;
+  final bool enableFullScreenPreview;
+  final FileType fileType;
 
   const AppAvatar({
     super.key,
-    required this.imageUrl,
-    this.radius = 24.0,
-    this.errorIcon = Icons.person,
+    required this.avatarPath,
+    this.avatarVersion,
+    this.radius = 100,
+    this.enableFullScreenPreview = true,
+    this.fileType = FileType.network,
   });
 
   @override
   Widget build(BuildContext context) {
-    if (imageUrl.isEmpty) {
-      return _buildErrorWidget(context);
-    }
+    final bool hasImage = avatarPath != null && avatarPath!.isNotEmpty;
+    final double diameter = radius * 2;
 
-    return CachedNetworkImage(
-      imageUrl: imageUrl,
-      imageBuilder: (context, imageProvider) => CircleAvatar(
-        radius: radius,
-        backgroundImage: imageProvider,
-      ),
-      placeholder: (context, url) => CircleAvatar(
-        radius: radius,
-        child:  CircularProgressIndicator(strokeWidth: 2),
-      ),
-      errorWidget: (context, url, error) => _buildErrorWidget(context),
+    // Выносим декор для состояния ошибки/отсутствия картинки,
+    // чтобы не дублировать код в дереве виджетов.
+    final placeholderDecoration = BoxDecoration(
+      color: const Color(0xFFF0F0F0),
+      shape: BoxShape.circle,
     );
-  }
 
-  Widget _buildErrorWidget(BuildContext context) {
-    return CircleAvatar(
-      radius: radius,
-      backgroundColor: context.ui.primaryColor,
-      child: Icon(errorIcon, color: Colors.white, size: radius),
+    return GestureDetector(
+      onTap: (hasImage && enableFullScreenPreview)
+          ? () {
+        context.push(
+          '/full_image_screen',
+          extra: {
+            'urls': [avatarPath.toString()],
+            'index': 0,
+            'type': fileType,
+          },
+        );
+      }
+          : null,
+      child: SizedBox(
+        height: diameter,
+        width: diameter,
+        child: hasImage
+            ? ClipOval(
+          child: CachedNetworkImage(
+            key: ValueKey('$avatarPath-${avatarVersion ?? 0}'),
+            imageUrl: avatarPath!,
+            fit: BoxFit.cover,
+            placeholder: (context, url) =>
+            const Center(child: DiaRoomLoader()),
+            errorWidget: (context, url, error) => Container(
+              decoration: placeholderDecoration,
+              child: Icon(
+                Icons.error,
+                color: Colors.grey,
+                size: radius,
+              ),
+            ),
+          ),
+        )
+            : Container(
+          decoration: placeholderDecoration,
+          child: Center(
+            child: Icon(
+              Icons.person,
+              color: Colors.grey,
+              size: radius,
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

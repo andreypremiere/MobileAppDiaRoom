@@ -1,3 +1,4 @@
+import 'package:dia_room/components/info_dialog_component.dart';
 import 'package:dia_room/components/post_card/stats_widget.dart';
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
@@ -165,13 +166,23 @@ class OwnPostComponent extends StatelessWidget {
     );
   }
 
+  Future<void> _handleTap(BuildContext context) async {
+    if (post.status == "processing") {
+      if (context.mounted) {
+        await AppInfoDialog.show(context, "Пожалуйста, дождитесь загрузки поста. Попробуйте обновить экран.");
+      }
+    } else {
+      context.push("/showPost/${post.data.roomId}/${post.data.postId}");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return BasePostCard(
+        return BasePostCard(
       title: post.data.title,
       previewUrl: post.data.preview,
       category: post.data.category,
-      onTap: () => context.push("/showPost/${post.data.postId}"),
+      onTap: () => _handleTap(context),
       bottomPanel: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [

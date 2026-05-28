@@ -1,18 +1,37 @@
 import 'dart:io';
+import 'package:camera/camera.dart';
+import 'package:dia_room/components/general/dialog_button.dart';
+import 'package:dia_room/components/loading_widget/loader_widget.dart';
 import 'package:dia_room/contracts/room/requests/save_room_request.dart';
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:dia_room/utils/auth_service.dart';
+import 'package:dia_room/utils/compress_image_service.dart';
+import 'package:dia_room/utils/picker_image_service.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:image_cropper/image_cropper.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 import '../../api/account_api.dart';
 import '../../components/info_dialog_component.dart';
-import '../../models/enums/room_categories.dart';
+import '../../models/enums/categories.dart';
 import '../../utils/utils.dart';
 
+class UploaderMedia {
+  static void uploadMediaInBackground(Map<String, dynamic> data, String? avatar, String? background) async {
+    if (avatar != null && avatar.isNotEmpty) {
+      final url = data['presignedUrlAvatar'];
+      if (url != null && url.isNotEmpty) {
+        try { await requestUploadImage(url, File(avatar)); } catch (_) {}
+      }
+    }
+    if (background != null && background.isNotEmpty) {
+      final url = data['presignedUrlBackground'];
+      if (url != null && url.isNotEmpty) {
+        try { await requestUploadImage(url, File(background)); } catch (_) {}
+      }
+    }
+  }
+}
 
 class RoomSettingsScreen extends StatefulWidget {
   const RoomSettingsScreen({super.key});
@@ -22,14 +41,14 @@ class RoomSettingsScreen extends StatefulWidget {
 }
 
 class _RoomSettingsScreenState extends State<RoomSettingsScreen> {
+  bool isLoading = false;
   final TextEditingController _idController = TextEditingController();
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _bioController = TextEditingController();
-  final ImagePicker _picker = ImagePicker();
 
   String? _avatarPath;
   String? _backgroundPath;
-  final List<RoomCategory> _selectedCategories = [];
+  final List<Categories> _selectedCategories = [];
 
   @override
   void dispose() {
@@ -41,83 +60,21 @@ class _RoomSettingsScreenState extends State<RoomSettingsScreen> {
 
   // --- ОБРАБОТКА ИЗОБРАЖЕНИЙ ---
 
-  Future<void> _deletePhysicalFile(String? path) async {
-    if (path == null || path.isEmpty) return;
-
-    try {
-      final file = File(path);
-      if (await file.exists()) {
-        await file.delete();
-        print("Файл удален: $path");
-      }
-    } catch (e) {
-      print("Ошибка при удалении файла: $e");
-    }
-  }
-
-  Future<void> _pickAndCropAvatar() async {
-    final XFile? pickedFile = await _picker.pickImage(
-      source: ImageSource.gallery,
-    );
-
-    if (pickedFile != null) {
-      final croppedFile = await ImageCropper().cropImage(
-        sourcePath: pickedFile.path,
-        // cropStyle: CropStyle.circle, // Круглый шаблон для аватара
-        uiSettings: [
-          AndroidUiSettings(
-            cropStyle: CropStyle.circle,
-            toolbarTitle: 'Обрежьте аватар',
-            toolbarColor: const Color(0xFFB4B4B4),
-            toolbarWidgetColor: Colors.white,
-            activeControlsWidgetColor: const Color(0xFF525252),
-            backgroundColor: const Color(0xFFF5F5F5),
-            initAspectRatio: CropAspectRatioPreset.square,
-            lockAspectRatio: true,
-          ),
-          IOSUiSettings(title: 'Обрежьте аватар', aspectRatioLockEnabled: true),
-        ],
-      );
-
-      if (croppedFile != null) {
-        setState(() => _avatarPath = croppedFile.path);
+  Future<void> _handlePickAndCropAvatar() async {
+    final croppedImage = await PickerImageService.pickAndCropAvatar();
+    if (croppedImage != null) {
+      if (mounted) {
+        setState(() => _avatarPath = croppedImage);
       }
     }
   }
 
-  Future<void> _pickAndCropBackground() async {
-    final XFile? pickedFile = await _picker.pickImage(
-      source: ImageSource.gallery,
-    );
+  Future<void> _handlePickAndCropBackground() async {
+    final croppedImage = await PickerImageService.pickAndCropBackground();
 
-    if (pickedFile != null) {
-      final croppedFile = await ImageCropper().cropImage(
-        sourcePath: pickedFile.path,
-        // cropStyle: CropStyle.rectangle,
-        uiSettings: [
-          AndroidUiSettings(
-            cropStyle: CropStyle.rectangle,
-            toolbarTitle: 'Обрежьте фон 16:9',
-            toolbarColor: const Color(0xFFB4B4B4),
-            toolbarWidgetColor: Colors.white,
-            activeControlsWidgetColor: const Color(0xFF525252),
-            backgroundColor: const Color(0xFFF5F5F5),
-            initAspectRatio: CropAspectRatioPreset.ratio16x9,
-            lockAspectRatio: true,
-          ),
-          IOSUiSettings(
-            title: 'Обрежьте фон 16:9',
-            aspectRatioLockEnabled: true,
-          ),
-        ],
-        aspectRatio: const CropAspectRatio(
-          ratioX: 16,
-          ratioY: 9,
-        ), // 16:9 для фона
-      );
-
-      if (croppedFile != null) {
-        setState(() => _backgroundPath = croppedFile.path);
+    if (croppedImage != null) {
+      if (mounted) {
+        setState(() => _backgroundPath = croppedImage);
       }
     }
   }
@@ -125,6 +82,13 @@ class _RoomSettingsScreenState extends State<RoomSettingsScreen> {
   // --- ОБРАБОТКА КАТЕГОРИЙ ---
 
   void _showCategoryPopup() {
+    final categoriesToDisplay = Categories.values
+        .where((c) => c != Categories.defaultVal)
+        .toList();
+
+    final List<Categories> categories = [];
+    categories.addAll(_selectedCategories);
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -135,22 +99,14 @@ class _RoomSettingsScreenState extends State<RoomSettingsScreen> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),
-              title: const Text(
-                "Выберите категории (до 3)",
-                style: TextStyle(
-                  fontFamily: 'SNPro',
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
               content: SizedBox(
                 width: double.maxFinite,
                 child: ListView.builder(
                   shrinkWrap: true,
-                  itemCount: RoomCategory.values.length,
+                  itemCount: categoriesToDisplay.length,
                   itemBuilder: (context, index) {
-                    final category = RoomCategory.values[index];
-                    final isSelected = _selectedCategories.contains(category);
+                    final category = categoriesToDisplay[index];
+                    final isSelected = categories.contains(category);
 
                     return CheckboxListTile(
                       title: Text(
@@ -159,20 +115,18 @@ class _RoomSettingsScreenState extends State<RoomSettingsScreen> {
                       ),
                       value: isSelected,
                       activeColor: const Color(0xFF525252),
-                      onChanged: (bool? value) {
+                      onChanged: (bool? value) async {
                         if (value == true) {
-                          if (_selectedCategories.length < 3) {
-                            setState(() => _selectedCategories.add(category));
-                            setStateDialog(() {});
+                          if (categories.length < 3) {
+                            setStateDialog(() => categories.add(category));
                           } else {
-                            AppInfoDialog.show(
+                            await AppInfoDialog.show(
                               context,
-                              "Можно выбрать только 3 категории :(",
+                              "Можно выбрать только 3 категории.",
                             );
                           }
                         } else {
-                          setState(() => _selectedCategories.remove(category));
-                          setStateDialog(() {});
+                          setStateDialog(() => categories.remove(category));
                         }
                       },
                     );
@@ -180,17 +134,17 @@ class _RoomSettingsScreenState extends State<RoomSettingsScreen> {
                 ),
               ),
               actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text(
-                    "Готово",
-                    style: TextStyle(
-                      color: Color(0xFF525252),
-                      fontFamily: 'SNPro',
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                DialogButton(
+                  text: "Готово",
+                  onPressed: () {
+                    if (mounted) {
+                      setState(() {
+                        _selectedCategories.clear();
+                        _selectedCategories.addAll(categories);
+                      });
+                      Navigator.pop(context);
+                    }
+                  },
                 ),
               ],
             );
@@ -200,89 +154,108 @@ class _RoomSettingsScreenState extends State<RoomSettingsScreen> {
     );
   }
 
-  void _removeCategory(String category) {
+  void _removeCategory(Categories category) {
     setState(() {
       _selectedCategories.remove(category);
     });
   }
 
   void _handleSaveRoom() async {
-    final roomId = _idController.text.trim();
-    final resultCheck = isValidRoomId(roomId);
-    if (resultCheck != null) {
-      AppInfoDialog.show(context, resultCheck);
-      return;
+    if (mounted) {
+      setState(() {
+        isLoading = true;
+      });
     }
 
-    final roomName = _nameController.text.trim();
-    if (roomName.isEmpty) {
-      AppInfoDialog.show(
-        context,
-        "Наименование не должно быть пустым: (",
-      );
-      return;
-    }
-
-    if (!isValidRoomName(roomName)) {
-      AppInfoDialog.show(
-        context,
-        "Наименование должно быть короче 100 символов : (",
-      );
-      return;
-    }
-
-    SaveRoomRequest room = SaveRoomRequest(
-      roomUniqueId: roomId,
-      roomName: roomName,
-      listCategory: _selectedCategories,
-      bio: _bioController.text.trim(),
-      avatarPath: _avatarPath,
-      backgroundPath: _backgroundPath,
-    );
-
-
-    print('room перед отправкой: $room');
-    final response = await requestUpdateRoom(context, room);
-
-    if (!response.success) {
-      // 2. Ждем закрытия диалога
-      await AppInfoDialog.show(context, response.message.toString());
-      return;
-    }
-
-    context.read<AuthProvider>().saveStatusConfigure(true);
-
-    () async {
-      if (_avatarPath != null &&
-          _avatarPath!.isNotEmpty &&
-          response.data!.containsKey('presignedUrlAvatar') &&
-          response.data!['presignedUrlAvatar'].isNotEmpty) {
-        File fileAvatar = File(_avatarPath!);
-        if (!await fileAvatar.exists()) {
-          print('Файл _avatarPath не существует');
-        } else {
-          await requestUploadImage(response.data!['presignedUrlAvatar'], fileAvatar);
+    try {
+      final roomId = _idController.text.trim();
+      final resultCheck = isValidRoomId(roomId);
+      if (resultCheck != null) {
+        if (mounted) {
+          AppInfoDialog.show(context, resultCheck);
         }
+        return;
       }
 
-      if (_backgroundPath != null &&
-          _backgroundPath!.isNotEmpty &&
-          response.data!.containsKey('presignedUrlBackground') &&
-          response.data!['presignedUrlBackground'].isNotEmpty) {
-
-        File fileBackground = File(_backgroundPath!);
-
-        if (!await fileBackground.exists()) {
-          print('Файл _backgroundPath не существует по пути: $_backgroundPath');
-        } else {
-          await requestUploadImage(response.data!['presignedUrlBackground'], fileBackground);
+      final roomName = _nameController.text.trim();
+      if (roomName.isEmpty) {
+        if (mounted) {
+          await AppInfoDialog.show(
+            context,
+            "Наименование не должно быть пустым.",
+          );
         }
+        return;
       }
-      print('Все изображения успешно загружены');
-    }();
 
-    context.go('/');
+      if (!isValidRoomName(roomName)) {
+        if (mounted) {
+          await AppInfoDialog.show(
+            context,
+            "Наименование должно быть короче 100 символов.",
+          );
+        }
+        return;
+      }
 
+      String? compressedAvatar;
+      if (_avatarPath != null && _avatarPath!.isNotEmpty) {
+        compressedAvatar = await CompressImageService.compressForPreview(
+          XFile(_avatarPath!),
+        );
+      }
+
+      String? compressedBackground;
+      if (_backgroundPath != null && _backgroundPath!.isNotEmpty) {
+        compressedBackground = await CompressImageService.compressForPreview(
+          XFile(_backgroundPath!),
+        );
+      }
+
+      SaveRoomRequest room = SaveRoomRequest(
+        roomUniqueId: roomId,
+        roomName: roomName,
+        listCategory: _selectedCategories,
+        bio: _bioController.text.trim(),
+        avatarPath: compressedAvatar,
+        backgroundPath: compressedBackground,
+      );
+
+      final response = await requestUpdateRoom(room);
+
+      if (!response.success) {
+        if (mounted) {
+          await AppInfoDialog.show(
+            context,
+            response.message ?? "Не удалось обновить данные комнаты.",
+          );
+        }
+        return;
+      }
+
+      UploaderMedia.uploadMediaInBackground(response.data, compressedAvatar, compressedBackground);
+    } catch (e) {
+      if (mounted) {
+        await AppInfoDialog.show(
+          context,
+          "Возникла ошибка в работе приложения. Пожалуйста, обратитесь в поддержку.",
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
+    }
+
+    if (mounted) {
+      await context.read<AuthProvider>().saveStatusConfigure(true);
+    }
+
+    if (mounted) {
+      context.go('/');
+    }
   }
 
   // --- ОСНОВНОЙ BUILD ---
@@ -293,7 +266,7 @@ class _RoomSettingsScreenState extends State<RoomSettingsScreen> {
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
         appBar: _buildAppBar(),
-        body: Column(
+        body: isLoading ? Center(child: DiaRoomLoader(),) : Column(
           children: [
             Expanded(
               child: ListView(
@@ -307,7 +280,10 @@ class _RoomSettingsScreenState extends State<RoomSettingsScreen> {
                   const SizedBox(height: 20),
 
                   _buildSectionTitle("Название комнаты", isRequired: true),
-                  _buildCustomField(controller: _nameController, hint: 'Например: My room'),
+                  _buildCustomField(
+                    controller: _nameController,
+                    hint: 'Например: My room',
+                  ),
                   const SizedBox(height: 20),
 
                   _buildSectionTitle("Аватар"),
@@ -351,10 +327,7 @@ class _RoomSettingsScreenState extends State<RoomSettingsScreen> {
       elevation: 0,
       title: const Text(
         'Настройка комнаты',
-        style: TextStyle(
-          fontWeight: FontWeight.w600,
-          fontSize: 22,
-        ),
+        style: TextStyle(fontWeight: FontWeight.w600, fontSize: 22),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       ),
@@ -371,7 +344,8 @@ class _RoomSettingsScreenState extends State<RoomSettingsScreen> {
             fontSize: 18,
             fontFamily: 'SNPro',
             fontWeight: FontWeight.w600,
-            color: Colors.black, // Добавь цвет, иначе в RichText он может быть белым по умолчанию
+            color: Colors
+                .black, // Добавь цвет, иначе в RichText он может быть белым по умолчанию
           ),
           children: [
             if (isRequired)
@@ -426,7 +400,7 @@ class _RoomSettingsScreenState extends State<RoomSettingsScreen> {
       return Align(
         alignment: Alignment.center,
         child: InkWell(
-          onTap: _pickAndCropAvatar,
+          onTap: _handlePickAndCropAvatar,
           borderRadius: BorderRadius.circular(50),
           child: Container(
             height: 100,
@@ -463,9 +437,8 @@ class _RoomSettingsScreenState extends State<RoomSettingsScreen> {
             top: -10,
             child: Row(
               children: [
-                // _buildCircleBtn(Icons.edit, _pickAndCropAvatar),
                 _buildCircleBtn(Icons.delete_outline, () async {
-                  await _deletePhysicalFile(_avatarPath);
+                  await PickerImageService.deletePhysicalFile(_avatarPath);
 
                   setState(() {
                     _avatarPath = null;
@@ -482,7 +455,7 @@ class _RoomSettingsScreenState extends State<RoomSettingsScreen> {
   Widget _buildBackgroundPicker() {
     if (_backgroundPath == null) {
       return InkWell(
-        onTap: _pickAndCropBackground,
+        onTap: _handlePickAndCropBackground,
         child: Container(
           height: 150,
           decoration: BoxDecoration(
@@ -526,7 +499,7 @@ class _RoomSettingsScreenState extends State<RoomSettingsScreen> {
               // _buildCircleBtn(Icons.edit, _pickAndCropBackground),
               // const SizedBox(width: 8),
               _buildCircleBtn(Icons.delete_outline, () async {
-                await _deletePhysicalFile(_backgroundPath);
+                await PickerImageService.deletePhysicalFile(_backgroundPath);
 
                 setState(() {
                   _backgroundPath = null;
@@ -605,7 +578,7 @@ class _RoomSettingsScreenState extends State<RoomSettingsScreen> {
             spacing: 8.0,
             runSpacing: 8.0,
             children: _selectedCategories
-                .map((category) => _buildTagChip(category.label))
+                .map((category) => _buildTagChip(category))
                 .toList(),
           ),
         ],
@@ -613,7 +586,7 @@ class _RoomSettingsScreenState extends State<RoomSettingsScreen> {
     );
   }
 
-  Widget _buildTagChip(String tag) {
+  Widget _buildTagChip(Categories tag) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
@@ -624,7 +597,10 @@ class _RoomSettingsScreenState extends State<RoomSettingsScreen> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(tag, style: const TextStyle(fontFamily: 'SNPro', fontSize: 14)),
+          Text(
+            tag.label,
+            style: const TextStyle(fontFamily: 'SNPro', fontSize: 14),
+          ),
           const SizedBox(width: 4),
           GestureDetector(
             onTap: () => _removeCategory(tag),
@@ -638,23 +614,26 @@ class _RoomSettingsScreenState extends State<RoomSettingsScreen> {
   Widget _buildBottomPanel() {
     return Container(
       padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(color: const Color(0xFFF8F8F8), border: null),
+      decoration: BoxDecoration(color: Colors.transparent, border: null),
       child: SafeArea(
         child: Row(
           children: [
             Expanded(
               child: OutlinedButton(
                 onPressed: () async {
-                  await AppInfoDialog.show(
-                    context,
-                    "Вы можете изменить параметры в настройках :)",
-                  );
-                  print("Выполнилось действие пропустить");
-
-                  requestSetConfigured();
-
-                  context.read<AuthProvider>().saveStatusConfigure(true);
-                  context.go('/');
+                  if (mounted) {
+                    await AppInfoDialog.show(
+                      context,
+                      "Вы можете изменить данные в настройках :)\nПриятного времяпровождения!",
+                    );
+                  }
+                  await requestSetConfigured();
+                  if (mounted) {
+                    await context.read<AuthProvider>().saveStatusConfigure(true);
+                  }
+                  if (mounted) {
+                    context.go('/');
+                  }
                 },
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
@@ -666,7 +645,7 @@ class _RoomSettingsScreenState extends State<RoomSettingsScreen> {
                 child: Text(
                   "Пропустить",
                   style: TextStyle(
-                    color: context.ui.fontColorPrimary,
+                    color: context.ui.primaryColor,
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),

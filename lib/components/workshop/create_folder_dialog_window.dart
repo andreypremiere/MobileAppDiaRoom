@@ -1,13 +1,16 @@
+import 'package:dia_room/components/info_dialog_component.dart';
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 
 import '../../api/workshop_api.dart';
+import '../../models/workshop/folder.dart';
+import '../general/dialog_button.dart';
 
 Future<void> showCreateFolderDialog(
     BuildContext context, {
       required String roomId,
       String? parentId,
-      required VoidCallback onSuccess,
+      required Function(Folder newFolder) onSuccess,
     }) async {
   final controller = TextEditingController();
 
@@ -31,13 +34,36 @@ Future<void> showCreateFolderDialog(
         ),
       ),
       actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text('Отмена', style: TextStyle(color: context.ui.fontColorPrimary)),
-        ),
-        TextButton(
-          onPressed: () => Navigator.pop(context, controller.text.trim()),
-          child: Text('Создать', style: TextStyle(color: context.ui.primaryColor, fontWeight: FontWeight.w600)),
+        Row(
+          children: [
+            DialogButton(
+              text: "Отмена",
+              onPressed: () {
+                if (context.mounted) {
+                  Navigator.pop(context);
+                }
+              },
+              textColor: context.ui.fontColorHint,
+              isTransparent: true,
+              padding: EdgeInsets.symmetric(
+                vertical: 8,
+                horizontal: 10,
+              ),
+            ),
+            const Spacer(),
+            DialogButton(
+              text: "Сохранить",
+              onPressed: () {
+                if (context.mounted) {
+                  Navigator.pop(context, controller.text.trim());
+                }
+              },
+              padding: EdgeInsets.symmetric(
+                vertical: 8,
+                horizontal: 10,
+              ),
+            ),
+          ],
         ),
       ],
     ),
@@ -46,11 +72,12 @@ Future<void> showCreateFolderDialog(
   if (folderName != null && folderName.isNotEmpty) {
     final result = await createFolder(parentId: parentId, name: folderName);
     if (result.success) {
-      onSuccess();
+      final newFolder = Folder.fromMap(result.data);
+      onSuccess(newFolder);
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result.message ?? "Не удалось создать папку")),
-      );
+      if (context.mounted) {
+        await AppInfoDialog.show(context, result.message ?? "Не удалось создать паппку.");
+      }
     }
   }
 }

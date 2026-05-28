@@ -1,12 +1,13 @@
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:dia_room/models/enums/post_categories.dart';
+import 'package:dia_room/components/loading_widget/loader_widget.dart';
+import 'package:dia_room/models/enums/categories.dart';
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 
 class BasePostCard extends StatelessWidget {
   final String title;
   final String? previewUrl;
-  final PostCategory category;
+  final Categories category;
   final VoidCallback onTap;
   final Widget bottomPanel;
   final Widget? topAction;
@@ -89,11 +90,13 @@ class BasePostCard extends StatelessWidget {
       fit: BoxFit.cover,
       width: double.infinity,
       height: double.infinity,
-      placeholder: (context, url) => Center(child: CircularProgressIndicator()),
-      errorWidget: (context, url, error) => Container(
-        color: const Color(0xFFE0E0E0),
-        child: const Icon(Icons.broken_image_outlined, size: 40, color: Color(0xFF888888)),
-      ),
+      placeholder: (context, url) => Center(child: DiaRoomLoader()),
+      errorWidget: (context, url, error) {
+        return Container(
+          color: const Color(0xFFE0E0E0),
+          child: const Icon(Icons.broken_image_outlined, size: 40, color: Color(0xFF888888)),
+        );
+      },
     );
   }
 

@@ -6,9 +6,12 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
+import '../../components/diary/link_button.dart';
 import '../../components/general/app_back_button.dart';
 import '../../components/info_dialog_component.dart';
-import '../../models/enums/post_categories.dart';
+import '../../models/enums/categories.dart';
+import '../../utils/auth_service.dart';
 
 
 class SetSettingsForPostScreen extends StatefulWidget {
@@ -54,7 +57,7 @@ class _SetSettingsForPostState extends State<SetSettingsForPostScreen> {
           if (!widget.postDraft.hashtags.contains(tag)) {
             widget.postDraft.hashtags.add(tag);
           }} else {
-            AppInfoDialog.show(context, "Можно добавить только 6 хештегов :(");
+            AppInfoDialog.show(context, "Можно добавить только 6 хештегов.");
           }
           _tagsController.clear(); // Очищаем поле для нового ввода
         });
@@ -68,27 +71,39 @@ class _SetSettingsForPostState extends State<SetSettingsForPostScreen> {
     });
   }
 
-  void _startPublication() {
+  Future<void> _startPublication() async {
     if (widget.postDraft.name.isEmpty) {
       // Вызываем статический метод, а не просто создаем виджет
-      AppInfoDialog.show(context, "Название поста не должно быть пустым :(");
+      AppInfoDialog.show(context, "Название поста не должно быть пустым.");
       return;
     }
 
     if (widget.postDraft.previewPath == null || widget.postDraft.previewPath!.isEmpty) {
-      AppInfoDialog.show(context, "Необходимо выбрать превью :(");
+      AppInfoDialog.show(context, "Необходимо выбрать превью.");
       return;
     }
 
-    if (widget.postDraft.category == PostCategory.defaultVal) {
-      AppInfoDialog.show(context, "Необходимо выбрать категорию публикации :(");
+    if (widget.postDraft.category == Categories.defaultVal) {
+      AppInfoDialog.show(context, "Необходимо выбрать категорию публикации.");
       return;
     }
 
-    print("Публикация разрешена!");
     CreatingPostService service = CreatingPostService(post: widget.postDraft);
     service.startCreating();
-    context.go('/');
+
+    if (mounted) {
+      await AppInfoDialog.show(context, "Пожалуйста, не закрывайте приложение пока идет загрузка публикации.");
+    }
+
+    if (mounted) {
+      final roomId = context.read<AuthProvider>().roomId;
+
+      if (roomId != null) {
+        context.go('/personalRoomPosts/$roomId');
+      } else {
+        context.go('/');
+      }
+    }
   }
 
   Future<void> _pickAndCropImage() async {
@@ -214,12 +229,13 @@ class _SetSettingsForPostState extends State<SetSettingsForPostScreen> {
             ),
 
             const SizedBox(height: 24),
-            _buildSectionTitle("Содержание (на будущее)"),
+            _buildSectionTitle("Ссылка на мастерскую"),
             const SizedBox(height: 8),
-            _buildContentSummary(),
+            _buildWorkShopBinding(),
 
             const SizedBox(height: 40),
             _buildPublishButton(),
+            SizedBox(height: MediaQuery.of(context).padding.bottom,)
           ],
         ),
       ),
@@ -361,22 +377,9 @@ class _SetSettingsForPostState extends State<SetSettingsForPostScreen> {
   }
 
   Widget _buildCategorySelector() {
-    return PopupMenuButton<PostCategory>(
-      color: Color(0xFFD0D0D0),
-      offset: const Offset(0, 50),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      onSelected: (val) => setState(() => widget.postDraft.category = val),
-      itemBuilder: (context) => PostCategory.values
-          .map(
-            (cat) => PopupMenuItem(
-              value: cat,
-              child: Text(
-                cat.label,
-                style: const TextStyle(fontFamily: 'SNPro'),
-              ),
-            ),
-          )
-          .toList(),
+    return InkWell(
+      onTap: _showCategoryDialog,
+      borderRadius: BorderRadius.circular(12),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
@@ -388,11 +391,16 @@ class _SetSettingsForPostState extends State<SetSettingsForPostScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              widget.postDraft.category.label,
+              // Если категория дефолтная — пишем заглушку, иначе — её название
+              widget.postDraft.category == Categories.defaultVal
+                  ? "Выберите категорию..."
+                  : widget.postDraft.category.label,
               style: TextStyle(
                 fontFamily: 'SNPro',
                 fontSize: 16,
-                color: Colors.black,
+                color: widget.postDraft.category == Categories.defaultVal
+                    ? Colors.black26
+                    : Colors.black,
               ),
             ),
             const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
@@ -402,20 +410,142 @@ class _SetSettingsForPostState extends State<SetSettingsForPostScreen> {
     );
   }
 
-  Widget _buildContentSummary() {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.5),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: const Color(0xFFD1D1D1),
-          style: BorderStyle.none,
+  void _showCategoryDialog() {
+    // Прячем клавиатуру перед открытием диалога, чтобы UI не прыгал
+    FocusScope.of(context).unfocus();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.white,
+          surfaceTintColor: Colors.transparent,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: const Text(
+            "Выберите категорию",
+            style: TextStyle(
+              fontFamily: 'SNPro',
+              fontWeight: FontWeight.w600,
+              fontSize: 20,
+            ),
+          ),
+          content: SizedBox(
+            // Ограничиваем ширину, чтобы на планшетах не растягивалось во весь экран
+            width: double.maxFinite,
+            child: ListView.builder(
+              shrinkWrap: true, // Позволяет диалогу адаптироваться под размер контента
+              physics: const BouncingScrollPhysics(),
+              itemCount: Categories.values.length,
+              itemBuilder: (context, index) {
+                final category = Categories.values[index];
+
+                // Если в твоем enums есть дефолтное техническое значение (например, defaultVal),
+                // мы просто скрываем его из списка выбора, чтобы юзер не мог его кликнуть.
+                if (category == Categories.defaultVal) {
+                  return const SizedBox.shrink();
+                }
+
+                final bool isSelected = widget.postDraft.category == category;
+
+                return ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  title: Text(
+                    category.label,
+                    style: TextStyle(
+                      fontFamily: 'SNPro',
+                      fontSize: 16,
+                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                      color: isSelected ? context.ui.primaryColor : Colors.black87,
+                    ),
+                  ),
+                  trailing: isSelected
+                      ? Icon(Icons.check_circle, color: context.ui.primaryColor)
+                      : null,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  onTap: () {
+                    setState(() {
+                      widget.postDraft.category = category;
+                    });
+                    Navigator.of(context).pop(); // Закрываем диалог после выбора
+                  },
+                );
+              },
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _handleBindLinkWorkshop() async {
+    String? roomId;
+    if (mounted) {
+      roomId = context.read<AuthProvider>().roomId;
+    }
+    if (roomId == null) {
+      if (mounted) {
+        await AppInfoDialog.show(context, "Не удалось получить текущую сессию. Пожалуйста, сообщите в поддержку.");
+      }
+      return;
+    }
+
+    final destinationId = await context.push<String?>(
+      '/select-folder-diary/$roomId',
+    );
+
+    if (destinationId != null) {
+      if (mounted) {
+        setState(() {
+          widget.postDraft.workshopLink.setId(destinationId);
+        });
+      }
+    }
+  }
+
+  void _onCloseLink() {
+    if (mounted) {
+      setState(() {
+        widget.postDraft.workshopLink.setEmpty();
+      });
+    }
+  }
+
+  Widget _buildWorkShopBinding() {
+    final bool isLinkSelected = widget.postDraft.workshopLink.isExist();
+
+    // Состояние 2: Ссылка выбрана
+    if (isLinkSelected) {
+      return CustomLinkButton(
+        icon: Icons.burst_mode_outlined,
+        label: "Связано с мастерской",
+        onClose: _onCloseLink,
+      );
+    }
+
+    // Состояние 1: Ссылка не выбрана (стиль как у селектора категории)
+    return InkWell(
+      onTap: _handleBindLinkWorkshop,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFFD1D1D1)),
         ),
-      ),
-      child: Text(
-        "Блоков контента: ${widget.postDraft.blocks.length}",
-        style: const TextStyle(fontFamily: 'SNPro', color: Colors.grey),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              "Связать с мастерской...",
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.black26,
+              ),
+            ),
+            const Icon(Icons.link, color: Colors.grey),
+          ],
+        ),
       ),
     );
   }
@@ -435,13 +565,12 @@ class _SetSettingsForPostState extends State<SetSettingsForPostScreen> {
           ),
           elevation: 0,
         ),
-        child: const Text(
+        child: Text(
           "Опубликовать",
           style: TextStyle(
-            color: Colors.white,
+            color: context.ui.fontColorLight,
             fontSize: 18,
             fontWeight: FontWeight.bold,
-            fontFamily: 'SNPro',
           ),
         ),
       ),

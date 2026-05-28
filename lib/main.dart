@@ -1,6 +1,11 @@
 import 'package:dia_room/models/enums/file_type.dart';
 import 'package:dia_room/models/post_creator/post_draft.dart';
 import 'package:dia_room/screens/authorization/registration_screen.dart';
+import 'package:dia_room/screens/diary/diary_screen.dart';
+import 'package:dia_room/screens/diary/search_messages.dart';
+import 'package:dia_room/screens/diary/select_folder_diary.dart';
+import 'package:dia_room/screens/diary/select_post_diary.dart';
+import 'package:dia_room/screens/global_search_screen.dart';
 import 'package:dia_room/screens/room/room_settings_screen.dart';
 import 'package:dia_room/screens/publication/full_image_screen.dart';
 import 'package:dia_room/screens/publication/full_video_screen.dart';
@@ -13,8 +18,10 @@ import 'package:dia_room/screens/room/room_screen.dart';
 import 'package:dia_room/screens/publication/set_settings_for_post_screen.dart';
 import 'package:dia_room/screens/publication/showing_post_screen.dart';
 import 'package:dia_room/screens/authorization/verify_code_screen.dart';
+import 'package:dia_room/screens/room/settings_screen.dart';
 import 'package:dia_room/screens/workshop/select_folder_screen.dart';
 import 'package:dia_room/screens/workshop/workshop_screen.dart';
+import 'package:dia_room/services/diary/upload_manager.dart';
 import 'package:dia_room/services/workshop/uploader_manager.dart';
 import 'package:dia_room/utils/auth_service.dart';
 import 'package:dia_room/utils/dio_service.dart';
@@ -25,6 +32,9 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import 'components/loading_widget/loader_widget.dart';
+import 'models/enums/diary/search_method.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -34,8 +44,10 @@ void main() async {
   ApiService.init(authProvider);
   await authProvider.loadSession();
 
-  print('Пользователь аутентифицирован?\nuserId: ${authProvider.userId}\nroomId: ${authProvider.roomId}\n'
-      'isAuthenticated: ${authProvider.isAuthenticated}\nisConfigured: ${authProvider.isConfigured} ');
+  print(
+    'Пользователь аутентифицирован?\nuserId: ${authProvider.userId}\nroomId: ${authProvider.roomId}\n'
+    'isAuthenticated: ${authProvider.isAuthenticated}\nisConfigured: ${authProvider.isConfigured} ',
+  );
 
   print(authProvider.accessToken);
 
@@ -47,6 +59,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => DraftProvider()),
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => UploaderManager()),
+        ChangeNotifierProvider(create: (_) => UploadManager()),
       ],
       child: const App(),
     ),
@@ -67,13 +80,14 @@ class App extends StatelessWidget {
         return AnnotatedRegion<SystemUiOverlayStyle>(
           value: SystemUiOverlayStyle(
             statusBarColor: Colors.transparent,
-            statusBarIconBrightness:
-            isDark ? Brightness.light : Brightness.dark,
-            statusBarBrightness:
-            isDark ? Brightness.dark : Brightness.light,
+            statusBarIconBrightness: isDark
+                ? Brightness.light
+                : Brightness.dark,
+            statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
             systemNavigationBarColor: Colors.transparent,
-            systemNavigationBarIconBrightness:
-            isDark ? Brightness.light : Brightness.dark,
+            systemNavigationBarIconBrightness: isDark
+                ? Brightness.light
+                : Brightness.dark,
             systemNavigationBarDividerColor: Colors.transparent,
             systemNavigationBarContrastEnforced: false,
             systemStatusBarContrastEnforced: false,
@@ -84,36 +98,73 @@ class App extends StatelessWidget {
       routerConfig: GoRouter(
         refreshListenable: auth,
         initialLocation: '/',
-        // redirect: (context, state) {
-        //   final bool loggedIn = auth.isAuthenticated;
-        //   final location = state.uri.path;
-        //   final publicRoutes = ['/login', '/registration', '/verifyCode'];
-        //
-        //   final bool isPublicPage = publicRoutes.any((route) => location.startsWith(route));
-        //
-        //   print('Текущий location: $location, Публичная: $isPublicPage, Авторизован: $loggedIn');
-        //
-        //   if (!loggedIn && !isPublicPage) {
-        //     return '/login';
-        //   }
-        //
-        //   if (loggedIn && !auth.isConfigured) {
-        //     return '/configureRoom';
-        //   }
-        //
-        //   if (loggedIn && isPublicPage) {
-        //     return '/';
-        //   }
-        //
-        //   return null;
-        // },
+        redirect: (context, state) {
+          final bool loggedIn = auth.isAuthenticated;
+          final location = state.uri.path;
+          final publicRoutes = ['/login', '/registration', '/verifyCode'];
+
+          final bool isPublicPage = publicRoutes.any(
+            (route) => location.startsWith(route),
+          );
+
+          print(
+            'Текущий location: $location, Публичная: $isPublicPage, Авторизован: $loggedIn',
+          );
+
+          if (!loggedIn && !isPublicPage) {
+            return '/login';
+          }
+
+          if (loggedIn && !auth.isConfigured) {
+            return '/configureRoom';
+          }
+
+          if (loggedIn && isPublicPage) {
+            return '/';
+          }
+
+          return null;
+        },
         routes: [
           // Главный экран ленты
+          GoRoute(path: '/', builder: (context, state) => MainPageScreen()),
           GoRoute(
-            path: '/',
-            builder: (context, state) => WorkshopScreen(roomId: "64a13030-7175-463f-9f7e-5a7b80382017"),
+            path: '/settings',
+            builder: (context, state) {
+              return SettingsScreen();
+            },
           ),
 
+          GoRoute(
+            path: '/diary/:roomId',
+            builder: (context, state) {
+              final roomId = state.pathParameters['roomId']!;
+              return DiaryScreen(roomId: roomId);
+            },
+          ),
+          GoRoute(
+            path: '/search-messages/:roomId',
+            builder: (context, state) {
+              final roomId = state.pathParameters['roomId']!;
+
+              final extra = state.extra as Map<String, dynamic>?;
+
+              final text = extra?['text'] as String?;
+              final method = extra?['method'] as SearchMethod?;
+
+              return SearchMessagesScreen(
+                roomId: roomId,
+                text: text,
+                method: method,
+              );
+            },
+          ),
+          GoRoute(
+            path: '/search',
+            builder: (context, state) {
+              return GlobalSearchScreen();
+            },
+          ),
           GoRoute(
             name: 'verifyCode',
             path: '/verifyCode/:userId',
@@ -124,17 +175,21 @@ class App extends StatelessWidget {
               return VerifyCode(userId: userId, email: email);
             },
           ),
-          GoRoute(path: '/post_preview',
+          GoRoute(
+            path: '/post_preview',
             builder: (context, state) {
               PostDraft? draft = context.read<DraftProvider>().currentDraft;
               // Если вдруг зашли сюда напрямую без черновика — редирект на начало
               if (draft == null) return NewPublicPostScreen();
               return PostPreviewScreen(postDraft: draft);
-            },),
-          GoRoute(path: '/configureRoom',
+            },
+          ),
+          GoRoute(
+            path: '/configureRoom',
             builder: (context, state) {
               return RoomSettingsScreen();
-            }),
+            },
+          ),
 
           // Экраны регистрации и входа
           GoRoute(
@@ -142,14 +197,19 @@ class App extends StatelessWidget {
             path: '/registration',
             builder: (context, state) => const Registration(),
           ),
-          GoRoute(name: 'login', path: '/login', builder: (context, state) => const Login()),
+          GoRoute(
+            name: 'login',
+            path: '/login',
+            builder: (context, state) => const Login(),
+          ),
 
           // Экран просмотра конкретного поста
           GoRoute(
-            path: "/showPost/:postId",
+            path: "/showPost/:roomId/:postId",
             builder: (context, state) {
+              final roomId = state.pathParameters['roomId']!;
               final postId = state.pathParameters['postId']!;
-              return ShowingPostScreen(postId: postId);
+              return ShowingPostScreen(postId: postId, roomId: roomId,);
             },
           ),
           GoRoute(
@@ -187,14 +247,17 @@ class App extends StatelessWidget {
           ),
 
           // Новый пост для витрины
-          GoRoute(path: '/newPublicPost',
-          builder: (context, state) => const NewPublicPostScreen()),
+          GoRoute(
+            path: '/newPublicPost',
+            builder: (context, state) => const NewPublicPostScreen(),
+          ),
 
           GoRoute(
             path: '/full_image_screen',
             builder: (context, state) {
               // Достаем параметры из extra
-              final Map<String, dynamic> params = state.extra as Map<String, dynamic>;
+              final Map<String, dynamic> params =
+                  state.extra as Map<String, dynamic>;
               final List<String> paths = params['urls'] as List<String>;
               final int initIdx = params['index'] as int;
               final FileType fileType = params['type'];
@@ -214,7 +277,13 @@ class App extends StatelessWidget {
               final String videoUrl = extra['url'] as String;
               final FileType type = extra['type'] as FileType;
 
-              return FullScreenVideoScreen(videoUrl: videoUrl, type: type,);
+              return FullScreenVideoScreen(videoUrl: videoUrl, type: type);
+            },
+          ),
+          GoRoute(
+            path: '/select_post_diary',
+            builder: (context, state) {
+              return SelectPostDiary();
             },
           ),
           GoRoute(
@@ -225,7 +294,8 @@ class App extends StatelessWidget {
             },
             routes: [
               GoRoute(
-                path: ':folderId', // Дочерний маршрут: /workshop/:roomId/:folderId
+                path: ':folderId',
+                // Дочерний маршрут: /workshop/:roomId/:folderId
                 builder: (context, state) {
                   final String roomId = state.pathParameters['roomId']!;
                   final String? folderId = state.pathParameters['folderId'];
@@ -236,17 +306,47 @@ class App extends StatelessWidget {
           ),
           GoRoute(
             path: '/select-folder/:roomId/:targetId',
-            builder: (context, state) => SelectFolderScreen(
+            builder: (context, state) {
+              final filterFoldersStr =
+                  state.uri.queryParameters['filterFolders'] ?? 'false';
+              final filterFolders = filterFoldersStr == 'true';
+
+              return SelectFolderScreen(
+                roomId: state.pathParameters['roomId']!,
+                targetId: state.pathParameters['targetId']!,
+                currentFolderId: null,
+                filterFolders: filterFolders,
+              );
+            },
+            routes: [
+              GoRoute(
+                path: ':currentFolderId',
+                builder: (context, state) {
+                  final filterFoldersStr =
+                      state.uri.queryParameters['filterFolders'] ?? 'false';
+                  final filterFolders = filterFoldersStr == 'true';
+
+                  return SelectFolderScreen(
+                    roomId: state.pathParameters['roomId']!,
+                    targetId: state.pathParameters['targetId']!,
+                    currentFolderId: state.pathParameters['currentFolderId'],
+                    filterFolders: filterFolders,
+                  );
+                },
+              ),
+            ],
+          ),
+          GoRoute(
+            path: '/select-folder-diary/:roomId',
+            builder: (context, state) => SelectFolderDiaryScreen(
               roomId: state.pathParameters['roomId']!,
-              targetId: state.pathParameters['targetId']!,
               currentFolderId: null,
             ),
             routes: [
               GoRoute(
                 path: ':currentFolderId',
-                builder: (context, state) => SelectFolderScreen(
+                builder: (context, state) => SelectFolderDiaryScreen(
                   roomId: state.pathParameters['roomId']!,
-                  targetId: state.pathParameters['targetId']!,
                   currentFolderId: state.pathParameters['currentFolderId'],
                 ),
               ),

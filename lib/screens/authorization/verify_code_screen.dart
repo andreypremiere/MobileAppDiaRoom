@@ -75,20 +75,19 @@ class _VerifyCodeState extends State<VerifyCode> {
 
   Future<void> _handleResendCode() async {
     if (!_canResend) return;
-    print("Повторная отправка кода на ${widget.email}");
     await requestRepeatCode(widget.userId);
     _startTimer();
   }
 
   // _handleSendCode отправляет код на проверку и авторизует пользователя
   void _handleSendCode() async {
-    final code = _codeController.text;
+    final code = _codeController.text.trim();
     if (code.isEmpty) {
-      AppInfoDialog.show(context, "Поле кода не должно быть пустым :(");
+      await AppInfoDialog.show(context, "Код не введен.");
       return;
     }
     if (code.length != 6) {
-      AppInfoDialog.show(context, "Код должен быть шестизначный :(");
+      await AppInfoDialog.show(context, "Код должен быть шестизначный.");
       return;
     }
 
@@ -102,9 +101,15 @@ class _VerifyCodeState extends State<VerifyCode> {
 
         context.read<AuthProvider>().login(access, refresh, configured);
         context.go('/');
+      } else {
+        return;
       }
     } else {
-      AppInfoDialog.show(context, response.message ?? "Неверный код");
+      if (mounted) {
+        await AppInfoDialog.show(context, response.message ?? "Неверный код.");
+      } else {
+        return;
+      }
     }
   }
 

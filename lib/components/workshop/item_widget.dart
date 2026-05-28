@@ -1,4 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:dia_room/components/loading_widget/loader_widget.dart';
 import 'package:dia_room/models/enums/workshop/item_status.dart';
 import 'package:dia_room/models/enums/workshop/item_type.dart';
 import 'package:dia_room/utils/app_theme.dart';
@@ -38,7 +39,7 @@ class FileItem extends StatelessWidget {
 
           // 3. Статус
           if (item.status == ItemStatus.uploading)
-            const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+            const Center(child: DiaRoomLoader()),
 
           Positioned.fill(
             child: Material(
@@ -146,7 +147,7 @@ class FileItem extends StatelessWidget {
             color: context.ui.containerColor.withOpacity(0.2),
             borderRadius: BorderRadius.circular(borderRadius),
           ),
-          child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+          child: const Center(child: DiaRoomLoader()),
         ),
       ),
       errorWidget: (context, url, error) => Container(

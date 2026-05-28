@@ -18,7 +18,7 @@ class FeedPostComponent extends StatelessWidget {
       title: post.data.title,
       previewUrl: post.data.preview,
       category: post.data.category,
-      onTap: () => context.push("/showPost/${post.data.postId}"),
+      onTap: () => context.push("/showPost/${post.data.roomId}/${post.data.postId}"),
       bottomPanel: Column(
         children: [
           Row(
@@ -37,7 +37,7 @@ class FeedPostComponent extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        AppAvatar(imageUrl: post.author.avatar, radius: 12,),
+        AppAvatar(radius: 12, avatarPath: post.author.avatar,),
         const SizedBox(width: 8),
         Text(
           post.author.roomName,

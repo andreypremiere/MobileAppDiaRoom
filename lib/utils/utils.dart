@@ -75,5 +75,5 @@ String? isValidRoomId(String input) {
 }
 
 bool isValidRoomName(String roomName) {
-  return (roomName.length < 100);
+  return (roomName.isNotEmpty && roomName.length < 100);
 }

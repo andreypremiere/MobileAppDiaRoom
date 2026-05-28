@@ -1,4 +1,4 @@
-import '../enums/room_categories.dart';
+import '../enums/categories.dart';
 
 class BaseRoom {
   String uniqueRoomId;
@@ -6,7 +6,7 @@ class BaseRoom {
   String bio;
   String avatarUrl;
   String backgroundUrl;
-  List<RoomCategory> listCategory;
+  List<Categories> listCategory;
   int countFollowers;
   int countFollowing;
 
@@ -29,8 +29,8 @@ class BaseRoom {
       avatarUrl: map['avatarPath'] ?? '',
       backgroundUrl: map['backgroundPath'] ?? '',
       listCategory: (map['listCategory'] as List<dynamic>?)
-          ?.map((slug) => RoomCategory.fromSlug(slug.toString()))
-          .whereType<RoomCategory>()
+          ?.map((slug) => Categories.fromSlug(slug.toString()))
+          .whereType<Categories>()
           .toList() ?? [],
       countFollowers: map['countFollowers'] ?? 0,
       countFollowing: map['countFollowing'] ?? 0
