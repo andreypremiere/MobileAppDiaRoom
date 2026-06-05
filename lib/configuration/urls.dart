@@ -1,5 +1,11 @@
-// Базовый адрес сервера
-const String baseUrl = 'https://diaroom.me/api';
+// 1. Базовый адрес API (по умолчанию — прод)
+const String baseUrl = String.fromEnvironment(
+  'API_BASE_URL',
+  defaultValue: 'https://diaroom.me/api',
+);
 
-// Адрес хранилища
-const String s3BaseUrl = 'https://storage.yandexcloud.net/';
+// 2. Базовый адрес S3 хранилища (по умолчанию — Яндекс)
+const String s3BaseUrl = String.fromEnvironment(
+  'S3_BASE_URL',
+  defaultValue: 'https://storage.yandexcloud.net/',
+);

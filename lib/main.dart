@@ -2,6 +2,7 @@ import 'package:dia_room/models/enums/file_type.dart';
 import 'package:dia_room/models/post_creator/post_draft.dart';
 import 'package:dia_room/screens/authorization/registration_screen.dart';
 import 'package:dia_room/screens/diary/diary_screen.dart';
+import 'package:dia_room/screens/diary/list_diaries_screen.dart';
 import 'package:dia_room/screens/diary/search_messages.dart';
 import 'package:dia_room/screens/diary/select_folder_diary.dart';
 import 'package:dia_room/screens/diary/select_post_diary.dart';
@@ -127,7 +128,7 @@ class App extends StatelessWidget {
         },
         routes: [
           // Главный экран ленты
-          GoRoute(path: '/', builder: (context, state) => MainPageScreen()),
+          GoRoute(path: '/', builder: (context, state) => DiaryListScreen()),
           GoRoute(
             path: '/settings',
             builder: (context, state) {

@@ -20,13 +20,15 @@ android {
     compileSdk = 36
     ndkVersion = "27.0.12077973"
 
+    // ИСПРАВЛЕНО: Поднимаем версию Java до актуальной 17-й, чтобы убрать варнинги
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 
+    // ИСПРАВЛЕНО: Корректное приведение версии JVM для Kotlin
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_11.toString()
+        jvmTarget = "17"
     }
 
     defaultConfig {
