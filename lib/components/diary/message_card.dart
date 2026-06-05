@@ -195,7 +195,9 @@ class DiaryMessageCard extends StatelessWidget {
     }
 
     return GestureDetector(
-      onLongPressStart: (details) async =>_showPopUp(context, details),
+      onLongPressStart: onLongPress != null
+          ? (details) async => _showPopUp(context, details)
+          : null,
       child: Container(
         padding: const EdgeInsets.all(4),
         margin: const EdgeInsets.only(bottom: 12),

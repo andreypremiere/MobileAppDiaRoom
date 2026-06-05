@@ -223,6 +223,15 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
     });
   }
 
+  Future<void> handleBack() async {
+    final result = await AppDialogs.showConfirmDialog(context, text: "Вы уверены, что хотите покинуть страницу? Данные будут утеряны.", cancelText: "Отмена", confirmText: "Выйти");
+    if (result != null && result) {
+      if (mounted) {
+        context.pop();
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -243,7 +252,7 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
           preferredSize: Size.fromHeight(60),
           child: AppBar(
             backgroundColor: context.ui.appBarColor,
-            leading: const AppBackButton(),
+            leading: AppBackButton(onPressed: handleBack,),
             title: Text(
               'Создание публикации',
               style: TextStyle(
@@ -310,6 +319,7 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
                       ),
                       onSelected: (value) => _addBlock(value),
                       itemBuilder: (context) => BlockType.values
+                          .where((type) => type != BlockType.videos)
                           .map(
                             (type) => PopupMenuItem<BlockType>(
                               height: 40,
@@ -393,6 +403,7 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
                       ),
                       onSelected: (value) => _addBlock(value),
                       itemBuilder: (context) => BlockType.values
+                          .where((type) => type != BlockType.videos)
                           .map(
                             (type) => PopupMenuItem<BlockType>(
                               height: 40,

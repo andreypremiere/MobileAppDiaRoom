@@ -571,7 +571,7 @@ class _WorkshopScreenState extends State<WorkshopScreen> {
                     break;
                 }
               },
-              itemBuilder: (context) => CreatingWorkshopAction.values
+              itemBuilder: (context) => CreatingWorkshopAction.values.where((type) => type != CreatingWorkshopAction.video)
                   .map(
                     (action) => PopupMenuItem<CreatingWorkshopAction>(
                   value: action,

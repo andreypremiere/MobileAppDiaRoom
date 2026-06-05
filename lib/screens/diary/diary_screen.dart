@@ -482,7 +482,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
 
                 return DiaryMessageCard(
                   message: _messages[index],
-                  onLongPress: _actionMessage,
+                  onLongPress: isMyRoom ? _actionMessage : null,
                 );
               },
             ),
@@ -624,7 +624,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
           _handlePickTag();
         }
       },
-      itemBuilder: (context) => CreatingDiaryAction.values
+      itemBuilder: (context) => CreatingDiaryAction.values.where((type) => ![CreatingDiaryAction.video, CreatingDiaryAction.videoNote].contains(type))
           .map(
             (action) => PopupMenuItem<CreatingDiaryAction>(
               value: action,

@@ -7,11 +7,13 @@ import 'package:dia_room/models/enums/diary/search_method.dart';
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 
 import '../../components/diary/message_card.dart';
 import '../../components/general/app_back_button.dart';
 import '../../components/loading_widget/loader_widget.dart';
 import '../../models/enums/diary/message_action.dart';
+import '../../utils/auth_service.dart';
 
 class SearchMessagesScreen extends StatefulWidget {
   final String roomId;
@@ -40,10 +42,15 @@ class _SearchMessagesScreenState extends State<SearchMessagesScreen> {
   bool _hasMore = true;
   SearchMethod _currentMethod = SearchMethod.byMessage;
   String? _errorMessage;
+  bool isMyRoom = false;
 
   @override
   void initState() {
     super.initState();
+
+    final myId = context.read<AuthProvider>().roomId;
+    isMyRoom = widget.roomId == myId;
+
     _scrollController.addListener(_onScroll);
 
     if (widget.text != null) {
@@ -349,7 +356,7 @@ class _SearchMessagesScreenState extends State<SearchMessagesScreen> {
 
           return DiaryMessageCard(
             message: _messages[index],
-            onLongPress: _actionMessage,
+            onLongPress: isMyRoom ? _actionMessage : null,
           );
         },
       ),
