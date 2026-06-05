@@ -137,3 +137,28 @@ Future<AuthResponse> searchMessages({
     return handleDioError(e, "Ошибка при поиске сообщений");
   }
 }
+
+Future<AuthResponse> getDiaries(
+    {required int page, required int limit}
+    ) async {
+  try {
+    final response = await ApiService.get('/diary/diaries', queryParameters: {
+      'page': page,
+      'limit': limit,
+    },);
+
+    return AuthResponse(success: true, data: response.data);
+  } on DioException catch (e) {
+    return handleDioError(e, "Ошибка при получении дневников");
+  }
+}
+
+Future<AuthResponse> updateState({required String authorId}) async {
+  try {
+    await ApiService.post('/diary/diary_state/$authorId/update');
+    return AuthResponse(success: true);
+
+  } on DioException catch (e) {
+    return handleDioError(e, "Ошибка при обноавлении статуса");
+  }
+}

@@ -128,7 +128,7 @@ class App extends StatelessWidget {
         },
         routes: [
           // Главный экран ленты
-          GoRoute(path: '/', builder: (context, state) => DiaryListScreen()),
+          GoRoute(path: '/', builder: (context, state) => MainPageScreen()),
           GoRoute(
             path: '/settings',
             builder: (context, state) {
@@ -189,6 +189,11 @@ class App extends StatelessWidget {
             path: '/configureRoom',
             builder: (context, state) {
               return RoomSettingsScreen();
+            },
+          ),
+          GoRoute(path: "/diaries",
+            builder: (context, state) {
+              return DiaryListScreen();
             },
           ),
 

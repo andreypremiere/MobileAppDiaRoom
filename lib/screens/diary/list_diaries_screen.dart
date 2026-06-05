@@ -1,26 +1,13 @@
+import 'package:dia_room/components/general/app_back_button.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../components/loading_widget/error_widget.dart';
 import '../../../components/loading_widget/loader_widget.dart';
 import '../../../components/diary/diary_room_card.dart';
 import '../../../utils/app_theme.dart';
-
-// Фейковая или реальная модель для контракта данных (замени на свой класс респонса)
-class DiaryRoomPresentation {
-  final String roomId;
-  final String nickname;
-  final String? avatarUrl;
-  final String lastMessage;
-  final int unreadCount;
-
-  DiaryRoomPresentation({
-    required this.roomId,
-    required this.nickname,
-    this.avatarUrl,
-    required this.lastMessage,
-    required this.unreadCount,
-  });
-}
+import '../../api/auth_response.dart';
+import '../../api/diary_api.dart';
+import '../../contracts/diary/response/diaries.dart';
 
 class DiaryListScreen extends StatefulWidget {
   const DiaryListScreen({super.key});
@@ -32,7 +19,7 @@ class DiaryListScreen extends StatefulWidget {
 class _DiaryListScreenState extends State<DiaryListScreen> {
   final ScrollController _scrollController = ScrollController();
 
-  final List<DiaryRoomPresentation> _rooms = [];
+  final List<DiaryCard> _rooms = [];
   bool _isLoading = false;
   bool _hasMore = true;
   int _currentPage = 0;
@@ -52,55 +39,48 @@ class _DiaryListScreenState extends State<DiaryListScreen> {
     super.dispose();
   }
 
+  // Обернули _onRefresh в Future<void>, чтобы RefreshIndicator понимал, когда прятать лоадер
+  Future<void> _onRefresh() async {
+    if (mounted) {
+      setState(() {
+        _hasMore = true;
+        _currentPage = 0;
+        _rooms.clear();
+        _errorMessage = null;
+      });
+    }
+    await _loadRooms();
+  }
+
   Future<void> _loadRooms() async {
-    if (_isLoading || !_hasMore) return;
+    if (_isLoading) return; // Убрали !_hasMore отсюда, чтобы refresh мог пробивать конец списка
 
     if (mounted) {
       setState(() => _isLoading = true);
     }
 
     try {
-      // Тут будет твой реальный запрос к API, например: await getDiaryRooms(...)
-      await Future.delayed(const Duration(seconds: 1)); // Имитация сети
+      final AuthResponse response = await getDiaries(
+        page: _currentPage,
+        limit: _limit,
+      );
 
-      // Имитируем успешный ответ бэкенда
-      final List<DiaryRoomPresentation> mockFetchedRooms = [
-        DiaryRoomPresentation(
-          roomId: "room_1",
-          nickname: "Александр Петров",
-          avatarUrl: "https://10.188.66.227:9005/avatars-diaroom-1/demo/user1.jpeg", // Твой локальный MinIO IP для тестов
-          lastMessage: "Слушай, я посмотрел твое последнее видео в Мастерской, это просто пушка! 🔥",
-          unreadCount: 5,
-        ),
-        DiaryRoomPresentation(
-          roomId: "room_2",
-          nickname: "Елена Смирнова",
-          avatarUrl: "", // Пустая строка для проверки дефолтной иконки-заглушки
-          lastMessage: "Где можно найти исходники для дипломного проекта?",
-          unreadCount: 12,
-        ),
-        DiaryRoomPresentation(
-          roomId: "room_4",
-          nickname: "ОченьДлинныйНикнеймПользователяКоторыйМожетСломатьВерсткуЕслиНеИспользоватьEllipsis",
-          avatarUrl: null, // null для проверки полной безопасности
-          lastMessage: "Тут тоже очень длинный текст сообщения, который должен аккуратно обрезаться на конце строки, чтобы интерфейс приложения DiaRoom оставался чистым и адаптивным.",
-          unreadCount: 150, // Проверка трансформации в "99+"
-        ),
-        DiaryRoomPresentation(
-          roomId: "room_5",
-          nickname: "Дмитрий К.",
-          avatarUrl: "",
-          lastMessage: "Договорились, завтра на созвоне обсудим архитектуру.",
-          unreadCount: 1,
-        ),
-      ];
+      if (response.success && response.data != null) {
+        final diariesData = Diaries.fromMap(response.data as Map<String, dynamic>);
+        final List<DiaryCard> fetchedRooms = diariesData.diaries;
 
-      if (mounted) {
-        setState(() {
-          _currentPage++;
-          _rooms.addAll(mockFetchedRooms);
-          if (mockFetchedRooms.length < _limit) _hasMore = false;
-        });
+        if (mounted) {
+          setState(() {
+            _currentPage++;
+            _rooms.addAll(fetchedRooms);
+
+            if (fetchedRooms.length < _limit) {
+              _hasMore = false;
+            }
+          });
+        }
+      } else {
+        throw Exception(response.message ?? "Не удалось загрузить данные");
       }
     } catch (e) {
       if (mounted) {
@@ -115,22 +95,10 @@ class _DiaryListScreenState extends State<DiaryListScreen> {
     }
   }
 
-  void _onRefresh() {
-    if (mounted) {
-      setState(() {
-        _hasMore = true;
-        _currentPage = 0;
-        _rooms.clear();
-        _errorMessage = null;
-      });
-    }
-    _loadRooms();
-  }
-
   void _onScroll() {
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 200) {
-      _loadRooms();
+      if (_hasMore) _loadRooms();
     }
   }
 
@@ -140,23 +108,18 @@ class _DiaryListScreenState extends State<DiaryListScreen> {
       appBar: AppBar(
         backgroundColor: context.ui.appBarColor,
         elevation: 0,
+        leading: const AppBackButton(),
         title: _isLoading && _rooms.isEmpty
-            ? Text(
-          "Загрузка...",
-          style: TextStyle(color: context.ui.fontColorPrimary, fontSize: 18),
-        )
-            : Text(
-          "Дневники",
-          style: TextStyle(
-            color: context.ui.fontColorPrimary,
-            fontWeight: FontWeight.bold,
-            fontSize: 20,
-          ),
-        ),
+            ? const Text("Загрузка...")
+            : const Text("Дневники"),
         centerTitle: false,
       ),
       body: SafeArea(
-        child: _buildBody(),
+        // Добавили RefreshIndicator на самый верхний уровень тела экрана
+        child: RefreshIndicator(
+          onRefresh: _onRefresh,
+          child: _buildBody(),
+        ),
       ),
     );
   }
@@ -177,18 +140,28 @@ class _DiaryListScreenState extends State<DiaryListScreen> {
       );
     }
 
+    // Изменение 1: Заглушка для пустого списка теперь "скроллируемая"
     if (_rooms.isEmpty) {
-      return const Center(
-        child: Text(
-          "Вы ни на кого не подписаны",
-          style: TextStyle(fontSize: 16, color: Colors.grey),
-        ),
+      return ListView(
+        physics: const AlwaysScrollableScrollPhysics(), // Магия тут
+        children: [
+          SizedBox(
+            height: MediaQuery.of(context).size.height * 0.7, // Центрируем текст на экране
+            child: const Center(
+              child: Text(
+                "Вы ни на кого не подписаны",
+                style: TextStyle(fontSize: 16, color: Colors.grey),
+              ),
+            ),
+          ),
+        ],
       );
     }
 
+    // Изменение 2: Добавили физику AlwaysScrollableScrollPhysics для обычного списка
     return ListView.builder(
       controller: _scrollController,
-      // padding: const EdgeInsets.symmetric(vertical: 6),
+      physics: const AlwaysScrollableScrollPhysics(), // Позволяет тянуть, даже если записей всего 1-2
       itemCount: _rooms.length + (_hasMore ? 1 : 0),
       itemBuilder: (context, index) {
         if (index == _rooms.length) {
@@ -201,15 +174,26 @@ class _DiaryListScreenState extends State<DiaryListScreen> {
         }
 
         final room = _rooms[index];
+        final String displayMessage = room.message?.content ?? "";
+
+        // Потом сделать отображение видеозаметки, аудиосообщения или медиавложения
 
         return DiaryRoomCard(
-          nickname: room.nickname,
-          avatarUrl: room.avatarUrl,
-          lastMessage: room.lastMessage,
+          nickname: room.author.roomName,
+          avatarUrl: room.author.avatar,
+          lastMessage: displayMessage,
+          lastMessageAt: room.lastMessageAt,
           unreadCount: room.unreadCount,
-          onTap: () {
-            // Переход в конкретный дневник по roomId
-            context.push('/diary/${room.roomId}');
+          onTap: () async {
+            await updateState(authorId: room.author.roomId);
+
+            if (context.mounted) {
+              setState(() {
+                _rooms[index] = room.copyWith(unreadCount: 0);
+              });
+
+              context.push('/diary/${room.author.roomId}');
+            }
           },
         );
       },
