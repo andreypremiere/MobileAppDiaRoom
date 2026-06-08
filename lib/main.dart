@@ -7,6 +7,7 @@ import 'package:dia_room/screens/diary/search_messages.dart';
 import 'package:dia_room/screens/diary/select_folder_diary.dart';
 import 'package:dia_room/screens/diary/select_post_diary.dart';
 import 'package:dia_room/screens/global_search_screen.dart';
+import 'package:dia_room/screens/publication_v2/create_post_v2_screen.dart';
 import 'package:dia_room/screens/room/room_settings_screen.dart';
 import 'package:dia_room/screens/publication/full_image_screen.dart';
 import 'package:dia_room/screens/publication/full_video_screen.dart';
@@ -128,7 +129,7 @@ class App extends StatelessWidget {
         },
         routes: [
           // Главный экран ленты
-          GoRoute(path: '/', builder: (context, state) => MainPageScreen()),
+          GoRoute(path: '/', builder: (context, state) => CreateInstagramPostScreen()),
           GoRoute(
             path: '/settings',
             builder: (context, state) {
