@@ -189,7 +189,8 @@ class _CreateInstagramPostScreenState extends State<CreateInstagramPostScreen> {
     }
 
     if (mounted && result.success) {
-      context.pop();
+      print("Пост успешно создался");
+      // context.pop();
     }
     if (mounted && !result.success) {
       await AppInfoDialog.show(context, result.message ?? "Не удалось опубликовать пост");

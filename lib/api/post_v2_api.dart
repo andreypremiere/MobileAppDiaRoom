@@ -48,3 +48,72 @@ Future<AuthResponse> updateMediaStatus({
     return handleDioError(e, "Ошибка при обновлении статуса медиафайла");
   }
 }
+
+Future<AuthResponse> getPostsByRoomId({
+  required String targetRoomId,
+  required int limit,
+  required int page,
+}) async {
+  try {
+    final response = await ApiService.get(
+      '/post_v2/getPostsByRoomId/$targetRoomId',
+      queryParameters: {
+        'limit': limit,
+        'page': page,
+      },
+    );
+
+    return AuthResponse(success: true, data: response.data);
+  } on DioException catch (e) {
+    return handleDioError(e, "Ошибка при получении постов комнаты");
+  }
+}
+
+Future<AuthResponse> getGlobalFeed({
+  required int limit,
+  required int page,
+}) async {
+  try {
+    final response = await ApiService.get(
+      '/post_v2/posts/feed',
+      queryParameters: {
+        'limit': limit,
+        'page': page,
+      },
+    );
+
+    return AuthResponse(success: true, data: response.data);
+  } on DioException catch (e) {
+    return handleDioError(e, "Ошибка при загрузке глобальной ленты");
+  }
+}
+
+Future<AuthResponse> likePost({
+  required String postId,
+}) async {
+  try {
+    final response = await ApiService.post(
+      '/post_v2/posts/like',
+      data: {'postId': postId},
+    );
+
+    return AuthResponse(success: true, data: response.data);
+  } on DioException catch (e) {
+    return handleDioError(e, "Ошибка при установке лайка");
+  }
+}
+
+Future<AuthResponse> unlikePost({
+  required String postId,
+}) async {
+  try {
+    final response = await ApiService.delete(
+      '/post_v2/posts/like',
+      data: {'postId': postId},
+    );
+
+    return AuthResponse(success: true, data: response.data);
+  } on DioException catch (e) {
+    return handleDioError(e, "Ошибка при снятии лайка");
+  }
+}
