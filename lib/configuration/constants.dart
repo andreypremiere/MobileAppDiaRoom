@@ -25,3 +25,7 @@ const int limitCountPhotoBlockInPost = 4;
 const int limitGeneralCountBlockInPost = 100;
 
 const String messageErrorCatch = "Возникла ошибка в работе приложения. Пожалуйста, сообщите в поддержку.";
+
+const int maxImagesPostV2 = 5;
+const int maxHashtagsPostV2 = 5;
+const int maxDescriptionSymbolsPost = 500;

@@ -10,17 +10,9 @@ import 'package:dia_room/utils/auth_service.dart';
 import '../../components/diary/link_button.dart';
 import '../../components/general/app_back_button.dart';
 import '../../components/info_dialog_component.dart';
-
-class InstagramPostDraft {
-  List<String> imagesPaths = [];
-  String description = '';
-  List<String> hashtags = [];
-  String? workshopLinkId;
-
-  static const int maxImages = 5;
-  static const int maxHashtags = 5;
-  static const int maxDescriptionLength = 500;
-}
+import '../../configuration/constants.dart';
+import '../../models/post_v2/post_v2_draft.dart';
+import '../../services/post_v2/post_v2_uploader_manager.dart';
 
 class CreateInstagramPostScreen extends StatefulWidget {
   const CreateInstagramPostScreen({super.key});
@@ -30,7 +22,7 @@ class CreateInstagramPostScreen extends StatefulWidget {
 }
 
 class _CreateInstagramPostScreenState extends State<CreateInstagramPostScreen> {
-  final InstagramPostDraft _postDraft = InstagramPostDraft();
+  final PostV2Draft _postDraft = PostV2Draft();
   final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _tagsController = TextEditingController();
   final ImagePicker _picker = ImagePicker();
@@ -54,8 +46,8 @@ class _CreateInstagramPostScreenState extends State<CreateInstagramPostScreen> {
 
   Future<void> _pickMultiImages() async {
     final int currentCount = _postDraft.imagesPaths.length;
-    if (currentCount >= InstagramPostDraft.maxImages) {
-      AppInfoDialog.show(context, "Можно добавить не более ${InstagramPostDraft.maxImages} фотографий.");
+    if (currentCount >= maxImagesPostV2) {
+      AppInfoDialog.show(context, "Можно добавить не более ${maxImagesPostV2} фотографий.");
       return;
     }
 
@@ -66,7 +58,7 @@ class _CreateInstagramPostScreenState extends State<CreateInstagramPostScreen> {
 
     if (pickedFiles.isNotEmpty) {
       // Считаем, сколько свободных слотов осталось до лимита в 5 штук
-      final int availableSlots = InstagramPostDraft.maxImages - currentCount;
+      final int availableSlots = maxImagesPostV2 - currentCount;
       final int imagesToAdd = pickedFiles.length > availableSlots ? availableSlots : pickedFiles.length;
 
       setState(() {
@@ -78,7 +70,7 @@ class _CreateInstagramPostScreenState extends State<CreateInstagramPostScreen> {
       if (pickedFiles.length > availableSlots) {
         AppInfoDialog.show(
           context,
-          "Было добавлено только $availableSlots фото, так как максимальное количество в карусели — ${InstagramPostDraft.maxImages}.",
+          "Было добавлено только $availableSlots фото, так как максимальное количество в карусели — $maxImagesPostV2.",
         );
       }
     }
@@ -130,12 +122,12 @@ class _CreateInstagramPostScreenState extends State<CreateInstagramPostScreen> {
 
       if (tag.isNotEmpty) {
         setState(() {
-          if (_postDraft.hashtags.length < InstagramPostDraft.maxHashtags) {
+          if (_postDraft.hashtags.length < maxHashtagsPostV2) {
             if (!_postDraft.hashtags.contains(tag)) {
               _postDraft.hashtags.add(tag);
             }
           } else {
-            AppInfoDialog.show(context, "Можно добавить только ${InstagramPostDraft.maxHashtags} хештегов.");
+            AppInfoDialog.show(context, "Можно добавить только $maxHashtagsPostV2 хештегов.");
           }
           _tagsController.clear();
         });
@@ -163,18 +155,27 @@ class _CreateInstagramPostScreenState extends State<CreateInstagramPostScreen> {
     }
   }
 
-  void _submitPublication() {
+  Future<void> _submitPublication() async {
     if (_postDraft.imagesPaths.isEmpty) {
-      AppInfoDialog.show(context, "Добавьте хотя бы одну фотографию для публикации.");
-      return;
-    }
-    if (_postDraft.description.trim().isEmpty) {
-      AppInfoDialog.show(context, "Напишите описание к публикации.");
+      if (mounted) {
+        await AppInfoDialog.show(context, "Добавьте хотя бы одну фотографию для публикации.");
+      }
       return;
     }
 
-    AppInfoDialog.show(context, "Публикация успешно запущена!");
-    context.pop();
+    final manager = PostV2UploaderManager();
+
+    // Здесь сделать проверку на публикацию, если идет обработка, то
+    // то выходить из функции
+    // отобразить экран загрузки
+
+    await manager.createPost(_postDraft);
+
+    // отправляем в менеджер postDraft
+
+    if (mounted) {
+      context.pop();
+    }
   }
 
   @override
@@ -195,7 +196,7 @@ class _CreateInstagramPostScreenState extends State<CreateInstagramPostScreen> {
         body: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            _buildSectionTitle("Фотографии (${_postDraft.imagesPaths.length}/${InstagramPostDraft.maxImages})"),
+            _buildSectionTitle("Фотографии (${_postDraft.imagesPaths.length}/$maxImagesPostV2)"),
             const SizedBox(height: 10),
             _buildMediaCarousel(),
 
@@ -242,7 +243,7 @@ class _CreateInstagramPostScreenState extends State<CreateInstagramPostScreen> {
   // --- ОБНОВЛЕННЫЙ КОМПОНЕНТ КАРУСЕЛИ ---
 
   Widget _buildMediaCarousel() {
-    final bool showAddButton = _postDraft.imagesPaths.length < InstagramPostDraft.maxImages;
+    final bool showAddButton = _postDraft.imagesPaths.length < maxImagesPostV2;
 
     return SizedBox(
       height: 120,
@@ -352,7 +353,7 @@ class _CreateInstagramPostScreenState extends State<CreateInstagramPostScreen> {
     return TextField(
       controller: _descriptionController,
       maxLines: 4,
-      maxLength: InstagramPostDraft.maxDescriptionLength,
+      maxLength: maxDescriptionSymbolsPost,
       style: const TextStyle(fontFamily: 'SNPro', fontSize: 15),
       textCapitalization: TextCapitalization.sentences,
       decoration: InputDecoration(
