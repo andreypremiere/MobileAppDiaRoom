@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:dia_room/api/auth_response.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_cropper/image_cropper.dart';
@@ -26,6 +27,8 @@ class _CreateInstagramPostScreenState extends State<CreateInstagramPostScreen> {
   final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _tagsController = TextEditingController();
   final ImagePicker _picker = ImagePicker();
+
+  bool _isPublication = false;
 
   @override
   void initState() {
@@ -163,18 +166,33 @@ class _CreateInstagramPostScreenState extends State<CreateInstagramPostScreen> {
       return;
     }
 
-    final manager = PostV2UploaderManager();
-
-    // Здесь сделать проверку на публикацию, если идет обработка, то
-    // то выходить из функции
-    // отобразить экран загрузки
-
-    await manager.createPost(_postDraft);
-
-    // отправляем в менеджер postDraft
-
     if (mounted) {
+      setState(() {
+        _isPublication = true;
+      });
+    }
+
+    AuthResponse result;
+
+    try {
+      final manager = PostV2UploaderManager();
+      result = await manager.createPost(_postDraft);
+    } catch (e) {
+      print("Возникла ошибка $e");
+      return;
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isPublication = false;
+        });
+      }
+    }
+
+    if (mounted && result.success) {
       context.pop();
+    }
+    if (mounted && !result.success) {
+      await AppInfoDialog.show(context, result.message ?? "Не удалось опубликовать пост");
     }
   }
 

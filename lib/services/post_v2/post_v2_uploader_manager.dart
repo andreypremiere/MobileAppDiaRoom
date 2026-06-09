@@ -12,6 +12,8 @@ import 'package:mime/mime.dart';
 import 'package:dia_room/api/post_v2_api.dart' as api;
 import 'package:dia_room/utils/dio_service.dart';
 
+import '../../contracts/posts_v2/requests/updating_media_post_status.dart';
+import '../../contracts/posts_v2/requests/updating_post_status.dart';
 import '../../contracts/posts_v2/responses/post_create_response.dart';
 import '../../models/post_v2/media_size_result.dart';
 import '../../models/post_v2/post_v2_draft.dart';
@@ -148,21 +150,25 @@ class PostV2UploaderManager {
           throw Exception("S3 вернул статус-код ${s3Response.statusCode}");
         }
       }).catchError((error) async {
-        // Если этот конкретный файл упал при загрузке:
-        hasUploadErrors = true;
-        print("Ошибка загрузки файла ${uploadItem.order} в S3: $error");
+        try {
+          // Если этот конкретный файл упал при загрузке:
+          hasUploadErrors = true;
+          print("Ошибка загрузки файла ${uploadItem.order} в S3: $error");
 
-        final failedFile = responseData.post.files.firstWhere(
-              (file) => file.order == uploadItem.order,
-        );
+          final failedFile = responseData.post.files.firstWhere(
+                (file) => file.order == uploadItem.order,
+          );
 
-        final UpdatingMediaStatusRequest updatingStatus = UpdatingMediaStatusRequest(
-          id: failedFile.id,
-          mediaStatus: MediaStatus.failed
-        );
+          final UpdatingMediaPostStatus updatingStatus = UpdatingMediaPostStatus(
+              id: failedFile.id,
+              status: MediaStatus.failed
+          );
 
-        // Сразу пинаем бэкенд, что этот файл сломался
-        await api.updateMediaPostStatus(updatingStatus);
+          // Сразу пинаем бэкенд, что этот файл сломался
+          await api.updateMediaStatus(mediaStatus: updatingStatus);
+        } catch (e) {
+          print("Не удалось обновить статусы при ошибке загрузки;");
+        }
       });
 
       // Добавляем задачу в общий пул параллельного выполнения
@@ -176,23 +182,23 @@ class PostV2UploaderManager {
     // ФИНАЛЬНЫЙ СТАТУС ПОСТА
     // ==========================================
     if (hasUploadErrors) {
-      final UpdatingPostStatusRequest updatingPost = UpdatingPostStatusRequest(
+      final UpdatingPostStatus updatingPost = UpdatingPostStatus(
         id: postId,
         status: PostStatus.error
-      )
+      );
 
-      await api.updatePostStatus(updatingPost);
+      await api.updatePostStatus(postStatus: updatingPost);
       return AuthResponse(
         success: false,
         message: "Часть файлов не удалось загрузить в хранилище. Пост переведен в статус ошибки.",
       );
     } else {
-      final UpdatingPostStatusRequest updatingPost = UpdatingPostStatusRequest(
+      final UpdatingPostStatus updatingPost = UpdatingPostStatus(
           id: postId,
           status: PostStatus.processing
-      )
+      );
 
-      await updatePostStatus(updatingPost);
+      await api.updatePostStatus(postStatus: updatingPost);
       return AuthResponse(
         success: true,
         message: "Пост успешно создан и отправлен на обработку.",
