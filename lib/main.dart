@@ -137,6 +137,12 @@ class App extends StatelessWidget {
               return SettingsScreen();
             },
           ),
+          GoRoute(
+            path: '/create_post_v2',
+            builder: (context, state) {
+              return CreateInstagramPostScreen();
+            },
+          ),
 
           GoRoute(
             path: '/diary/:roomId',

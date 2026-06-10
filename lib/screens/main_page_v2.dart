@@ -228,25 +228,28 @@ class _StateMainPageScreen extends State<MainPageScreenV2> {
         ),
 
         // Стрелка вверх
-        floatingActionButton: AnimatedOpacity(
-          duration: const Duration(milliseconds: 300),
-          opacity: _showBackToTop ? 1.0 : 0.0,
-          child: Container(
-            padding: const EdgeInsets.all(2),
-            decoration: ShapeDecoration(
-              color: context.ui.containerColor,
-              shape: const StadiumBorder(),
-              shadows: [
-                BoxShadow(
-                  blurRadius: 8,
-                  color: Colors.black.withAlpha(25),
-                  spreadRadius: 4,
-                ),
-              ],
-            ),
-            child: BottomMenuItem(
-              icon: Icons.arrow_upward_rounded,
-              onPressed: _scrollToTop,
+        floatingActionButton: Visibility(
+          visible: _showBackToTop, // Если false, полностью выключает кликабельность виджета
+          child: AnimatedOpacity(
+            duration: const Duration(milliseconds: 300),
+            opacity: _showBackToTop ? 1.0 : 0.0,
+            child: Container(
+              padding: const EdgeInsets.all(2),
+              decoration: ShapeDecoration(
+                color: context.ui.containerColor,
+                shape: const StadiumBorder(),
+                shadows: [
+                  BoxShadow(
+                    blurRadius: 8,
+                    color: Colors.black.withAlpha(25),
+                    spreadRadius: 4,
+                  ),
+                ],
+              ),
+              child: BottomMenuItem(
+                icon: Icons.arrow_upward_rounded,
+                onPressed: _scrollToTop,
+              ),
             ),
           ),
         ),

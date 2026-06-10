@@ -168,7 +168,10 @@ class _StatePersonalPostsScreen extends State<PersonalPostsScreen> {
       actions: _isMyRoom
           ? [
         IconButton(
-          onPressed: () => context.push('/newPublicPost'),
+          // onPressed: () => context.push('/newPublicPost'),
+          // icon: const Icon(Icons.add_rounded, size: 34),
+          // color: context.ui.fontColorPrimary,
+          onPressed: () => context.push('/create_post_v2'),
           icon: const Icon(Icons.add_rounded, size: 34),
           color: context.ui.fontColorPrimary,
         ),
