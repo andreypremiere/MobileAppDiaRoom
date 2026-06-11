@@ -167,3 +167,19 @@ Future<AuthResponse> getComments({
     return handleSystemError(e);
   }
 }
+
+Future<AuthResponse> searchPostsV2(
+    {required int page, required int limit, required String value}
+    ) async {
+  try {
+    final res = await ApiService.get('/post_v2/posts/search', queryParameters: {"page": page, "limit": limit, "hashtag": value});
+    return AuthResponse(
+      success: true,
+      data: res.data,
+    );
+  } on DioException catch (e) {
+    return handleDioError(e, "Ошибка во время поиска");
+  } catch (e) {
+    return handleSystemError(e);
+  }
+}

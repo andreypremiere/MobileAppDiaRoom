@@ -1,6 +1,8 @@
 enum GlobalSearchMethod {
   room("Комнаты"),
-  post("Публикации");
+  postV2("Публикации"),
+  post("Статьи");
+
 
   final String label;
   const GlobalSearchMethod(this.label);

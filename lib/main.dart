@@ -39,6 +39,7 @@ import 'package:provider/provider.dart';
 
 import 'components/loading_widget/loader_widget.dart';
 import 'models/enums/diary/search_method.dart';
+import 'models/enums/global_search/global_search_method.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -173,7 +174,22 @@ class App extends StatelessWidget {
           GoRoute(
             path: '/search',
             builder: (context, state) {
-              return GlobalSearchScreen();
+              final textParam = state.uri.queryParameters['text'];
+
+              final methodParamStr = state.uri.queryParameters['method'];
+
+              GlobalSearchMethod? methodParam;
+              if (methodParamStr != null) {
+                methodParam = GlobalSearchMethod.values.firstWhere(
+                      (e) => e.name == methodParamStr,
+                  orElse: () => GlobalSearchMethod.room,
+                );
+              }
+
+              return GlobalSearchScreen(
+                text: textParam,
+                method: methodParam,
+              );
             },
           ),
           GoRoute(

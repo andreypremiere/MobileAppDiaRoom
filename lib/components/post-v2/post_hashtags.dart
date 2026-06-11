@@ -1,4 +1,6 @@
+import 'package:dia_room/models/enums/global_search/global_search_method.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../utils/app_theme.dart';
 
 class PostHashtags extends StatelessWidget {
@@ -22,9 +24,7 @@ class PostHashtags extends StatelessWidget {
             color: Colors.transparent,
             child: InkWell(
               onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text("Поиск по тегу: $formattedTag")),
-                );
+                context.push('/search?text=${tag}&method=${GlobalSearchMethod.postV2.name}');
               },
               borderRadius: BorderRadius.circular(4),
               child: Padding(
