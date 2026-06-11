@@ -183,3 +183,16 @@ Future<AuthResponse> searchPostsV2(
     return handleSystemError(e);
   }
 }
+
+Future<AuthResponse> deletePost(
+{required String postId}
+) async {
+  try {
+    await ApiService.delete('/post_v2/posts/delete/$postId');
+    return AuthResponse(success: true,);
+  } on DioException catch (e) {
+    return handleDioError(e, "Ошибка при удалени поста");
+  } catch (e) {
+    return handleSystemError(e);
+  }
+}

@@ -2,6 +2,7 @@ import 'package:dia_room/components/post-v2/post_description.dart';
 import 'package:dia_room/components/post-v2/post_hashtags.dart';
 import 'package:dia_room/components/post-v2/post_media_carousel.dart';
 import 'package:dia_room/components/post-v2/post_workshop_link.dart';
+import 'package:dia_room/models/enums/post_v2/action_post.dart';
 import 'package:dia_room/models/enums/post_v2/post_status.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -14,10 +15,11 @@ import '../../utils/utils.dart';
 
 class PostManageCard extends StatefulWidget {
   final PostResponse post;
-  final VoidCallback? onMenuPressed; // Колбэк для обработки нажатия на троеточие
   final bool isMyPost;
+  final Function(ActionPost, PostResponse) processAction;
 
-  const PostManageCard({super.key, required this.post, this.onMenuPressed, required this.isMyPost});
+  const PostManageCard({super.key, required this.post, required this.isMyPost,
+  required this.processAction});
 
   @override
   State<PostManageCard> createState() => _PostManageCardState();
@@ -114,6 +116,46 @@ class _PostManageCardState extends State<PostManageCard> {
     );
   }
 
+  Future<void> _showPopUpFromButton(BuildContext buttonContext) async {
+    // Находим координаты кнопки на экране
+    final RenderBox renderBox = buttonContext.findRenderObject() as RenderBox;
+    final Offset offset = renderBox.localToGlobal(Offset.zero);
+
+    // Формируем прямоугольник ровно под кнопкой троеточия
+    final RelativeRect position = RelativeRect.fromRect(
+      Rect.fromLTWH(offset.dx, offset.dy + renderBox.size.height, renderBox.size.width, 0),
+      Offset.zero & MediaQuery.of(context).size,
+    );
+
+    final result = await showMenu<ActionPost>(
+      color: context.ui.containerColor,
+      context: context,
+      position: position, // Передаем вычисленную позицию кнопки
+      items: ActionPost.values.map((action) {
+        return PopupMenuItem<ActionPost>(
+          value: action,
+          child: Row(
+            children: [
+              Icon(action.icon, size: 20, color: action.color),
+              const SizedBox(width: 12),
+              Text(
+                action.name,
+                style: TextStyle(fontSize: 14, color: context.ui.fontColorPrimary),
+              ),
+            ],
+          ),
+        );
+      }).toList(),
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    );
+
+    if (result != null && mounted) {
+      print('Выбрано действие: ${result.name}');
+      await widget.processAction(result, widget.post);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     TextStyle countStyle = TextStyle(
@@ -194,13 +236,45 @@ class _PostManageCardState extends State<PostManageCard> {
             icon: Icon(Icons.share_outlined, color: context.ui.fontColorHint),
           ),
 
-          // Дополнительная кнопка Троеточия
-          widget.isMyPost ? IconButton(
-            onPressed: widget.onMenuPressed ?? () {
-              // Дефолтное поведение или вызов BottomSheet управления постом
-            },
-            icon: Icon(Icons.more_vert_rounded, color: context.ui.fontColorHint),
-          ) : SizedBox.shrink(),
+          if (widget.isMyPost)
+            PopupMenuButton<ActionPost>(
+              // Задаем иконку троеточия
+              icon: Icon(Icons.more_vert_rounded, color: context.ui.fontColorHint),
+              // Настройка внешнего вида самого меню
+              color: context.ui.containerColor,
+              elevation: 4,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              // Сдвиг меню чуть ниже иконки (опционально, подгони под дизайн)
+              offset: const Offset(0, 40),
+
+              // Логика выбора элемента
+              onSelected: (ActionPost action) async {
+                print('Выбрано действие: ${action.name}');
+                await widget.processAction(action, widget.post);
+              },
+
+              // Генерация элементов меню
+              itemBuilder: (BuildContext context) {
+                return ActionPost.values.map((action) {
+                  return PopupMenuItem<ActionPost>(
+                    value: action,
+                    child: Row(
+                      children: [
+                        Icon(action.icon, size: 20, color: action.color),
+                        const SizedBox(width: 12),
+                        Text(
+                          action.name,
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: context.ui.fontColorPrimary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList();
+              },
+            ),
         ],
       ),
     );

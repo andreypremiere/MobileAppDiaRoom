@@ -1,5 +1,6 @@
 import 'package:dia_room/components/info_dialog_component.dart';
 import 'package:dia_room/components/room_screen/app_dialogs.dart';
+import 'package:dia_room/models/enums/post_v2/action_post.dart';
 import 'package:dia_room/models/post_view/author.dart';
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
@@ -75,6 +76,29 @@ class _StatePersonalPostsScreen extends State<PersonalPostsScreenV2> {
   void dispose() {
     _scrollController.dispose();
     super.dispose();
+  }
+
+  Future<void> processAction(ActionPost action, PostResponse post) async {
+    switch (action) {
+      case ActionPost.delete:
+        final resultConfirm = await AppDialogs.showConfirmDialog(context, text: "Вы уверены, что хотите удалить пост безвозвратно?", cancelText: "Отмена", confirmText: "Удалить");
+        if (resultConfirm == null || resultConfirm == false) {
+          return;
+        }
+
+        final result = await deletePost(postId: post.id);
+        if (result.success) {
+          if (mounted) {
+            setState(() {
+              _posts.removeWhere((el) => el.id == post.id);
+            });
+          }
+        } else {
+          if (mounted) {
+            await AppInfoDialog.show(context, result.message ?? "Не удалось удалить пост");
+          }
+        }
+    }
   }
 
   Future<void> _handleCreatePost() async {
@@ -303,7 +327,7 @@ class _StatePersonalPostsScreen extends State<PersonalPostsScreenV2> {
           // его будет проще прокинуть через callback или проверять внутри самой карточки.
           return PostManageCard(
             post: post,
-            isMyPost: _isMyRoom,
+            isMyPost: _isMyRoom, processAction: processAction,
           );
         },
       ),
