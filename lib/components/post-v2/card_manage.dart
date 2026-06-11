@@ -4,6 +4,7 @@ import 'package:dia_room/components/post-v2/post_media_carousel.dart';
 import 'package:dia_room/components/post-v2/post_workshop_link.dart';
 import 'package:dia_room/models/enums/post_v2/post_status.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../api/auth_response.dart';
 import '../../api/post_v2_api.dart';
 import '../../models/post_v2/post_response.dart';
@@ -27,11 +28,26 @@ class _PostManageCardState extends State<PostManageCard> {
   late int _likesCount;
   bool _isLikePending = false;
 
+  late int _commentsCount;
+
   @override
   void initState() {
     super.initState();
     _isLiked = widget.post.isLiked;
     _likesCount = widget.post.likesCount;
+
+    _commentsCount = widget.post.commentsCount;
+  }
+
+  Future<void> _openComments() async {
+    final result = await context.push<int>('/posts_v2/comments/${widget.post.id}');
+
+    if (result != null && result > 0 && mounted) {
+      setState(() {
+        _commentsCount += result;
+        widget.post.commentsCount = _commentsCount;
+      });
+    }
   }
 
   Future<void> _toggleLike() async {
@@ -50,6 +66,9 @@ class _PostManageCardState extends State<PostManageCard> {
         _likesCount++;
       }
       _isLiked = !_isLiked;
+
+      widget.post.likesCount = _likesCount;
+      widget.post.isLiked = _isLiked;
     });
 
     try {
@@ -210,10 +229,10 @@ class _PostManageCardState extends State<PostManageCard> {
           Row(
             children: [
               IconButton(
-                onPressed: () {},
+                onPressed: _openComments,
                 icon: Icon(Icons.mode_comment_outlined, color: context.ui.fontColorHint),
               ),
-              Text('${widget.post.commentsCount}', style: countStyle),
+              Text('$_commentsCount', style: countStyle),
             ],
           ),
           Row(
