@@ -2,25 +2,26 @@ import 'package:dia_room/components/post-v2/post_description.dart';
 import 'package:dia_room/components/post-v2/post_hashtags.dart';
 import 'package:dia_room/components/post-v2/post_media_carousel.dart';
 import 'package:dia_room/components/post-v2/post_workshop_link.dart';
-import 'package:dia_room/utils/app_theme.dart';
+import 'package:dia_room/models/enums/post_v2/post_status.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-
 import '../../api/auth_response.dart';
 import '../../api/post_v2_api.dart';
 import '../../models/post_v2/post_response.dart';
-import '../../models/post_view/author.dart';
-import '../general/author_tile_appbar/author_tile.dart';
+import '../../utils/app_theme.dart';
 
-class PostCard extends StatefulWidget {
+
+class PostManageCard extends StatefulWidget {
   final PostResponse post;
-  const PostCard({super.key, required this.post});
+  final VoidCallback? onMenuPressed; // Колбэк для обработки нажатия на троеточие
+  final bool isMyPost;
+
+  const PostManageCard({super.key, required this.post, this.onMenuPressed, required this.isMyPost});
+
   @override
-  State<PostCard> createState() => _PostCardState();
+  State<PostManageCard> createState() => _PostManageCardState();
 }
 
-class _PostCardState extends State<PostCard> {
-  // Сюда инкапсулируем только логику лайка, остальной стейт ушел в дочерние компоненты
+class _PostManageCardState extends State<PostManageCard> {
   late bool _isLiked;
   late int _likesCount;
   bool _isLikePending = false;
@@ -95,66 +96,112 @@ class _PostCardState extends State<PostCard> {
 
   @override
   Widget build(BuildContext context) {
-    TextStyle countStyle = TextStyle(fontSize: 14, color: context.ui.fontColorHint, fontWeight: FontWeight.w600);
+    TextStyle countStyle = TextStyle(
+      fontSize: 14,
+      color: context.ui.fontColorHint,
+      fontWeight: FontWeight.w600,
+    );
 
     return Container(
       width: double.infinity,
-      decoration: BoxDecoration(color: context.ui.containerColor, borderRadius: BorderRadius.circular(16)),
+      decoration: BoxDecoration(
+        color: context.ui.containerColor,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            spreadRadius: 1,
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildHeader(context),
-          PostMediaCarousel(files: widget.post.files), // Используем общий виджет
+          // 1. Измененный Хедер под новый сценарий
+          _buildManageHeader(),
+
+          // 2. Общая Карусель
+          PostMediaCarousel(files: widget.post.files),
+
+          // 3. Панель кнопок
           _buildActionsBar(countStyle),
-          PostDescription(description: widget.post.description), // Используем общий виджет
-          PostHashtags(hashtags: widget.post.hashtags), // Используем общий виджет
-          PostWorkshopLink(workshopLink: widget.post.workshopLink, roomId: widget.post.roomId), // Используем общий виджет
+
+          // 4. Общее описание
+          PostDescription(description: widget.post.description),
+
+          // 5. Общие хэштеги
+          PostHashtags(hashtags: widget.post.hashtags),
+
+          // 6. Ссылка на мастерскую
+          PostWorkshopLink(workshopLink: widget.post.workshopLink, roomId: widget.post.roomId),
+
           const SizedBox(height: 6),
         ],
       ),
     );
   }
 
-  Widget _buildHeader(BuildContext context) {
-    final author = widget.post.roomInfo;
+  Widget _buildManageHeader() {
+    // Проверяем статус (предполагаем, что поле называется status, подставь свою переменную, если это строка или enum)
+    final bool isNotPublished = widget.post.status != PostStatus.published;
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 12),
       child: Row(
         children: [
-          author == null ? Text("Ошибка") : AuthorTile(
-            author: Author(roomId: author.roomId, roomName: author.roomName, avatar: author.avatarUrl),
-            onTap: () => context.push("/room/${author.roomId}"),),
-          Spacer(),
+          // Слева сверху: отображаем статус, если он не published
+          if (isNotPublished)
+            Text(
+              widget.post.status.name, // Например, "ЧЕРНОВИК" или "МОДЕРАЦИЯ"
+              style: const TextStyle(
+                color: Colors.deepOrangeAccent, // Замени на нужный цвет из темы
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
+            )
+          else
+            const SizedBox.shrink(),
+
+          const Spacer(),
+
+          // Справа сверху: Кнопка Поделиться
           IconButton(
             onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Поделиться (заглушка)")));
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Поделиться")));
             },
             icon: Icon(Icons.share_outlined, color: context.ui.fontColorHint),
           ),
+
+          // Дополнительная кнопка Троеточия
+          widget.isMyPost ? IconButton(
+            onPressed: widget.onMenuPressed ?? () {
+              // Дефолтное поведение или вызов BottomSheet управления постом
+            },
+            icon: Icon(Icons.more_vert_rounded, color: context.ui.fontColorHint),
+          ) : SizedBox.shrink(),
         ],
       ),
     );
   }
 
   Widget _buildActionsBar(TextStyle countStyle) {
+    // Оставляем как в базовой карточке (лайки и комментарии)
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 2.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-// Слева: Комментарии
           Row(
             children: [
               IconButton(
-                onPressed: () {
-// Переход к комментариям
-                },
+                onPressed: () {},
                 icon: Icon(Icons.mode_comment_outlined, color: context.ui.fontColorHint),
               ),
               Text('${widget.post.commentsCount}', style: countStyle),
             ],
           ),
-// Справа: Лайки
           Row(
             children: [
               IconButton(

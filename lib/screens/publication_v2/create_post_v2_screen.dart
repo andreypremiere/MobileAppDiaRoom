@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:dia_room/api/auth_response.dart';
+import 'package:dia_room/components/loading_widget/loader_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_cropper/image_cropper.dart';
@@ -189,8 +190,8 @@ class _CreateInstagramPostScreenState extends State<CreateInstagramPostScreen> {
     }
 
     if (mounted && result.success) {
-      print("Пост успешно создался");
-      // context.pop();
+      // print("Пост успешно создался");
+      context.pop();
     }
     if (mounted && !result.success) {
       await AppInfoDialog.show(context, result.message ?? "Не удалось опубликовать пост");
@@ -212,7 +213,7 @@ class _CreateInstagramPostScreenState extends State<CreateInstagramPostScreen> {
             style: TextStyle(fontWeight: FontWeight.w600, fontSize: 22),
           ),
         ),
-        body: ListView(
+        body: _isPublication ? Center(child: DiaRoomLoader(),) : ListView(
           padding: const EdgeInsets.all(16),
           children: [
             _buildSectionTitle("Фотографии (${_postDraft.imagesPaths.length}/$maxImagesPostV2)"),

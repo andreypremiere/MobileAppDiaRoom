@@ -205,7 +205,8 @@ class _ShowcaseButtonWidgetState extends State<ShowcaseButtonWidget> {
           color: Colors.transparent,
           child: InkWell(
             borderRadius: BorderRadius.circular(16),
-            onTap: () => context.push('/personalRoomPosts/${widget.roomId}'),
+            // onTap: () => context.push('/personalRoomPosts/${widget.roomId}'),
+            onTap: () => context.push('/personalRoomPostsV2/${widget.roomId}'),
             child: Padding(
               padding: const EdgeInsets.all(8.0),
               child: Column(
