@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../api/auth_response.dart';
 import '../../api/post_v2_api.dart';
@@ -31,8 +32,9 @@ class _PostCommentsScreenState extends State<PostCommentsScreen> {
   bool _isSending = false;
   bool _hasMore = true;
   int _currentPage = 0;
-  final int _limit = 20;
+  final int _limit = 10;
   String? _errorMessage;
+  int _commentsAddedCount = 0;
 
   @override
   void initState() {
@@ -82,7 +84,13 @@ class _PostCommentsScreenState extends State<PostCommentsScreen> {
 
       setState(() {
         _currentPage++;
-        _comments.addAll(fetchedComments);
+        final uniqueFetchedComments = fetchedComments.where((fetched) =>
+        !_comments.any((existing) => existing.id == fetched.id)
+        ).toList();
+
+        // Добавляем в список только уникальные
+        _comments.addAll(uniqueFetchedComments);
+
         if (fetchedComments.length < _limit) _hasMore = false;
         _errorMessage = null;
       });
@@ -115,6 +123,7 @@ class _PostCommentsScreenState extends State<PostCommentsScreen> {
         setState(() {
           // Вставляем новый комментарий в конец списка или в начало (в зависимости от желаемой сортировки)
           _comments.add(newComment);
+          _commentsAddedCount++;
         });
 
         // Автоматически прокручиваем список вниз к новому комментарию
@@ -155,17 +164,20 @@ class _PostCommentsScreenState extends State<PostCommentsScreen> {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
-      child: Scaffold(
+      child: PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, result) async {
+          if (didPop) return;
+          context.pop(_commentsAddedCount);
+        },
+        child: Scaffold(
         appBar: AppBar(
           backgroundColor: context.ui.appBarColor,
-          leading: const AppBackButton(),
-          centerTitle: true,
+          leading: AppBackButton(onPressed: () => context.pop(_commentsAddedCount)),
           title: Text(
             "Комментарии",
             style: TextStyle(
               color: context.ui.fontColorPrimary,
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
             ),
           ),
         ),
@@ -179,7 +191,7 @@ class _PostCommentsScreenState extends State<PostCommentsScreen> {
             ),
           ],
         ),
-      ),
+      )),
     );
   }
 

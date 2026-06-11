@@ -79,10 +79,10 @@ class PostResponse {
   final PostStatus status;
   final DateTime createdAt;
   final List<PostMediaResponse> files;
-  final int likesCount;
+  int likesCount;
   final int viewsCount;
-  final int commentsCount;
-  final bool isLiked;
+  int commentsCount;
+  bool isLiked;
 
   PostResponse({
     this.roomInfo,

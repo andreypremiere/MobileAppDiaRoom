@@ -26,11 +26,26 @@ class _PostCardState extends State<PostCard> {
   late int _likesCount;
   bool _isLikePending = false;
 
+  late int _commentsCount;
+
   @override
   void initState() {
     super.initState();
     _isLiked = widget.post.isLiked;
     _likesCount = widget.post.likesCount;
+
+    _commentsCount = widget.post.commentsCount;
+  }
+
+  Future<void> _openComments() async {
+    final result = await context.push<int>('/posts_v2/comments/${widget.post.id}');
+
+    if (result != null && result > 0 && mounted) {
+      setState(() {
+        _commentsCount += result;
+        widget.post.commentsCount = _commentsCount;
+      });
+    }
   }
 
   Future<void> _toggleLike() async {
@@ -49,6 +64,9 @@ class _PostCardState extends State<PostCard> {
         _likesCount++;
       }
       _isLiked = !_isLiked;
+
+      widget.post.likesCount = _likesCount;
+      widget.post.isLiked = _isLiked;
     });
 
     try {
@@ -161,12 +179,10 @@ class _PostCardState extends State<PostCard> {
           Row(
             children: [
               IconButton(
-                onPressed: () {
-                  context.push('/posts_v2/comments/${widget.post.id}');
-                },
+                onPressed: _openComments,
                 icon: Icon(Icons.mode_comment_outlined, color: context.ui.fontColorHint),
               ),
-              Text('${widget.post.commentsCount}', style: countStyle),
+              Text('$_commentsCount', style: countStyle),
             ],
           ),
 
