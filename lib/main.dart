@@ -1,6 +1,7 @@
 import 'package:dia_room/models/enums/file_type.dart';
 import 'package:dia_room/models/post_creator/post_draft.dart';
 import 'package:dia_room/screens/authorization/registration_screen.dart';
+import 'package:dia_room/screens/comments_screen.dart';
 import 'package:dia_room/screens/diary/diary_screen.dart';
 import 'package:dia_room/screens/diary/list_diaries_screen.dart';
 import 'package:dia_room/screens/diary/search_messages.dart';
@@ -266,6 +267,14 @@ class App extends StatelessWidget {
               final String roomId = state.pathParameters['roomId']!;
 
               return PersonalPostsScreenV2(roomId: roomId);
+            },
+          ),
+          GoRoute(
+            path: '/posts_v2/comments/:postId',
+            builder: (context, state) {
+              final String postId = state.pathParameters['postId']!;
+
+              return PostCommentsScreen(postId: postId);
             },
           ),
 

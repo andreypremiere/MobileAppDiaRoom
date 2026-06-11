@@ -8,6 +8,7 @@ import '../../api/auth_response.dart';
 import '../../api/post_v2_api.dart';
 import '../../models/post_v2/post_response.dart';
 import '../../utils/app_theme.dart';
+import '../../utils/utils.dart';
 
 
 class PostManageCard extends StatefulWidget {
@@ -192,7 +193,20 @@ class _PostManageCardState extends State<PostManageCard> {
       padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 2.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
+          // Слева: Текст с датой публикации по центру высоты
+          Text(
+            formatSmartDate(widget.post.createdAt),
+            style: TextStyle(
+              color: context.ui.fontColorHint,
+              fontSize: 13,
+              fontWeight: FontWeight.w400,
+            ),
+          ),
+
+          // Расталкивает левую (дату) и правую (лайки/комменты) части по краям
+          const Spacer(),
           Row(
             children: [
               IconButton(

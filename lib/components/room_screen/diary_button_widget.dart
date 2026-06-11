@@ -3,7 +3,8 @@ import 'package:go_router/go_router.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:dia_room/utils/app_theme.dart';
 
-import '../../api/post_api.dart'; // Твой путь к теме
+import '../../api/post_api.dart';
+import '../../api/post_v2_api.dart'; // Твой путь к теме
 
 class _StatShimmer extends StatelessWidget {
   final double width;
@@ -164,8 +165,7 @@ class _ShowcaseButtonWidgetState extends State<ShowcaseButtonWidget> {
 
   Future<void> _fetchShowcaseStats() async {
     try {
-      // TODO: Твой запрос к API
-      final response = await getCountPosts(roomId: widget.roomId);
+      final response = await getCountPostsV2(roomId: widget.roomId);
 
       if (response.success) {
         if (mounted) {

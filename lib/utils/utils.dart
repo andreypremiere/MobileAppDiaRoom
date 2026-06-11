@@ -1,5 +1,6 @@
 // Функция для создания полного пути из базового url и postfix
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 import '../configuration/urls.dart';
 
@@ -76,4 +77,25 @@ String? isValidRoomId(String input) {
 
 bool isValidRoomName(String roomName) {
   return (roomName.isNotEmpty && roomName.length < 100);
+}
+
+String formatSmartDate(DateTime date) {
+  final localDate = date.toLocal();
+
+  final now = DateTime.now();
+
+  final today = DateTime(now.year, now.month, now.day);
+  final yesterday = today.subtract(const Duration(days: 1));
+  final dateToCheck = DateTime(localDate.year, localDate.month, localDate.day);
+
+  final String timePart = DateFormat('HH:mm').format(localDate);
+
+  if (dateToCheck == today) {
+    return timePart;
+  } else if (dateToCheck == yesterday) {
+    return "Вчера в $timePart";
+  } else {
+    // Для старых дат выводим день и время
+    return "$timePart · ${DateFormat('dd.MM.yy').format(localDate)}";
+  }
 }

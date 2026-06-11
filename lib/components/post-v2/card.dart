@@ -10,6 +10,7 @@ import '../../api/auth_response.dart';
 import '../../api/post_v2_api.dart';
 import '../../models/post_v2/post_response.dart';
 import '../../models/post_view/author.dart';
+import '../../utils/utils.dart';
 import '../general/author_tile_appbar/author_tile.dart';
 
 class PostCard extends StatefulWidget {
@@ -140,21 +141,36 @@ class _PostCardState extends State<PostCard> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 2.0),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
+        // Выравниваем все элементы в Row строго по центру вертикали
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-// Слева: Комментарии
+          // Слева: Текст с датой публикации по центру высоты
+          Text(
+            formatSmartDate(widget.post.createdAt),
+            style: TextStyle(
+              color: context.ui.fontColorHint,
+              fontSize: 13,
+              fontWeight: FontWeight.w400,
+            ),
+          ),
+
+          // Расталкивает левую (дату) и правую (лайки/комменты) части по краям
+          const Spacer(),
+
+          // Справа: Комментарии
           Row(
             children: [
               IconButton(
                 onPressed: () {
-// Переход к комментариям
+                  context.push('/posts_v2/comments/${widget.post.id}');
                 },
                 icon: Icon(Icons.mode_comment_outlined, color: context.ui.fontColorHint),
               ),
               Text('${widget.post.commentsCount}', style: countStyle),
             ],
           ),
-// Справа: Лайки
+
+          // Справа: Лайки
           Row(
             children: [
               IconButton(

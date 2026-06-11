@@ -117,3 +117,53 @@ Future<AuthResponse> unlikePost({
     return handleDioError(e, "Ошибка при снятии лайка");
   }
 }
+
+Future<AuthResponse> getCountPostsV2(
+    {required String roomId}
+    ) async {
+  try {
+    final res = await ApiService.get('/post_v2/posts/count/$roomId');
+    return AuthResponse(
+      success: true,
+      data: res.data,
+    );
+  } on DioException catch (e) {
+    return handleDioError(e, "Ошибка получения количества постов");
+  } catch (e) {
+    return handleSystemError(e);
+  }
+}
+
+Future<AuthResponse> createComment({
+  required String postId,
+  required String text,
+}) async {
+  try {
+    final response = await ApiService.post(
+      '/post_v2/comments/create',
+      data: {'postId': postId, "text": text},
+    );
+
+    return AuthResponse(success: true, data: response.data);
+  } on DioException catch (e) {
+    return handleDioError(e, "Не удалось опубликовать пост");
+  }
+}
+
+Future<AuthResponse> getComments({
+  required String postId,
+  required int page,
+  required int limit,
+}) async {
+  try {
+    final res = await ApiService.get('/post_v2/comments/$postId', queryParameters: {"page": page, "limit": limit});
+    return AuthResponse(
+      success: true,
+      data: res.data,
+    );
+  } on DioException catch (e) {
+    return handleDioError(e, "Не удалось получить комментарии");
+  } catch (e) {
+    return handleSystemError(e);
+  }
+}
