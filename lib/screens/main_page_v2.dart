@@ -10,7 +10,7 @@ import '../components/loading_widget/error_widget.dart';
 import '../components/loading_widget/loader_widget.dart';
 import '../components/main_page_screen/bottom_menu/bottom_menu_component.dart';
 import '../components/main_page_screen/bottom_menu/bottom_menu_item.dart';
-import '../models/post_v2/post_response.dart';
+import '../contracts/posts_v2/responses/post_response.dart';
 
 class MainPageScreenV2 extends StatefulWidget {
   const MainPageScreenV2({super.key});

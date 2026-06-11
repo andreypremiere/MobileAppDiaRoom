@@ -10,7 +10,7 @@ import '../../api/account_api.dart';
 // Импортируем новый роут API и новую модель постов
 import '../../api/post_v2_api.dart';
 import '../../components/post-v2/card_manage.dart';
-import '../../models/post_v2/post_response.dart';
+import '../../contracts/posts_v2/responses/post_response.dart';
 import '../../components/post-v2/card.dart'; // Твоя новая универсальная PostCard
 
 import '../../components/general/app_back_button.dart';
@@ -75,6 +75,29 @@ class _StatePersonalPostsScreen extends State<PersonalPostsScreenV2> {
   void dispose() {
     _scrollController.dispose();
     super.dispose();
+  }
+
+  Future<void> _handleCreatePost() async {
+    // 1. Ожидаем результат с экрана создания поста
+    final result = await context.push('/create_post_v2');
+
+    // 2. Проверяем, что вернулся именно объект нового поста и виджет еще в дереве
+    if (result != null && result is PostResponse && mounted) {
+      setState(() {
+        // 3. Вставляем новый пост на самую первую позицию (индекс 0)
+        _posts.insert(0, result);
+      });
+
+      // Опционально: если список был прокручен вниз, можно плавно вернуть пользователя наверх,
+      // чтобы он сразу увидел свою новую публикацию
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          0,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    }
   }
 
   /// Загрузка информации о чужой комнате для AppBar
@@ -205,7 +228,7 @@ class _StatePersonalPostsScreen extends State<PersonalPostsScreenV2> {
       actions: _isMyRoom
           ? [
         IconButton(
-          onPressed: () => context.push('/create_post_v2'),
+          onPressed: _handleCreatePost,
           icon: const Icon(Icons.add_rounded, size: 34),
           color: context.ui.fontColorPrimary,
         ),

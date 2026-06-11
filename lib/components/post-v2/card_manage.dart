@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../api/auth_response.dart';
 import '../../api/post_v2_api.dart';
-import '../../models/post_v2/post_response.dart';
+import '../../contracts/posts_v2/responses/post_response.dart';
 import '../../utils/app_theme.dart';
 import '../../utils/utils.dart';
 

@@ -4,6 +4,7 @@ import 'package:dia_room/api/auth_response.dart';
 import 'package:dia_room/contracts/posts_v2/requests/creating_post.dart';
 import 'package:dia_room/contracts/posts_v2/requests/media_file_item.dart';
 import 'package:dia_room/contracts/posts_v2/requests/media_metadata.dart';
+import 'package:dia_room/contracts/posts_v2/responses/post_response.dart';
 import 'package:dia_room/models/enums/post_v2/post_media_status.dart';
 import 'package:dia_room/models/enums/post_v2/post_status.dart';
 import 'package:image_size_getter/file_input.dart';
@@ -201,6 +202,7 @@ class PostV2UploaderManager {
       await api.updatePostStatus(postStatus: updatingPost);
       return AuthResponse(
         success: true,
+        data: PostResponse.fromPostCreateResponse(responseData.post, responseData.statistic),
         message: "Пост успешно создан и отправлен на обработку.",
       );
     }

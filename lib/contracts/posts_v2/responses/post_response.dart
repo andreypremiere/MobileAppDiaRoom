@@ -1,7 +1,10 @@
 // post_models.dart
 
-import '../enums/post_v2/post_media_status.dart';
-import '../enums/post_v2/post_status.dart';
+import 'package:dia_room/contracts/posts_v2/responses/post_response_base.dart';
+import 'package:dia_room/contracts/posts_v2/responses/statistic_response.dart';
+
+import '../../../models/enums/post_v2/post_media_status.dart';
+import '../../../models/enums/post_v2/post_status.dart';
 
 class PostsRoom {
   final List<PostResponse> posts;
@@ -67,6 +70,7 @@ class PostMediaResponse {
       height: map['height'] ?? 0,
     );
   }
+
 }
 
 class PostResponse {
@@ -121,6 +125,34 @@ class PostResponse {
       viewsCount: _convertToInt(map['viewsCount']),
       commentsCount: _convertToInt(map['commentsCount']),
       isLiked: map['isLiked'] ?? false,
+    );
+  }
+
+  factory PostResponse.fromPostCreateResponse(PostResponseBase postBase, StatisticResponse statistics) {
+    return PostResponse(
+      // Профиля автора при создании обычно нет, оставляем null (карточка обработает)
+      roomInfo: null,
+
+      id: postBase.id,
+
+      // Переносим roomId из базового ответа поста.
+      // Если в PostResponseBase его нет, добавь: postBase.roomId
+      roomId: '',
+
+      description: postBase.description,
+      hashtags: postBase.hashtags,
+      workshopLink: postBase.workshopLink,
+      status: postBase.status,
+      createdAt: postBase.createdAt,
+      files: postBase.files.map((file) => PostMediaResponse.fromMap(file.toMap())).toList(),
+
+      // Данные из объекта статистики
+      likesCount: statistics.likesCount,
+      viewsCount: statistics.viewsCount,
+      commentsCount: statistics.commentsCount,
+
+      // Новый или только что созданный пост по умолчанию не лайкнут текущим юзером
+      isLiked: false,
     );
   }
 
