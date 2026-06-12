@@ -162,3 +162,37 @@ Future<AuthResponse> updateState({required String authorId}) async {
     return handleDioError(e, "Ошибка при обноавлении статуса");
   }
 }
+
+Future<AuthResponse> getMessageComments({
+  required String messageId,
+  required int page,
+  required int limit,
+}) async {
+  try {
+    final res = await ApiService.get('/diary/comments/$messageId', queryParameters: {"page": page, "limit": limit});
+    return AuthResponse(
+      success: true,
+      data: res.data,
+    );
+  } on DioException catch (e) {
+    return handleDioError(e, "Не удалось получить комментарии");
+  } catch (e) {
+    return handleSystemError(e);
+  }
+}
+
+Future<AuthResponse> createMessageComment({
+  required String messageId,
+  required String text,
+}) async {
+  try {
+    final response = await ApiService.post(
+      '/diary/comments/create',
+      data: {'messageId': messageId, "content": text},
+    );
+
+    return AuthResponse(success: true, data: response.data);
+  } on DioException catch (e) {
+    return handleDioError(e, "Не удалось опубликовать комментарий");
+  }
+}

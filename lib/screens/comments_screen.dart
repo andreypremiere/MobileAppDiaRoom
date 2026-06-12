@@ -1,33 +1,44 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
 import '../../api/auth_response.dart';
-import '../../api/post_v2_api.dart';
 import '../../components/general/app_back_button.dart';
 import '../../components/loading_widget/error_widget.dart';
 import '../../components/loading_widget/loader_widget.dart';
 import '../../components/info_dialog_component.dart';
 import '../../utils/app_theme.dart';
-import '../../utils/auth_service.dart';
 import '../components/general/comments/comment_card.dart';
 import '../components/general/comments/input_panel.dart';
-import '../contracts/posts_v2/responses/comment_response.dart';
+import '../models/i_comment_item.dart';
 
+class CommentsScreen<T extends ICommentItem> extends StatefulWidget {
+  final String targetId; // Это может быть либо postId, либо messageId
 
-class PostCommentsScreen extends StatefulWidget {
-  final String postId;
+  // Передаем функцию запроса из нужного API
+  final Future<AuthResponse> Function({required String id, required int page, required int limit}) onLoadCommentsApi;
 
-  const PostCommentsScreen({super.key, required this.postId});
+  // Передаем функцию отправки из нужного API
+  final Future<AuthResponse> Function({required String id, required String text}) onSendCommentApi;
+
+  // Функция-маппер, которая знает, как превратить Map из базы в конкретный CommentResponse
+  final T Function(Map<String, dynamic> map) fromMap;
+
+  const CommentsScreen({
+    super.key,
+    required this.targetId,
+    required this.onLoadCommentsApi,
+    required this.onSendCommentApi,
+    required this.fromMap,
+  });
 
   @override
-  State<PostCommentsScreen> createState() => _PostCommentsScreenState();
+  State<CommentsScreen<T>> createState() => _CommentsScreenState<T>();
 }
 
-class _PostCommentsScreenState extends State<PostCommentsScreen> {
+class _CommentsScreenState<T extends ICommentItem> extends State<CommentsScreen<T>> {
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _commentController = TextEditingController();
 
-  List<CommentResponse> _comments = [];
+  final List<T> _comments = [];
   bool _isLoading = false;
   bool _isSending = false;
   bool _hasMore = true;
@@ -56,15 +67,15 @@ class _PostCommentsScreenState extends State<PostCommentsScreen> {
     }
   }
 
-  /// Получение комментариев с пагинацией
   Future<void> _loadComments() async {
     if (_isLoading || !_hasMore) return;
 
     setState(() => _isLoading = true);
 
     try {
-      final AuthResponse response = await getComments(
-        postId: widget.postId,
+      // Вызываем переданный через конструктор API метод
+      final AuthResponse response = await widget.onLoadCommentsApi(
+        id: widget.targetId,
         page: _currentPage,
         limit: _limit,
       );
@@ -76,10 +87,11 @@ class _PostCommentsScreenState extends State<PostCommentsScreen> {
         return;
       }
 
-      // Предполагаем, что бэкенд возвращает список в поле 'comments'
       final List<dynamic> rawComments = response.data['comments'] ?? [];
-      final List<CommentResponse> fetchedComments = rawComments
-          .map((c) => CommentResponse.fromMap(c as Map<String, dynamic>))
+
+      // Парсим с помощью динамического маппера widget.fromMap
+      final List<T> fetchedComments = rawComments
+          .map((c) => widget.fromMap(c as Map<String, dynamic>))
           .toList();
 
       setState(() {
@@ -88,7 +100,6 @@ class _PostCommentsScreenState extends State<PostCommentsScreen> {
         !_comments.any((existing) => existing.id == fetched.id)
         ).toList();
 
-        // Добавляем в список только уникальные
         _comments.addAll(uniqueFetchedComments);
 
         if (fetchedComments.length < _limit) _hasMore = false;
@@ -103,7 +114,6 @@ class _PostCommentsScreenState extends State<PostCommentsScreen> {
     }
   }
 
-  /// Отправка комментария
   Future<void> _sendComment() async {
     final text = _commentController.text.trim();
     if (text.isEmpty || _isSending) return;
@@ -113,20 +123,19 @@ class _PostCommentsScreenState extends State<PostCommentsScreen> {
     FocusScope.of(context).unfocus();
 
     try {
-      final AuthResponse response = await createComment(
-        postId: widget.postId,
+      // Вызываем переданный через конструктор API метод для создания
+      final AuthResponse response = await widget.onSendCommentApi(
+        id: widget.targetId,
         text: text,
       );
 
       if (response.success) {
-        final newComment = CommentResponse.fromMap(response.data);
+        final newComment = widget.fromMap(response.data);
         setState(() {
-          // Вставляем новый комментарий в конец списка или в начало (в зависимости от желаемой сортировки)
           _comments.add(newComment);
           _commentsAddedCount++;
         });
 
-        // Автоматически прокручиваем список вниз к новому комментарию
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (_scrollController.hasClients) {
             _scrollController.animateTo(
@@ -171,47 +180,40 @@ class _PostCommentsScreenState extends State<PostCommentsScreen> {
           context.pop(_commentsAddedCount);
         },
         child: Scaffold(
-        appBar: AppBar(
-          backgroundColor: context.ui.appBarColor,
-          leading: AppBackButton(onPressed: () => context.pop(_commentsAddedCount)),
-          title: Text(
-            "Комментарии",
-            style: TextStyle(
-              color: context.ui.fontColorPrimary,
+          appBar: AppBar(
+            backgroundColor: context.ui.appBarColor,
+            leading: AppBackButton(onPressed: () => context.pop(_commentsAddedCount)),
+            title: Text(
+              "Комментарии",
+              style: TextStyle(color: context.ui.fontColorPrimary),
             ),
           ),
+          body: Column(
+            children: [
+              Expanded(child: _buildMainContent()),
+              CommentInputPanel(
+                controller: _commentController,
+                onSend: _sendComment,
+                isSending: _isSending,
+              ),
+            ],
+          ),
         ),
-        body: Column(
-          children: [
-            Expanded(child: _buildMainContent()),
-            CommentInputPanel(
-              controller: _commentController,
-              onSend: _sendComment,
-              isSending: _isSending,
-            ),
-          ],
-        ),
-      )),
+      ),
     );
   }
 
   Widget _buildMainContent() {
-    // 1. Состояние ошибки
     if (_errorMessage != null && _comments.isEmpty) {
       return Center(
-        child: DiaRoomErrorView(
-          errorMessage: _errorMessage!,
-          onRefresh: _onRefresh,
-        ),
+        child: DiaRoomErrorView(errorMessage: _errorMessage!, onRefresh: _onRefresh),
       );
     }
 
-    // 2. Первоначальный лоадер
     if (_isLoading && _comments.isEmpty) {
       return const Center(child: DiaRoomLoader());
     }
 
-    // 3. Пустой список комментариев
     if (_comments.isEmpty) {
       return RefreshIndicator(
         color: context.ui.primaryColor,
@@ -233,7 +235,6 @@ class _PostCommentsScreenState extends State<PostCommentsScreen> {
       );
     }
 
-    // 4. Отображение списка комментариев
     return RefreshIndicator(
       color: context.ui.primaryColor,
       onRefresh: () async => _onRefresh(),
@@ -245,7 +246,7 @@ class _PostCommentsScreenState extends State<PostCommentsScreen> {
         separatorBuilder: (context, index) => Divider(
           color: context.ui.fontColorHint.withOpacity(0.05),
           height: 1,
-          indent: 64, // Делаем отступ разделителя, чтобы он начинался под текстом
+          indent: 64,
         ),
         itemBuilder: (context, index) {
           if (index == _comments.length) {
@@ -257,8 +258,7 @@ class _PostCommentsScreenState extends State<PostCommentsScreen> {
 
           return CommentCard(
             comment: _comments[index],
-            onLongPress: () {
-            },
+            onLongPress: () {},
           );
         },
       ),

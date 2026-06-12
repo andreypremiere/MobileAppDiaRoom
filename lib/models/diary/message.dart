@@ -16,6 +16,7 @@ class Message {
   final DateTime createdAt;
   final DateTime updatedAt;
   final DateTime? deletedAt;
+  int countComments;
 
   Message({
     required this.id,
@@ -29,6 +30,7 @@ class Message {
     required this.createdAt,
     required this.updatedAt,
     this.deletedAt,
+    required this.countComments
   });
 
   // Map<String, dynamic> toMap() {
@@ -77,6 +79,7 @@ class Message {
       deletedAt: map['deletedAt'] != null
           ? DateTime.parse(map['deletedAt'])
           : null,
+      countComments: map['countComments'] ?? 0
     );
   }
 }

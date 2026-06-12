@@ -37,6 +37,10 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import 'api/diary_api.dart';
+import 'api/post_v2_api.dart';
+import 'contracts/diary/response/comment_response.dart' as message_contract;
+import 'contracts/posts_v2/responses/comment_response.dart' as post_contract;
 import 'models/enums/diary/search_method.dart';
 import 'models/enums/global_search/global_search_method.dart';
 import 'package:flutter_quill/flutter_quill.dart';
@@ -305,9 +309,29 @@ class App extends StatelessWidget {
           GoRoute(
             path: '/posts_v2/comments/:postId',
             builder: (context, state) {
-              final String postId = state.pathParameters['postId']!;
-
-              return PostCommentsScreen(postId: postId);
+              final postId = state.pathParameters['postId']!;
+              return CommentsScreen<post_contract.CommentResponse>(
+                targetId: postId,
+                fromMap: post_contract.CommentResponse.fromMap,
+                onLoadCommentsApi: ({required id, required page, required limit}) =>
+                    getComments(postId: id, page: page, limit: limit), // твой метод API для постов
+                onSendCommentApi: ({required id, required text}) =>
+                    createComment(postId: id, text: text), // твой метод API для постов
+              );
+            },
+          ),
+          GoRoute(
+            path: '/message/comments/:messageId',
+            builder: (context, state) {
+              final messageId = state.pathParameters['messageId']!;
+              return CommentsScreen<message_contract.CommentResponse>(
+                targetId: messageId,
+                fromMap: message_contract.CommentResponse.fromMap,
+                onLoadCommentsApi: ({required id, required page, required limit}) =>
+                    getMessageComments(messageId: id, page: page, limit: limit), // твой метод API для сообщений (замени имя на свое)
+                onSendCommentApi: ({required id, required text}) =>
+                    createMessageComment(messageId: id, text: text), // твой метод API для сообщений (замени имя на свое)
+              );
             },
           ),
 

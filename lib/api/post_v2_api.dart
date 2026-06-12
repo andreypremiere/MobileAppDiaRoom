@@ -146,7 +146,7 @@ Future<AuthResponse> createComment({
 
     return AuthResponse(success: true, data: response.data);
   } on DioException catch (e) {
-    return handleDioError(e, "Не удалось опубликовать пост");
+    return handleDioError(e, "Не удалось опубликовать комментарий");
   }
 }
 

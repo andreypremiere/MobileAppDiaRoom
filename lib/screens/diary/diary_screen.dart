@@ -487,6 +487,22 @@ class _DiaryScreenState extends State<DiaryScreen> {
                 return DiaryMessageCard(
                   message: _messages[index],
                   onLongPress: isMyRoom ? _actionMessage : null,
+                  onCommentsTap: () async {
+                    final currentMessage = _messages[index];
+
+                    // Переходим на созданный нами универсальный CommentsScreen
+                    final int? addedCommentsCount = await context.push<int?>(
+                      '/message/comments/${currentMessage.message.id}',
+                    );
+
+                    // Если пользователь написал комментарии и вернулся назад
+                    if (addedCommentsCount != null && addedCommentsCount > 0 && mounted) {
+                      setState(() {
+                        // Прямо по ссылке инкрементируем счетчик внутри нашего массива сообщений
+                        currentMessage.message.countComments += addedCommentsCount;
+                      });
+                    }
+                  },
                 );
               },
             ),

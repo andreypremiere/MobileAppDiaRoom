@@ -291,6 +291,34 @@ class _DiaryInputPanelState extends State<DiaryInputPanel> {
                         const VerticalSpacing(0, 0),
                         null,
                       ),
+                      quote: DefaultTextBlockStyle(
+                        TextStyle(
+                          fontSize: 15, // Можно сделать чуть меньше основного текста
+                          color: context.ui.fontColorPrimary.withAlpha(220), // Слегка приглушенный цвет текста
+                          fontStyle: FontStyle.italic, // Делаем текст курсивным
+                          height: 1.4,
+                        ),
+                        const HorizontalSpacing(2, 2), // Внутренние отступы (padding) слева и справа
+                        const VerticalSpacing(8, 8),   // Отступы (margin) сверху и снизу самого блока цитаты
+                        const VerticalSpacing(6, 6),   // Внутренние отступы между строками внутри цитаты
+                        BoxDecoration(
+                          // Делаем цвет подложки чуть светлее/темнее основного фона панели
+                          // color: context.ui.containerColor.withAlpha(20).addColorMask(Colors.black, 10),
+                          // Либо можно использовать явный полупрозрачный акцентный цвет:
+                          color: context.ui.primaryColor.withAlpha(25),
+
+                          // Скругляем края (твое требование)
+                          borderRadius: BorderRadius.circular(4),
+
+                          // Кастомная граница: делаем толстую вертикальную линию только СЛЕВА
+                          border: Border(
+                            left: BorderSide(
+                              width: 4,
+                              color: context.ui.primaryColor, // Цвет вертикальной полоски (твой акцентный цвет)
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
 
                     contextMenuBuilder: (context, rawEditorState) {

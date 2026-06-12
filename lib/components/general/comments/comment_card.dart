@@ -4,10 +4,12 @@ import 'package:dia_room/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
+import '../../../models/i_comment_item.dart';
+
 
 
 class CommentCard extends StatelessWidget {
-  final CommentResponse comment;
+  final ICommentItem comment;
   final VoidCallback? onLongPress;
 
   const CommentCard({

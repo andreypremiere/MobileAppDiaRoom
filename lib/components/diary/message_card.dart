@@ -18,8 +18,9 @@ import 'media_grid.dart';
 class DiaryMessageCard extends StatelessWidget {
   final MessagePresentation message;
   final Function(MessageAction action, MessagePresentation message)? onLongPress;
+  final VoidCallback? onCommentsTap;
 
-  const DiaryMessageCard({super.key, required this.message, this.onLongPress});
+  const DiaryMessageCard({super.key, required this.message, this.onLongPress, this.onCommentsTap});
 
   Future<void> _showPopUp(BuildContext context, LongPressStartDetails details) async {
     final Offset tapPosition = details.globalPosition;
@@ -169,6 +170,61 @@ class DiaryMessageCard extends StatelessWidget {
                         showCursor: false,
                         enableInteractiveSelection: true, // Позволяет выделять и копировать текст
                         enableSelectionToolbar: true,
+
+                        customStyles: DefaultStyles(
+                          // Стиль для обычного текста (абзаца)
+                          paragraph: DefaultTextBlockStyle(
+                            TextStyle(
+                              fontSize: 16, // Делаем крупнее (по дефолту обычно 14)
+                              color: context.ui.fontColorPrimary, // Твой цвет текста из темы
+                              height: 1.3, // Высота строки для красивого отображения
+                            ),
+                            const HorizontalSpacing(0, 0),
+                            const VerticalSpacing(0, 0), // Убираем дефолтные отступы между абзацами
+                            const VerticalSpacing(0, 0),
+                            null,
+                          ),
+                          // Стиль для плейсхолдера (размер должен совпадать с основным текстом)
+                          placeHolder: DefaultTextBlockStyle(
+                            TextStyle(
+                              fontSize: 16,
+                              color: context.ui.fontColorHint, // Серый цвет для подсказки
+                              height: 1.3,
+                            ),
+                            const HorizontalSpacing(0, 0),
+                            const VerticalSpacing(0, 0),
+                            const VerticalSpacing(0, 0),
+                            null,
+                          ),
+                          quote: DefaultTextBlockStyle(
+                            TextStyle(
+                              fontSize: 15, // Можно сделать чуть меньше основного текста
+                              color: context.ui.fontColorPrimary.withAlpha(220), // Слегка приглушенный цвет текста
+                              fontStyle: FontStyle.italic, // Делаем текст курсивным
+                              height: 1.4,
+                            ),
+                            const HorizontalSpacing(2, 2), // Внутренние отступы (padding) слева и справа
+                            const VerticalSpacing(8, 8),   // Отступы (margin) сверху и снизу самого блока цитаты
+                            const VerticalSpacing(6, 6),   // Внутренние отступы между строками внутри цитаты
+                            BoxDecoration(
+                              // Делаем цвет подложки чуть светлее/темнее основного фона панели
+                              // color: context.ui.containerColor.withAlpha(20).addColorMask(Colors.black, 10),
+                              // Либо можно использовать явный полупрозрачный акцентный цвет:
+                              color: context.ui.primaryColor.withAlpha(25),
+
+                              // Скругляем края (твое требование)
+                              borderRadius: BorderRadius.circular(4),
+
+                              // Кастомная граница: делаем толстую вертикальную линию только СЛЕВА
+                              border: Border(
+                                left: BorderSide(
+                                  width: 4,
+                                  color: context.ui.primaryColor, // Цвет вертикальной полоски (твой акцентный цвет)
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
                         // 🔥 ИСПРАВЛЕНИЕ 2: Убрали капризный customStyles с его VerticalSpacing.
                         // Текст теперь стилизуется стабильно через DefaultTextStyle выше.
                       ),
@@ -223,51 +279,107 @@ class DiaryMessageCard extends StatelessWidget {
       messageContent = VoiceMessageBubble(message: message);
     } else if (message.message.msgType == MessageType.videoNote) {
       messageContent = VideoMessageBubble(message: message);
-    }
-    else {
-      return SizedBox.shrink();
+    } else {
+      return const SizedBox.shrink();
     }
 
-    return GestureDetector(
-      onLongPressStart: onLongPress != null
-          ? (details) async => _showPopUp(context, details)
-          : null,
-      child: Container(
-        padding: const EdgeInsets.all(4),
-        margin: const EdgeInsets.only(bottom: 12),
-        decoration: BoxDecoration(
-          color: context.ui.containerColor,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withAlpha(5),
-              blurRadius: 10,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
-          spacing: 4,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            messageContent,
-
-            // Общий футер с датой
-            Padding(
-              padding: const EdgeInsets.only(bottom: 6, right: 10, top: 2),
-              child: Align(
-                alignment: Alignment.bottomRight,
-                child: Text(
-                  formatSmartDate(message.message.createdAt),
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: context.ui.fontColorPrimary.withAlpha(120),
+    return Padding(
+      // Нижний отступ между сообщениями в ленте
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          // 1. Основной кликабельный контейнер (теперь он чуть выше, чтобы вместить таблетку)
+          GestureDetector(
+            onLongPressStart: onLongPress != null
+                ? (details) async => _showPopUp(context, details)
+                : null,
+            child: Container(
+              padding: const EdgeInsets.all(4),
+              // Важно: делаем нижний маргин внутри контейнера, чтобы визуально карточка
+              // кончалась выше, а физически ее границы доходили до конца таблетки!
+              margin: const EdgeInsets.only(bottom: 12),
+              decoration: BoxDecoration(
+                color: context.ui.containerColor,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withAlpha(5),
+                    blurRadius: 10,
+                    offset: const Offset(0, 2),
                   ),
+                ],
+              ),
+              child: Column(
+                spacing: 4,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  messageContent,
+
+                  // Общий футер с датой
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 16, right: 10, top: 2), // Дали больше отступа снизу
+                    child: Align(
+                      alignment: Alignment.bottomRight,
+                      child: Text(
+                        formatSmartDate(message.message.createdAt),
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: context.ui.fontColorPrimary.withAlpha(120),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // 2. Таблетка комментария. Теперь у нее позиция bottom: 0!
+          // Она сидит на физической границе Stack и контейнера, поэтому кликается идеально.
+          Positioned(
+            bottom: 0,
+            left: 16,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque, // Гарантирует обработку тапа по всей площади
+              onTap: onCommentsTap,
+              child: Container(
+                height: 32,
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                decoration: BoxDecoration(
+                  color: context.ui.containerColor,
+                  borderRadius: BorderRadius.circular(32),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withAlpha(15),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      '${message.message.countComments}',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: context.ui.fontColorHint,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Icon(
+                      Icons.chat_bubble_outline_rounded,
+                      size: 16,
+                      color: context.ui.fontColorHint,
+                    ),
+                  ],
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
