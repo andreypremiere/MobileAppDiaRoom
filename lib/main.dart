@@ -40,6 +40,7 @@ import 'package:provider/provider.dart';
 import 'models/enums/diary/search_method.dart';
 import 'models/enums/global_search/global_search_method.dart';
 import 'package:flutter_quill/flutter_quill.dart';
+import 'package:flutter_localizations/flutter_localizations.dart'; // Нужен для Global локализаций
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -80,15 +81,15 @@ class App extends StatelessWidget {
     final auth = context.watch<AuthProvider>();
     final themeProvider = context.watch<ThemeProvider>();
     return MaterialApp.router(
-      // localizationsDelegates: const [
-      //   // Стандартные делегаты для работы компонентов Flutter (кнопки, даты, инпуты)
-      //   GlobalMaterialLocalizations.delegate,
-      //   GlobalWidgetsLocalizations.delegate,
-      //   GlobalCupertinoLocalizations.delegate,
-      //
-      //   // Делегат самого flutter_quill, который исправляет ошибку
-      //   FlutterQuillLocalizations.delegate,
-      // ],
+      localizationsDelegates: const [
+        // Стандартные делегаты для работы компонентов Flutter (кнопки, даты, инпуты)
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+
+        // Делегат самого flutter_quill, который исправляет ошибку
+        FlutterQuillLocalizations.delegate,
+      ],
       supportedLocales: const [
         Locale('ru', 'RU'), // Основной язык твоего приложения DiaRoom
         Locale('en', 'US'),

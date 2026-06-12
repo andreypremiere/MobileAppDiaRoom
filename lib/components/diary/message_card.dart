@@ -7,6 +7,7 @@ import 'package:dia_room/models/enums/diary/message_action.dart';
 import 'package:dia_room/models/enums/diary/message_type.dart';
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_quill/flutter_quill.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
@@ -135,19 +136,52 @@ class DiaryMessageCard extends StatelessWidget {
 
   Widget _buildStandardMessage(MessagePresentation message, BuildContext context) {
     return Column(
-      mainAxisSize: MainAxisSize.min, // Чтобы колонка не занимала весь экран
+      mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // 1. Текст сообщения
-        if (message.message.content != null && message.message.content!.isNotEmpty)
+        // 1. Отображение Rich Text (Quill Editor в режиме Read-Only)
+        if (message.message.contentJson != null && message.message.contentJson!.isNotEmpty)
           Padding(
-            padding: const EdgeInsets.all(6),
-            child: Text(
-              message.message.content!,
-              style: TextStyle(
-                fontSize: 15,
-                color: context.ui.fontColorPrimary,
-              ),
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+            child: Builder(
+              builder: (context) {
+                try {
+                  // Загружаем Delta JSON в документ Quill
+                  final doc = Document.fromJson(message.message.contentJson!);
+
+                  // Оборачиваем в стандартный DefaultTextStyle.
+                  // Теперь QuillEditor автоматически унаследует цвет и размер текста приложения!
+                  return DefaultTextStyle(
+                    style: TextStyle(color: context.ui.fontColorPrimary, fontSize: 15),
+                    child: QuillEditor(
+                      focusNode: FocusNode(),
+                      scrollController: ScrollController(),
+                      // 🔥 ИСПРАВЛЕНИЕ 1: Переносим readOnly: true прямо в конструктор QuillController
+                      controller: QuillController(
+                        document: doc,
+                        selection: const TextSelection.collapsed(offset: 0),
+                        readOnly: true,
+                      ),
+                      config: QuillEditorConfig(
+                        autoFocus: false,
+                        expands: false,
+                        scrollable: false, // Отключаем внутренний скролл, чтобы не ломать ListView чата
+                        showCursor: false,
+                        enableInteractiveSelection: true, // Позволяет выделять и копировать текст
+                        enableSelectionToolbar: true,
+                        // 🔥 ИСПРАВЛЕНИЕ 2: Убрали капризный customStyles с его VerticalSpacing.
+                        // Текст теперь стилизуется стабильно через DefaultTextStyle выше.
+                      ),
+                    ),
+                  );
+                } catch (e) {
+                  // Защита на случай, если в базе остались старые сообщения в виде обычных строк
+                  return Text(
+                    message.message.content ?? "Ошибка отображения формата текста",
+                    style: TextStyle(fontSize: 15, color: context.ui.fontColorPrimary),
+                  );
+                }
+              },
             ),
           ),
 
@@ -165,7 +199,7 @@ class DiaryMessageCard extends StatelessWidget {
               onTapWorkshop: () => _handleOnTapWorkshop(context),
               onTapPost: () => _handleOnTapPost(context)),
 
-        // Теги сообщения
+        // 4. Теги сообщения
         if (message.tags.isNotEmpty)
           TagsWidget(
             tags: message.tags,
