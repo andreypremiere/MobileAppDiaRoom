@@ -1,12 +1,16 @@
 import 'package:dia_room/models/enums/file_type.dart';
 import 'package:dia_room/models/post_creator/post_draft.dart';
 import 'package:dia_room/screens/authorization/registration_screen.dart';
+import 'package:dia_room/screens/comments_screen.dart';
 import 'package:dia_room/screens/diary/diary_screen.dart';
 import 'package:dia_room/screens/diary/list_diaries_screen.dart';
 import 'package:dia_room/screens/diary/search_messages.dart';
 import 'package:dia_room/screens/diary/select_folder_diary.dart';
 import 'package:dia_room/screens/diary/select_post_diary.dart';
 import 'package:dia_room/screens/global_search_screen.dart';
+import 'package:dia_room/screens/main_page_v2.dart';
+import 'package:dia_room/screens/publication_v2/create_post_v2_screen.dart';
+import 'package:dia_room/screens/publication_v2/personal_posts_screen_v2.dart';
 import 'package:dia_room/screens/room/room_settings_screen.dart';
 import 'package:dia_room/screens/publication/full_image_screen.dart';
 import 'package:dia_room/screens/publication/full_video_screen.dart';
@@ -33,8 +37,9 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import 'components/loading_widget/loader_widget.dart';
 import 'models/enums/diary/search_method.dart';
+import 'models/enums/global_search/global_search_method.dart';
+import 'package:flutter_quill/flutter_quill.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -75,6 +80,20 @@ class App extends StatelessWidget {
     final auth = context.watch<AuthProvider>();
     final themeProvider = context.watch<ThemeProvider>();
     return MaterialApp.router(
+      // localizationsDelegates: const [
+      //   // Стандартные делегаты для работы компонентов Flutter (кнопки, даты, инпуты)
+      //   GlobalMaterialLocalizations.delegate,
+      //   GlobalWidgetsLocalizations.delegate,
+      //   GlobalCupertinoLocalizations.delegate,
+      //
+      //   // Делегат самого flutter_quill, который исправляет ошибку
+      //   FlutterQuillLocalizations.delegate,
+      // ],
+      supportedLocales: const [
+        Locale('ru', 'RU'), // Основной язык твоего приложения DiaRoom
+        Locale('en', 'US'),
+      ],
+
       builder: (context, child) {
         final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -128,11 +147,19 @@ class App extends StatelessWidget {
         },
         routes: [
           // Главный экран ленты
-          GoRoute(path: '/', builder: (context, state) => MainPageScreen()),
+          GoRoute(path: '/', builder: (context, state) => MainPageScreenV2()),
+          // GoRoute(path: '/', builder: (context, state) => QuillEditorScreen()),
+
           GoRoute(
             path: '/settings',
             builder: (context, state) {
               return SettingsScreen();
+            },
+          ),
+          GoRoute(
+            path: '/create_post_v2',
+            builder: (context, state) {
+              return CreateInstagramPostScreen();
             },
           ),
 
@@ -163,7 +190,22 @@ class App extends StatelessWidget {
           GoRoute(
             path: '/search',
             builder: (context, state) {
-              return GlobalSearchScreen();
+              final textParam = state.uri.queryParameters['text'];
+
+              final methodParamStr = state.uri.queryParameters['method'];
+
+              GlobalSearchMethod? methodParam;
+              if (methodParamStr != null) {
+                methodParam = GlobalSearchMethod.values.firstWhere(
+                      (e) => e.name == methodParamStr,
+                  orElse: () => GlobalSearchMethod.room,
+                );
+              }
+
+              return GlobalSearchScreen(
+                text: textParam,
+                method: methodParam,
+              );
             },
           ),
           GoRoute(
@@ -249,6 +291,22 @@ class App extends StatelessWidget {
               final String roomId = state.pathParameters['roomId']!;
 
               return PersonalPostsScreen(roomId: roomId);
+            },
+          ),
+          GoRoute(
+            path: '/personalRoomPostsV2/:roomId',
+            builder: (context, state) {
+              final String roomId = state.pathParameters['roomId']!;
+
+              return PersonalPostsScreenV2(roomId: roomId);
+            },
+          ),
+          GoRoute(
+            path: '/posts_v2/comments/:postId',
+            builder: (context, state) {
+              final String postId = state.pathParameters['postId']!;
+
+              return PostCommentsScreen(postId: postId);
             },
           ),
 

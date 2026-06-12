@@ -58,6 +58,9 @@ dependencies:
   flutter_cache_manager: ^3.4.1
   shimmer: ^3.0.0
   crypto: ^3.0.7
+  image_size_getter: ^2.4.1
+  carousel_slider: ^5.1.2
+  flutter_quill: ^11.5.0
 
 dev_dependencies:
   flutter_test:

@@ -8,15 +8,23 @@ import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 import '../../components/general/app_back_button.dart';
 import '../api/account_api.dart';
+import '../api/post_v2_api.dart';
 import '../components/global_search_screen/room_tile.dart';
 import '../components/loading_widget/error_widget.dart';
 import '../components/loading_widget/loader_widget.dart';
+import '../components/post-v2/card.dart';
 import '../components/post_card/feed_card.dart';
+import '../contracts/posts_v2/responses/post_response.dart';
 import '../models/global_search/room_info.dart';
 
 class GlobalSearchScreen extends StatefulWidget {
+  final String? text;
+  final GlobalSearchMethod? method;
+
   const GlobalSearchScreen({
     super.key,
+    this.text,
+    this.method,
   });
 
   @override
@@ -39,6 +47,18 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
+
+    if (widget.method != null) {
+      _currentMethod = widget.method!;
+    }
+
+    if (widget.text != null) {
+      _searchController.text = widget.text!;
+    }
+
+    if (_searchController.text.isNotEmpty) {
+      _searchValues();
+    }
 
   }
 
@@ -177,6 +197,30 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
             _foundValues.addAll(foundPosts.posts);
           });
           break;
+
+        case (GlobalSearchMethod.postV2):
+          final response = await searchPostsV2(
+            page: _currentPage,
+            limit: _limit,
+            value: _searchController.text.trim(),
+          );
+
+          if (!mounted) return;
+
+          if (!response.success) {
+            setState(() {
+              _errorMessage = response.message ?? "Не выполнить поиск публикаций.";
+            });
+            return;
+          }
+
+          final PostsRoom foundPosts = PostsRoom.fromMap(response.data);
+          incomingLength = foundPosts.posts.length;
+
+          setState(() {
+            _foundValues.addAll(foundPosts.posts);
+          });
+          break;
       }
 
       if (mounted) {
@@ -241,7 +285,12 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
                 child: TextField(
                   controller: _searchController,
                   decoration: InputDecoration(
-                    hintText: _currentMethod == GlobalSearchMethod.room ? '@id или никнейм' : 'Название публикации',
+                    hintText: switch (_currentMethod) {
+                      GlobalSearchMethod.room => 'id или никнейм',
+                      GlobalSearchMethod.post => 'Название статьи',
+                      GlobalSearchMethod
+                          .postV2 => 'Название хештега',
+                    },
                     border: InputBorder.none,
                     contentPadding: EdgeInsets.only(left: 10),
                     suffixIcon: IconButton(
@@ -267,35 +316,6 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
         children: [
           _panelButtons(),
           _buildBody()
-          // Expanded(
-          //   child: ListView.separated(
-          //     separatorBuilder: (context, index) => const SizedBox(height: 6),
-          //     controller: _scrollController,
-          //     itemCount: _searchController.text.trim().isEmpty
-          //         ? 1
-          //         : (_foundValues.length + (_isLoading ? 1 : 0)),
-          //     itemBuilder: (context, index) {
-          //       if (_searchController.text.trim().isEmpty) {
-          //         return SizedBox.shrink();
-          //       } else {
-          //         if (index == _foundValues.length) {
-          //           return const Center(
-          //             child: Padding(
-          //               padding: EdgeInsets.all(8.0),
-          //               child: CircularProgressIndicator(),
-          //             ),
-          //           );
-          //         }
-          //         switch (_currentMethod) {
-          //           case GlobalSearchMethod.room:
-          //             return RoomTile(room: _foundValues[index] as RoomInfo,);
-          //           case GlobalSearchMethod.post:
-          //             return FeedPostComponent(post: _foundValues[index] as FeedPost);
-          //         }
-          //       }
-          //     },
-          //   ),
-          // ),
         ],
       ),
     );
@@ -364,6 +384,10 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
               return RoomTile(room: _foundValues[index] as RoomInfo);
             case GlobalSearchMethod.post:
               return FeedPostComponent(post: _foundValues[index] as FeedPost);
+            case GlobalSearchMethod.postV2:
+              return PostCard(
+                post: _foundValues[index] as PostResponse,
+              );
           }
         },
       ),

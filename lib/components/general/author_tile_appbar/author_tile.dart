@@ -18,35 +18,36 @@ class AuthorTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      // Скругление эффекта нажатия (splash) подгоняем под общую форму
-      borderRadius: BorderRadius.circular(12),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: 4,
-          vertical: 4,
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min, // Строго по контенту
-          children: [
-            // Аватар комнаты
-            AppAvatar(
-              avatarPath: author.avatar,
-              radius: 18,
-              enableFullScreenPreview: false,
-            ),
-            const SizedBox(width: 10),
-            // Название комнаты
-            Text(
-              author.roomName,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: context.ui.fontColorPrimary, // Твой фирменный цвет шрифта
+    // ВСТАВЛЯЕМ MATERIAL ТУТ
+    return Material(
+      color: Colors.transparent, // Чтобы не перекрыть фон карточки
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12), // Скругление для эффекта
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: 4,
+            vertical: 4,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AppAvatar(
+                avatarPath: author.avatar,
+                radius: 18,
+                enableFullScreenPreview: false,
               ),
-            ),
-          ],
+              const SizedBox(width: 10),
+              Text(
+                author.roomName,
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: context.ui.fontColorPrimary,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
