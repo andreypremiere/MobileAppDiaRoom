@@ -8,14 +8,11 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../api/account_api.dart';
-// Импортируем новый роут API и новую модель постов
 import '../../api/post_v2_api.dart';
 import '../../components/post-v2/card_manage.dart';
 import '../../contracts/posts_v2/responses/post_response.dart';
-import '../../components/post-v2/card.dart'; // Твоя новая универсальная PostCard
 
 import '../../components/general/app_back_button.dart';
-import '../../api/auth_response.dart';
 import '../../utils/auth_service.dart';
 
 import '../../components/general/author_tile_appbar/author_error_tile.dart';

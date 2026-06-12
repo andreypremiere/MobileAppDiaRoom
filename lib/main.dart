@@ -37,9 +37,9 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import 'components/loading_widget/loader_widget.dart';
 import 'models/enums/diary/search_method.dart';
 import 'models/enums/global_search/global_search_method.dart';
+import 'package:flutter_quill/flutter_quill.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -80,6 +80,20 @@ class App extends StatelessWidget {
     final auth = context.watch<AuthProvider>();
     final themeProvider = context.watch<ThemeProvider>();
     return MaterialApp.router(
+      // localizationsDelegates: const [
+      //   // Стандартные делегаты для работы компонентов Flutter (кнопки, даты, инпуты)
+      //   GlobalMaterialLocalizations.delegate,
+      //   GlobalWidgetsLocalizations.delegate,
+      //   GlobalCupertinoLocalizations.delegate,
+      //
+      //   // Делегат самого flutter_quill, который исправляет ошибку
+      //   FlutterQuillLocalizations.delegate,
+      // ],
+      supportedLocales: const [
+        Locale('ru', 'RU'), // Основной язык твоего приложения DiaRoom
+        Locale('en', 'US'),
+      ],
+
       builder: (context, child) {
         final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -134,6 +148,8 @@ class App extends StatelessWidget {
         routes: [
           // Главный экран ленты
           GoRoute(path: '/', builder: (context, state) => MainPageScreenV2()),
+          // GoRoute(path: '/', builder: (context, state) => QuillEditorScreen()),
+
           GoRoute(
             path: '/settings',
             builder: (context, state) {

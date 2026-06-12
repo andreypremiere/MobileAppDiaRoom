@@ -60,6 +60,7 @@ dependencies:
   crypto: ^3.0.7
   image_size_getter: ^2.4.1
   carousel_slider: ^5.1.2
+  flutter_quill: ^11.5.0
 
 dev_dependencies:
   flutter_test:
