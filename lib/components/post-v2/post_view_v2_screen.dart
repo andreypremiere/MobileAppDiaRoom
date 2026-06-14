@@ -1,0 +1,116 @@
+import 'package:dia_room/components/general/app_back_button.dart';
+import 'package:flutter/material.dart';
+import 'package:dia_room/utils/app_theme.dart';
+import '../../api/post_v2_api.dart';
+import '../../contracts/posts_v2/responses/post_response.dart';
+import '../../components/loading_widget/error_widget.dart';
+import '../../components/loading_widget/loader_widget.dart';
+import '../../components/post-v2/card.dart'; // Твоя стандартная PostCard
+
+class PostViewScreen extends StatefulWidget {
+  final String postId;
+  final PostResponse? post; // Необязательный объект из ленты
+
+  const PostViewScreen({
+    super.key,
+    required this.postId,
+    this.post,
+  });
+
+  @override
+  State<PostViewScreen> createState() => _PostViewScreenState();
+}
+
+class _PostViewScreenState extends State<PostViewScreen> {
+  PostResponse? _post;
+  bool _isLoading = false;
+  String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Если объект уже передан в конструктор, сразу используем его
+    if (widget.post != null) {
+      _post = widget.post;
+      _isLoading = false;
+    } else {
+      // Если объекта нет (переход по ссылке), запускаем загрузку с бэкенда
+      _loadPost();
+    }
+  }
+
+  Future<void> _loadPost() async {
+    if (!mounted) return;
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      // Запрос к бэкенду по ID
+      final response = await getPostById(postId: widget.postId);
+
+      if (response.success && response.data != null) {
+        if (mounted) {
+          setState(() {
+            _post = PostResponse.fromMap(response.data as Map<String, dynamic>);
+            _isLoading = false;
+          });
+        }
+      } else {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+            _errorMessage = response.message ?? "Не удалось загрузить публикацию";
+          });
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = "Произошла ошибка при загрузке. Попробуйте позже.";
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return PopScope(
+        canPop: false, // Блокируем дефолтный поп, чтобы обработать вручную
+        onPopInvokedWithResult: (didPop, result) async {
+          if (didPop) return;
+          // Возвращаем текущее состояние поста на предыдущий экран
+          Navigator.of(context).pop(_post);
+        },
+        child: Scaffold(
+      appBar: AppBar(
+        backgroundColor: context.ui.appBarColor,
+        elevation: 0,
+        leading: AppBackButton(onPressed: () => Navigator.of(context).pop(_post),),
+      ),
+      body: _isLoading
+          ? const Center(child: DiaRoomLoader())
+          : _errorMessage != null
+          ? DiaRoomErrorView(
+        errorMessage: _errorMessage!,
+        onRefresh: _loadPost,
+      )
+          : _post == null
+          ? Center(child: Text("Публикация не найдена", style: TextStyle(color: context.ui.fontColorPrimary)))
+          : RefreshIndicator(
+        color: context.ui.primaryColor,
+        onRefresh: _loadPost,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: PostCard(post: _post!),
+          ),
+        ),
+      ),
+    ));
+  }
+}

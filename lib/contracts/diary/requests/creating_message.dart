@@ -4,7 +4,7 @@ import 'package:dia_room/models/enums/diary/message_type.dart';
 
 class CreatingMessage {
   final MessageType type;
-  final String? text;
+  final List<dynamic>? contentJson;
   final List<AttachmentCreating> attachments;
   final String? workshopFolderId;
   final String? publicationPostId;
@@ -12,7 +12,7 @@ class CreatingMessage {
 
   CreatingMessage({
     required this.type,
-    this.text,
+    this.contentJson,
     this.attachments = const [],
     this.workshopFolderId,
     this.publicationPostId,
@@ -22,7 +22,7 @@ class CreatingMessage {
   Map<String, dynamic> toMap() {
     return {
       'msgType': type.toJson(),
-      'content': text,
+      'contentJson': contentJson,
       'attachments': attachments.map((x) => x.toMap()).toList(),
       'workshopFolderId': workshopFolderId,
       'publicationPostId': publicationPostId,

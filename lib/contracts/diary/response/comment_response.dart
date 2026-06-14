@@ -1,17 +1,18 @@
-import 'package:dia_room/models/post_view/author.dart';
-
 import '../../../models/i_comment_item.dart';
+import '../../../models/post_view/author.dart';
 
 class CommentResponse implements ICommentItem {
   final String id;
-  final String postId;
+  final String messageId;
+  final String roomId;
   final String text;
   final DateTime createdAt;
   final Author? author;
 
   const CommentResponse({
     required this.id,
-    required this.postId,
+    required this.messageId,
+    required this.roomId,
     required this.text,
     required this.createdAt,
     this.author,
@@ -20,8 +21,9 @@ class CommentResponse implements ICommentItem {
   factory CommentResponse.fromMap(Map<String, dynamic> map) {
     return CommentResponse(
       id: map['id'] ?? '',
-      postId: map['postId'] ?? '',
-      text: map['text'] ?? '',
+      messageId: map['messageId'] ?? '',
+      roomId: map['roomId'] ?? '',
+      text: map['content'] ?? '',
       createdAt: map['createdAt'] != null
           ? DateTime.parse(map['createdAt']).toLocal()
           : DateTime.now(),

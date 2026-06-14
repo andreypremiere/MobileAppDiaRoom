@@ -146,7 +146,7 @@ Future<AuthResponse> createComment({
 
     return AuthResponse(success: true, data: response.data);
   } on DioException catch (e) {
-    return handleDioError(e, "Не удалось опубликовать пост");
+    return handleDioError(e, "Не удалось опубликовать комментарий");
   }
 }
 
@@ -192,6 +192,22 @@ Future<AuthResponse> deletePost(
     return AuthResponse(success: true,);
   } on DioException catch (e) {
     return handleDioError(e, "Ошибка при удалени поста");
+  } catch (e) {
+    return handleSystemError(e);
+  }
+}
+
+Future<AuthResponse> getPostById({
+  required String postId
+}) async {
+  try {
+    final res = await ApiService.get('/post_v2/posts/$postId');
+    return AuthResponse(
+      success: true,
+      data: res.data,
+    );
+  } on DioException catch (e) {
+    return handleDioError(e, "Не удалось получить пост");
   } catch (e) {
     return handleSystemError(e);
   }
