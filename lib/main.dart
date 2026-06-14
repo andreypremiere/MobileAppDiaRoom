@@ -39,8 +39,10 @@ import 'package:provider/provider.dart';
 
 import 'api/diary_api.dart';
 import 'api/post_v2_api.dart';
+import 'components/post-v2/post_view_v2_screen.dart';
 import 'contracts/diary/response/comment_response.dart' as message_contract;
 import 'contracts/posts_v2/responses/comment_response.dart' as post_contract;
+import 'contracts/posts_v2/responses/post_response.dart';
 import 'models/enums/diary/search_method.dart';
 import 'models/enums/global_search/global_search_method.dart';
 import 'package:flutter_quill/flutter_quill.dart';
@@ -331,6 +333,19 @@ class App extends StatelessWidget {
                     getMessageComments(messageId: id, page: page, limit: limit), // твой метод API для сообщений (замени имя на свое)
                 onSendCommentApi: ({required id, required text}) =>
                     createMessageComment(messageId: id, text: text), // твой метод API для сообщений (замени имя на свое)
+              );
+            },
+          ),
+
+          GoRoute(
+            path: '/post_v2/:id',
+            builder: (context, state) {
+              final postId = state.pathParameters['id'] ?? '';
+              final postResponse = state.extra as PostResponse?;
+
+              return PostViewScreen(
+                postId: postId,
+                post: postResponse,
               );
             },
           ),

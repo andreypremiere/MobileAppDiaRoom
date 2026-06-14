@@ -1,6 +1,7 @@
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:go_router/go_router.dart';
 
 // Импорты твоих новых сервисов, моделей и компонентов
 import '../api/post_v2_api.dart';
@@ -10,7 +11,9 @@ import '../components/loading_widget/error_widget.dart';
 import '../components/loading_widget/loader_widget.dart';
 import '../components/main_page_screen/bottom_menu/bottom_menu_component.dart';
 import '../components/main_page_screen/bottom_menu/bottom_menu_item.dart';
+import '../components/post-v2/pinterest_post_card.dart';
 import '../contracts/posts_v2/responses/post_response.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 
 class MainPageScreenV2 extends StatefulWidget {
   const MainPageScreenV2({super.key});
@@ -29,6 +32,8 @@ class _StateMainPageScreen extends State<MainPageScreenV2> {
   bool _isLoading = false;
   bool _hasMore = true;
   String? _errorMessage;
+  // Добавляем флаг переключения вида
+  bool _isPinterestView = false;
 
   bool _isBottomMenuVisible = true;
   final ScrollController _scrollController = ScrollController();
@@ -72,6 +77,28 @@ class _StateMainPageScreen extends State<MainPageScreenV2> {
       duration: const Duration(milliseconds: 500),
       curve: Curves.easeInOut,
     );
+  }
+
+  Future<void> _navigateToPost(PostResponse post) async {
+    // Ждем возврата объекта из детального экрана
+    final updatedPost = await context.push<PostResponse>(
+      '/post_v2/${post.id}',
+      extra: post,
+    );
+
+    // Если вернулся обновленный пост (пользователь лайкнул или оставил коммент)
+    if (updatedPost != null && mounted) {
+      setState(() {
+        // Находим индекс старого поста в массиве и заменяем его на обновленный
+        final index = _posts.indexWhere((p) => p.id == post.id);
+        if (index != -1) {
+          _posts[index] = updatedPost;
+        }
+      });
+    } else if (mounted) {
+      // На случай, если объект мутировал по ссылке (для Pinterest вида)
+      setState(() {});
+    }
   }
 
   bool _handleScrollNotification(UserScrollNotification notification) {
@@ -173,13 +200,36 @@ class _StateMainPageScreen extends State<MainPageScreenV2> {
             child: CustomScrollView(
               controller: _scrollController,
               slivers: [
+                SliverAppBar(
+                  backgroundColor: context.ui.appBarColor,
+                  floating: true, // Скрывается при скролле вниз, появляется при скролле вверх
+                  title: Text(
+                    'Главная',
+                    style: TextStyle(color: context.ui.fontColorPrimary),
+                  ),
+                  actions: [
+                    IconButton(
+                      icon: Icon(
+                        _isPinterestView ? Icons.view_agenda_rounded : Icons.grid_view_rounded,
+                        color: context.ui.iconColorPrimary,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _isPinterestView = !_isPinterestView;
+                        });
+                      },
+                    ),
+                  ],
+                ),
                 // Основной список постов
                 SliverSafeArea(
-                  top: true,
+                  top: false,
                   sliver: SliverPadding(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 0,
-                      horizontal: 0,
+                    padding: const EdgeInsets.only(
+                      top: 8,
+                      left: 0,
+                      right: 0,
+                      bottom: 0
                     ),
                     sliver: _posts.isEmpty && _isLoading
                         ? const SliverFillRemaining(
@@ -191,19 +241,21 @@ class _StateMainPageScreen extends State<MainPageScreenV2> {
                         child: Text(_errorMessage ?? "Лента пуста"),
                       ),
                     )
+                        : _isPinterestView
+                        ? SliverMasonryGrid.count(
+                      crossAxisCount: 2,
+                      mainAxisSpacing: 10,
+                      crossAxisSpacing: 10,
+                      childCount: _posts.length,
+                      itemBuilder: (context, index) {
+                        return PinterestPostCard(post: _posts[index], onTap: () => _navigateToPost(_posts[index]));
+                      },
+                    )
                         : SliverList(
-                      delegate: SliverChildBuilderDelegate((
-                          context,
-                          index,
-                          ) {
+                      delegate: SliverChildBuilderDelegate((context, index) {
                         return Padding(
-                          padding: const EdgeInsets.only(
-                            bottom: 10,
-                          ),
-                          // 3. Заменяем старый компонент на нашу новую кастомную карточку
-                          child: PostCard(
-                            post: _posts[index],
-                          ),
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: PostCard(post: _posts[index]), // Твоя старая карточка
                         );
                       }, childCount: _posts.length),
                     ),
