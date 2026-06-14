@@ -11,7 +11,7 @@ class PublicationPost {
   Map<String, dynamic> metadata;
   WorkshopLink workshopLink = WorkshopLink();
 
-  Categories categorySlug;
+  Categories? categorySlug;
 
   List<BlockUpload>? payload;
 

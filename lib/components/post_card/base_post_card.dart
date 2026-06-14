@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 class BasePostCard extends StatelessWidget {
   final String title;
   final String? previewUrl;
-  final Categories category;
+  final Categories? category;
   final VoidCallback onTap;
   final Widget bottomPanel;
   final Widget? topAction;
@@ -40,7 +40,7 @@ class BasePostCard extends StatelessWidget {
                 child: Stack(
                   children: [
                     _buildImage(context),
-                    _buildCategoryBadge(context),
+                    // category != null ? _buildCategoryBadge(context) : SizedBox.shrink(),
                     if (topAction != null)
                       Positioned(
                         top: 4,
@@ -110,7 +110,7 @@ class BasePostCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(8),
         ),
         child: Text(
-          category.label,
+          category?.label ?? "Не выбрана",
           style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: context.ui.fontColorPrimary),
         ),
       ),

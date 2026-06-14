@@ -151,13 +151,7 @@ class _StatePersonalPostsScreen extends State<PersonalPostsScreen> {
       centerTitle: false,
       title: _isMyRoom
           ? Text(
-        'Публикации',
-        style: TextStyle(
-          color: context.ui.fontColorPrimary,
-          fontFamily: 'SNPro',
-          fontSize: 20,
-          fontWeight: FontWeight.w600,
-        ),
+        'Статьи',
       )
           : _isLoadingRoomInfo
           ? AuthorShimmerTile()
@@ -168,12 +162,12 @@ class _StatePersonalPostsScreen extends State<PersonalPostsScreen> {
       actions: _isMyRoom
           ? [
         IconButton(
-          // onPressed: () => context.push('/newPublicPost'),
-          // icon: const Icon(Icons.add_rounded, size: 34),
-          // color: context.ui.fontColorPrimary,
-          onPressed: () => context.push('/create_post_v2'),
+          onPressed: () => context.push('/newPublicPost'),
           icon: const Icon(Icons.add_rounded, size: 34),
           color: context.ui.fontColorPrimary,
+          // onPressed: () => context.push('/create_post_v2'),
+          // icon: const Icon(Icons.add_rounded, size: 34),
+          // color: context.ui.fontColorPrimary,
         ),
       ]
           : null,

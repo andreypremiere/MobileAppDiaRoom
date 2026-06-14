@@ -186,11 +186,6 @@ class _AudioRecordScreenState extends State<AudioRecordScreen> {
         leading: const AppBackButton(),
         title: Text(
           'Голосовое сообщение',
-          style: TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.w600,
-            color: context.ui.fontColorPrimary,
-          ),
         ),
       ),
       body: Padding(

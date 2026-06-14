@@ -88,12 +88,6 @@ class _StateSelectPostDiary extends State<SelectPostDiary> {
         leading: AppBackButton(),
         title: Text(
           'Выберите публикацию',
-          style: TextStyle(
-            color: context.ui.fontColorPrimary,
-            fontFamily: 'SNPro',
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-          ),
         ),
       ),
       // Прокручиваемая колонка с постами

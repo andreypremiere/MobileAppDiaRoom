@@ -210,7 +210,6 @@ class _CreateInstagramPostScreenState extends State<CreateInstagramPostScreen> {
           leading: const AppBackButton(),
           title: const Text(
             'Новая публикация',
-            style: TextStyle(fontWeight: FontWeight.w600, fontSize: 22),
           ),
         ),
         body: _isPublication ? Center(child: DiaRoomLoader(),) : ListView(

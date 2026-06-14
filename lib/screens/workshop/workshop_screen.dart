@@ -472,7 +472,6 @@ class _WorkshopScreenState extends State<WorkshopScreen> {
         leading: const AppBackButton(),
         title: Text(
           'Мастерская',
-          style: TextStyle(color: context.ui.fontColorPrimary),
         ),
         actions: [
           if (isMyRoom)

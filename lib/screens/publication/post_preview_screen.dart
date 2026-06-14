@@ -23,11 +23,8 @@ class PostPreviewScreen extends StatelessWidget {
           leading: AppBackButton(),
           title: Text(
             'Предпросмотр',
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w600,
-              color: context.ui.fontColorPrimary
-            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
           actions: [
             AppBarButton(

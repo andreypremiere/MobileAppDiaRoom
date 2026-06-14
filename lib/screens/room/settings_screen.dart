@@ -610,12 +610,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
         centerTitle: false,
         title: const Text(
           'Настройки',
-          style: TextStyle(
-            color: Colors.black,
-            fontWeight: FontWeight.w600,
-            fontSize: 22,
-            fontFamily: 'SNPro',
-          ),
         ),
         iconTheme: const IconThemeData(color: Colors.black),
       ),

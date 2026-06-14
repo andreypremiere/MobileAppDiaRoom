@@ -185,7 +185,6 @@ class _CommentsScreenState<T extends ICommentItem> extends State<CommentsScreen<
             leading: AppBackButton(onPressed: () => context.pop(_commentsAddedCount)),
             title: Text(
               "Комментарии",
-              style: TextStyle(color: context.ui.fontColorPrimary),
             ),
           ),
           body: Column(

@@ -7,7 +7,7 @@ class PostDraft {
   List<BlockPost> blocks;
   String name;
   String? previewPath;
-  Categories category;
+  Categories? category;
   List<String> hashtags;
   WorkshopLink workshopLink = WorkshopLink();
 
@@ -16,7 +16,7 @@ class PostDraft {
   PostDraft({
     this.name = '',
     this.previewPath,
-    this.category = Categories.defaultVal,
+    this.category,
     List<String>? hashtags,
     List<BlockPost>? blocks,
     Map<String, dynamic>? metadata,

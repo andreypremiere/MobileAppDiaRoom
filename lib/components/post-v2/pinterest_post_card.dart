@@ -193,22 +193,7 @@ class _PinterestPostCardState extends State<PinterestPostCard> {
               padding: const EdgeInsets.all(8.0),
               child: Row(
                 children: [
-                  // Лайки (Работаем напрямую с widget.post)
-                  Icon(
-                    widget.post.isLiked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-                    color: widget.post.isLiked ? Colors.redAccent : context.ui.fontColorHint,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    '${widget.post.likesCount}',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: context.ui.fontColorHint,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-
+                  Spacer(),
                   // Комментарии (Работаем напрямую с widget.post)
                   Icon(
                     Icons.chat_bubble_outline_rounded,
@@ -218,6 +203,20 @@ class _PinterestPostCardState extends State<PinterestPostCard> {
                   const SizedBox(width: 4),
                   Text(
                     "${widget.post.commentsCount}",
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: context.ui.fontColorHint,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Icon(
+                    widget.post.isLiked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                    color: widget.post.isLiked ? Colors.redAccent : context.ui.fontColorHint,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    '${widget.post.likesCount}',
                     style: TextStyle(
                       fontSize: 13,
                       color: context.ui.fontColorHint,

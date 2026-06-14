@@ -58,7 +58,7 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
   void removeEmptyBlocks() {
     postDraft.blocks.removeWhere((block) {
       if (block is BlockTextCreating) {
-        return block.controller.text.trim().isEmpty;
+        return block.isEmpty();
       }
       if (block is BlockPhotosCreating) {
         return block.isEmpty();
@@ -172,8 +172,7 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
 
   /// Специфичные методы инициализации блоков (Текст, Фото, Видео)
   void _addTextBlock() {
-    final newController = TextEditingController();
-    final newBlock = BlockTextCreating(controller: newController);
+    final newBlock = BlockTextCreating();
 
     if (mounted) {
       setState(() {
@@ -255,11 +254,8 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
             leading: AppBackButton(onPressed: handleBack,),
             title: Text(
               'Создание публикации',
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.w600,
-                color: context.ui.fontColorPrimary
-              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
             actions: [
               AppBarButton(text: "Далее", onPressed: () {
@@ -436,8 +432,7 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
                   if (_focusedIndex != null)
                     /// Появляется только для определенного типа
                     if (_focusedIndex != null &&
-                        (postDraft.blocks[_focusedIndex!] is BlockTextCreating ||
-                            postDraft.blocks[_focusedIndex!] is BlockPhotosCreating))
+                        (postDraft.blocks[_focusedIndex!] is BlockPhotosCreating))
                       Positioned(
                         bottom: 10,
                         left: 10,

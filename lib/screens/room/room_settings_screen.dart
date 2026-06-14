@@ -327,7 +327,6 @@ class _RoomSettingsScreenState extends State<RoomSettingsScreen> {
       elevation: 0,
       title: const Text(
         'Настройка комнаты',
-        style: TextStyle(fontWeight: FontWeight.w600, fontSize: 22),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       ),
