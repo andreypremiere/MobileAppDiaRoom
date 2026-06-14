@@ -300,7 +300,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
             }
           }
           break;
-        case LinkAction.linkPost:
+        case LinkAction.linkArticle:
           if (mounted) {
             final postId = await context.push<String?>('/select_post_diary');
 
@@ -310,6 +310,17 @@ class _DiaryScreenState extends State<DiaryScreen> {
               });
             }
           }
+          break;
+        case LinkAction.linkPost:
+          // if (mounted) {
+          //   final postId = await context.push<String?>('/select_post_diary');
+          //
+          //   if (postId != null) {
+          //     setState(() {
+          //       _linkPost = postId;
+          //     });
+          //   }
+          // }
           break;
       }
     }

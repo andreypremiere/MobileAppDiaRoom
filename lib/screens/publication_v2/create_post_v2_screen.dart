@@ -159,6 +159,18 @@ class _CreateInstagramPostScreenState extends State<CreateInstagramPostScreen> {
     }
   }
 
+  Future<void> _handleBindLinkArticle() async {
+    if (mounted) {
+      final postId = await context.push<String?>('/select_post_diary');
+
+      if (postId != null) {
+        setState(() {
+          _postDraft.articleLinkId = postId;
+        });
+      }
+    }
+  }
+
   Future<void> _submitPublication() async {
     if (_postDraft.imagesPaths.isEmpty) {
       if (mounted) {
@@ -230,9 +242,15 @@ class _CreateInstagramPostScreenState extends State<CreateInstagramPostScreen> {
             _buildTagsSection(),
 
             const SizedBox(height: 14),
-            _buildSectionTitle("Интерактивная ссылка"),
+            _buildSectionTitle("Добавить каталог"),
             const SizedBox(height: 10),
             _buildWorkshopSection(),
+
+            const SizedBox(height: 14),
+            _buildSectionTitle("Добавить статью"),
+            const SizedBox(height: 10),
+            _buildArticleSection(),
+
 
             const SizedBox(height: 20),
             _buildPublishButton(),
@@ -452,7 +470,7 @@ class _CreateInstagramPostScreenState extends State<CreateInstagramPostScreen> {
     if (isLinkSelected) {
       return CustomLinkButton(
         icon: Icons.burst_mode_outlined,
-        label: "Привязано к объекту Мастерской",
+        label: "Каталог",
         onClose: () => setState(() => _postDraft.workshopLinkId = null),
       );
     }
@@ -470,7 +488,39 @@ class _CreateInstagramPostScreenState extends State<CreateInstagramPostScreen> {
         child: const Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text("Связать с работой из мастерской...", style: TextStyle(fontSize: 15, color: Colors.black26)),
+            Text("Выбрать каталог", style: TextStyle(fontSize: 15, color: Colors.black26)),
+            Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildArticleSection() {
+    final bool isLinkSelected = _postDraft.articleLinkId != null;
+
+    if (isLinkSelected) {
+      return CustomLinkButton(
+        icon: Icons.article_outlined,
+        label: "Статья",
+        onClose: () => setState(() => _postDraft.articleLinkId = null),
+      );
+    }
+
+    return InkWell(
+      onTap: _handleBindLinkArticle,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFE0E0E0)),
+        ),
+        child: const Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text("Выбрать статью", style: TextStyle(fontSize: 15, color: Colors.black26)),
             Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
           ],
         ),

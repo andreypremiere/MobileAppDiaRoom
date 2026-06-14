@@ -6,6 +6,7 @@ class PostResponseBase {
   final String? description;
   final List<String> hashtags;
   final String? workshopLink;
+  final String? articleLink;
   final PostStatus status;
   final DateTime createdAt;
   final List<PostMediaResponse> files;
@@ -15,6 +16,7 @@ class PostResponseBase {
     this.description,
     required this.hashtags,
     this.workshopLink,
+    this.articleLink,
     required this.status,
     required this.createdAt,
     required this.files,
@@ -26,6 +28,7 @@ class PostResponseBase {
       'description': description,
       'hashtags': hashtags,
       'workshopLink': workshopLink,
+      'articleLink': articleLink,
       'status': status.value,
       'createdAt': createdAt.toIso8601String(),
     };
@@ -37,6 +40,7 @@ class PostResponseBase {
       description: map['description'] as String?,
       hashtags: List<String>.from(map['hashtags'] ?? []),
       workshopLink: map['workshopLink'] as String?,
+      articleLink: map['articleLink'] as String?,
       status: PostStatus.fromMap(map['status'] as String),
       // Парсим ISO-строку времени в локальное время девайса
       createdAt: DateTime.parse(map['createdAt'] as String).toLocal(),

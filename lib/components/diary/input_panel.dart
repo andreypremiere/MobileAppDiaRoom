@@ -125,8 +125,8 @@ class _DiaryInputPanelState extends State<DiaryInputPanel> {
           AttachedLinksBlock(
               workshopLink: widget.linkWorkshop,
               postLink: widget.linkPost,
-              labelWorkshop: 'Ссылка в мастерской',
-              labelPost: 'Ссылка в публикациях',
+              labelWorkshop: 'Каталог',
+              labelPost: 'Статья',
               onRemovePost: widget.onClosePost,
               onRemoveWorkshop: widget.onCloseWorkshop),
         if (widget.selectedMedia.isNotEmpty) _buildMediaPreview(context),

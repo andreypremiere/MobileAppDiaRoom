@@ -31,6 +31,7 @@ class TextBlockWidget extends StatelessWidget {
         selection: const TextSelection.collapsed(offset: 0),
       );
     }
+    controller.readOnly = true;
 
     return QuillEditor.basic(
       controller: controller,

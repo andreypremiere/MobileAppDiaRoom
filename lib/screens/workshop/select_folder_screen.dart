@@ -137,7 +137,7 @@ class _SelectFolderScreenState extends State<SelectFolderScreen> {
       appBar: AppBar(
         automaticallyImplyLeading: false,
         backgroundColor: context.ui.appBarColor,
-        title: Text('Выберите место'),
+        title: Text('Выберите каталог'),
         leading: AppBackButton(onPressed: () => context.pop()),
       ),
       // Кнопка подтверждения

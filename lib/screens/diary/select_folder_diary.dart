@@ -91,7 +91,7 @@ class _SelectFolderScreenState extends State<SelectFolderDiaryScreen> {
         automaticallyImplyLeading: false,
         backgroundColor: context.ui.appBarColor,
         title: Text(
-          'Выберите папку',
+          'Выберите каталог',
         ),
         leading: AppBackButton(onPressed: () => context.pop()),
       ),

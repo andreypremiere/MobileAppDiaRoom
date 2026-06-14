@@ -253,7 +253,7 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
             backgroundColor: context.ui.appBarColor,
             leading: AppBackButton(onPressed: handleBack,),
             title: Text(
-              'Создание публикации',
+              'Новая статья',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),

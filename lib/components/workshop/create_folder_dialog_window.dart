@@ -28,7 +28,7 @@ Future<void> showCreateFolderDialog(
         autofocus: true,
         style: TextStyle(color: context.ui.fontColorPrimary),
         decoration: InputDecoration(
-          hintText: 'Имя папки',
+          hintText: 'Имя каталога',
           hintStyle: TextStyle(color: context.ui.fontColorPrimary.withAlpha(100)),
           enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: context.ui.primaryColor)),
         ),

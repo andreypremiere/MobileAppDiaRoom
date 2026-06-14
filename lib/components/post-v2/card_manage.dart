@@ -1,3 +1,4 @@
+import 'package:dia_room/components/post-v2/post_article_link.dart';
 import 'package:dia_room/components/post-v2/post_description.dart';
 import 'package:dia_room/components/post-v2/post_hashtags.dart';
 import 'package:dia_room/components/post-v2/post_media_carousel.dart';
@@ -198,6 +199,7 @@ class _PostManageCardState extends State<PostManageCard> {
 
           // 6. Ссылка на мастерскую
           PostWorkshopLink(workshopLink: widget.post.workshopLink, roomId: widget.post.roomId),
+          PostArticleLink(articleLink: widget.post.articleLink, roomId: widget.post.roomId),
 
           const SizedBox(height: 6),
         ],

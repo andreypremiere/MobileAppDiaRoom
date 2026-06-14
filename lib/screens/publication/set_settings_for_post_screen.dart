@@ -298,7 +298,7 @@ class _SetSettingsForPostState extends State<SetSettingsForPostScreen> {
       elevation: 0,
       leading: const AppBackButton(),
       title: const Text(
-        'Настройки публикации',
+        'Настройка',
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       ),

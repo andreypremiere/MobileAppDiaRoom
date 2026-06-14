@@ -130,7 +130,7 @@ class DiaryMessageCard extends StatelessWidget {
     print('Там по посту');
     final postId = message.message.attachedObjectPostId;
     if (postId == null) return;
-    final String path = "/showPost/$postId";
+    final String path = "/showPost/${message.message.roomId}/$postId";
     context.push(path);
   }
 
@@ -251,7 +251,7 @@ class DiaryMessageCard extends StatelessWidget {
           AttachedLinksBlock(
               workshopLink: message.message.attachedObjectWorkshopId,
               postLink: message.message.attachedObjectPostId,
-              labelWorkshop: 'Ссылка в мастерской', labelPost: 'Ссылка в публикациях',
+              labelWorkshop: 'Каталог', labelPost: 'Статья',
               onTapWorkshop: () => _handleOnTapWorkshop(context),
               onTapPost: () => _handleOnTapPost(context)),
 

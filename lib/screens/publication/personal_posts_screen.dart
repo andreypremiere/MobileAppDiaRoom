@@ -235,7 +235,7 @@ class _StatePersonalPostsScreen extends State<PersonalPostsScreen> {
               onDelete: () async {
                 final bool? confirm = await AppDialogs.showConfirmDialog(
                   context,
-                  text: "Вы уверены, что хотите удалить пост?",
+                  text: "Вы уверены, что хотите удалить статью?",
                   cancelText: "Отмена",
                   confirmText: "Удалить",
                 );
@@ -253,7 +253,7 @@ class _StatePersonalPostsScreen extends State<PersonalPostsScreen> {
                     if (context.mounted) {
                       await AppInfoDialog.show(
                         context,
-                        result.message ?? "Не удалось удалить пост.",
+                        result.message ?? "Не удалось удалить статью.",
                       );
                     }
                   }

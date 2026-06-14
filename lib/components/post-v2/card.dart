@@ -1,3 +1,4 @@
+import 'package:dia_room/components/post-v2/post_article_link.dart';
 import 'package:dia_room/components/post-v2/post_description.dart';
 import 'package:dia_room/components/post-v2/post_hashtags.dart';
 import 'package:dia_room/components/post-v2/post_media_carousel.dart';
@@ -128,6 +129,7 @@ class _PostCardState extends State<PostCard> {
           PostDescription(description: widget.post.description), // Используем общий виджет
           PostHashtags(hashtags: widget.post.hashtags), // Используем общий виджет
           PostWorkshopLink(workshopLink: widget.post.workshopLink, roomId: widget.post.roomId), // Используем общий виджет
+          PostArticleLink(articleLink: widget.post.articleLink, roomId: widget.post.roomId),
           const SizedBox(height: 6),
         ],
       ),

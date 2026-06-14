@@ -215,7 +215,7 @@ class _ShowcaseButtonWidgetState extends State<ShowcaseButtonWidget> {
                   Icon(Icons.featured_video_outlined, size: 36, color: context.ui.primaryColor),
                   const SizedBox(height: 12),
                   Text(
-                    'Витрина',
+                    'Публикации',
                     style: TextStyle(
                       color: context.ui.fontColorPrimary,
                       fontSize: 16,
@@ -318,14 +318,14 @@ class _WorkshopButtonWidgetState extends State<WorkshopButtonWidget> {
             child: Row(
               children: [
                 // Убрана сложная подложка, оставлена лаконичная иконка
-                Icon(Icons.storage_outlined, color: context.ui.primaryColor, size: 28),
+                Icon(Icons.burst_mode_outlined, color: context.ui.primaryColor, size: 28),
                 const SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Мастерская',
+                        'Каталоги',
                         style: TextStyle(
                           color: context.ui.fontColorPrimary,
                           fontSize: 18,
