@@ -7,6 +7,7 @@ import 'package:dia_room/models/enums/post_v2/action_post.dart';
 import 'package:dia_room/models/enums/post_v2/post_status.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../api/auth_response.dart';
 import '../../api/post_v2_api.dart';
 import '../../contracts/posts_v2/responses/post_response.dart';
@@ -232,8 +233,23 @@ class _PostManageCardState extends State<PostManageCard> {
 
           // Справа сверху: Кнопка Поделиться
           IconButton(
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Поделиться")));
+            onPressed: () async {
+              // 1. Формируем ссылку и текст
+              final String shareUrl = 'https://diaroom.me/share/post/${widget.post.id}';
+              final String shareText = 'Посмотри пост в DiaRoom! \n$shareUrl';
+
+              // 2. Высчитываем координаты для iPad
+              final box = context.findRenderObject() as RenderBox?;
+              final sharePositionOrigin = box != null ? box.localToGlobal(Offset.zero) & box.size : null;
+
+              // 3. Новый синтаксис share_plus 10.0+ через SharePlus.instance
+              await SharePlus.instance.share(
+                  ShareParams(
+                      text: shareText,
+                      subject: 'Пост из социальной сети DiaRoom',
+                      sharePositionOrigin: sharePositionOrigin
+                  )
+              );
             },
             icon: Icon(Icons.share_outlined, color: context.ui.fontColorHint),
           ),

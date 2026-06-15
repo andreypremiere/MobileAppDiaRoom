@@ -339,6 +339,15 @@ class App extends StatelessWidget {
           ),
 
           GoRoute(
+            path: '/share/post/:id', // Слушаем именно браузерный путь из Gateway
+            redirect: (context, state) {
+              final postId = state.pathParameters['id'] ?? '';
+              // Мгновенно перенаправляем пользователя на твой стандартный экран
+              return '/post_v2/$postId';
+            },
+          ),
+
+          GoRoute(
             path: '/post_v2/:id',
             builder: (context, state) {
               final postId = state.pathParameters['id'] ?? '';
