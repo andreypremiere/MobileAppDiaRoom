@@ -134,6 +134,12 @@ class DiaryMessageCard extends StatelessWidget {
     context.push(path);
   }
 
+  void _handleOnTapPostV2(BuildContext context) {
+    final postId = message.message.attachedObjectPostV2Id;
+    if (postId == null) return;
+    final String path = "/post_v2/$postId";
+    context.push(path);
+  }
 
   Widget _buildStandardMessage(MessagePresentation message, BuildContext context) {
     return Column(
@@ -247,13 +253,15 @@ class DiaryMessageCard extends StatelessWidget {
 
         // 3. Кнопки ссылок (Объекты мастерской/посты)
         if (message.message.attachedObjectWorkshopId != null ||
-            message.message.attachedObjectPostId != null)
+            message.message.attachedObjectPostId != null || message.message.attachedObjectPostV2Id != null)
           AttachedLinksBlock(
               workshopLink: message.message.attachedObjectWorkshopId,
               postLink: message.message.attachedObjectPostId,
-              labelWorkshop: 'Каталог', labelPost: 'Статья',
+              postV2Link: message.message.attachedObjectPostV2Id,
+              labelWorkshop: 'Каталог', labelPost: 'Статья', labelPostV2: "Публикация",
               onTapWorkshop: () => _handleOnTapWorkshop(context),
-              onTapPost: () => _handleOnTapPost(context)),
+              onTapPost: () => _handleOnTapPost(context),
+              onTapPostV2: () => _handleOnTapPostV2(context)),
 
         // 4. Теги сообщения
         if (message.tags.isNotEmpty)

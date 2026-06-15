@@ -50,6 +50,7 @@ class UploadManager extends ChangeNotifier {
     List<SelectedMedia>? media,
     VideoRecordResult? videoNote,
     String? linkWorkshop,
+    String? linkPostV2,
     List<MessageTag>? selectedTags,
     String? linkPost,
     VoiceRecordResult? audioNote,
@@ -165,7 +166,9 @@ class UploadManager extends ChangeNotifier {
           contentJson: contentJson,
           attachments: attachments,
           workshopFolderId: linkWorkshop,
-          publicationPostId: linkPost, tags: selectedTags ?? []
+          publicationPostId: linkPost,
+          publicationPostV2Id: linkPostV2,
+          tags: selectedTags ?? []
         );
 
         print("ContentJson: ${creatingMessage.contentJson}");

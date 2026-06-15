@@ -13,6 +13,7 @@ class Message {
   final List<dynamic>? contentJson;
   final String? attachedObjectWorkshopId;
   final String? attachedObjectPostId;
+  final String? attachedObjectPostV2Id;
   final DateTime createdAt;
   final DateTime updatedAt;
   final DateTime? deletedAt;
@@ -27,6 +28,7 @@ class Message {
     required this.status,
     this.attachedObjectWorkshopId,
     this.attachedObjectPostId,
+    this.attachedObjectPostV2Id,
     required this.createdAt,
     required this.updatedAt,
     this.deletedAt,
@@ -70,6 +72,7 @@ class Message {
       contentJson: parsedJson,
       attachedObjectWorkshopId: map['attachedObjectWorkshopId'],
       attachedObjectPostId: map['attachedObjectPostId'],
+      attachedObjectPostV2Id: map['attachedObjectPostV2Id'],
       createdAt: map['createdAt'] != null
           ? DateTime.parse(map['createdAt'])
           : DateTime.now(),

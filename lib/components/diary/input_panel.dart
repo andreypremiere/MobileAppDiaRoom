@@ -19,8 +19,10 @@ class DiaryInputPanel extends StatefulWidget {
   final Widget addMenu;
   final String? linkWorkshop;
   final String? linkPost;
+  final String? linkPostV2;
   final VoidCallback? onCloseWorkshop;
   final VoidCallback? onClosePost;
+  final VoidCallback? onClosePostV2;
   final Function(String)? onCloseTag;
 
   const DiaryInputPanel({
@@ -33,8 +35,10 @@ class DiaryInputPanel extends StatefulWidget {
     required this.selectedTags,
     this.linkWorkshop,
     this.linkPost,
+    this.linkPostV2,
     this.onCloseWorkshop,
     this.onClosePost,
+    this.onClosePostV2,
     this.onCloseTag,
   });
 
@@ -121,14 +125,17 @@ class _DiaryInputPanelState extends State<DiaryInputPanel> {
       mainAxisSize: MainAxisSize.min,
       children: [
         _buildUploadProgress(context, isUploading, progress),
-        if (widget.linkWorkshop != null || widget.linkPost != null)
+        if (widget.linkWorkshop != null || widget.linkPost != null || widget.linkPostV2 != null)
           AttachedLinksBlock(
               workshopLink: widget.linkWorkshop,
               postLink: widget.linkPost,
+              postV2Link: widget.linkPostV2,
               labelWorkshop: 'Каталог',
               labelPost: 'Статья',
+              labelPostV2: "Публикация",
               onRemovePost: widget.onClosePost,
-              onRemoveWorkshop: widget.onCloseWorkshop),
+              onRemoveWorkshop: widget.onCloseWorkshop,
+              onRemovePostV2: widget.onClosePostV2),
         if (widget.selectedMedia.isNotEmpty) _buildMediaPreview(context),
         if (widget.selectedTags.isNotEmpty) _buildTagsPanel(),
         _buildInputRow(context, isUploading),

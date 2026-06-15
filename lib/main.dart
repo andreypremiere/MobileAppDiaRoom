@@ -39,6 +39,7 @@ import 'package:provider/provider.dart';
 
 import 'api/diary_api.dart';
 import 'api/post_v2_api.dart';
+import 'components/diary/select_post_v2.dart';
 import 'components/post-v2/post_view_v2_screen.dart';
 import 'contracts/diary/response/comment_response.dart' as message_contract;
 import 'contracts/posts_v2/responses/comment_response.dart' as post_contract;
@@ -347,6 +348,12 @@ class App extends StatelessWidget {
                 postId: postId,
                 post: postResponse,
               );
+            },
+          ),
+          GoRoute(
+            path: '/select_post_v2',
+            builder: (context, state) {
+              return SelectPostV2();
             },
           ),
 

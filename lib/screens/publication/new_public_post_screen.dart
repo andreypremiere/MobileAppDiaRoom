@@ -313,7 +313,14 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
                         ),
                         child: const Icon(Icons.add_rounded, size: 40),
                       ),
-                      onSelected: (value) => _addBlock(value),
+                      onSelected: (value) {
+                        // Даем меню закрыться, перенося добавление блока на следующий тик движка
+                        Future.delayed(Duration(milliseconds: 250), () {
+                          if (mounted) {
+                            _addBlock(value);
+                          }
+                        });
+                      },
                       itemBuilder: (context) => BlockType.values
                           .where((type) => type != BlockType.videos)
                           .map(
@@ -397,7 +404,14 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
                         ),
                         child: Icon(Icons.add_rounded, size: 40),
                       ),
-                      onSelected: (value) => _addBlock(value),
+                      onSelected: (value) {
+                        // Даем меню закрыться, перенося добавление блока на следующий тик движка
+                        Future.delayed(Duration(milliseconds: 250), () {
+                          if (mounted) {
+                            _addBlock(value);
+                          }
+                        });
+                      },
                       itemBuilder: (context) => BlockType.values
                           .where((type) => type != BlockType.videos)
                           .map(
