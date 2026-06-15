@@ -1,3 +1,7 @@
+import 'package:dia_room/api/account_api.dart';
+import 'package:dia_room/contracts/account-microservice/requests/check_version_request.dart';
+import 'package:dia_room/contracts/account-microservice/responses/check_version_response.dart';
+import 'package:dia_room/utils/utils.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'dio_service.dart';
@@ -62,6 +66,14 @@ class AuthProvider extends ChangeNotifier {
   String? _roomId;
   bool _isConfigured = false;
   // bool _isLoading = true;
+
+  String _versionStatus = 'NO_UPDATE'; // Может быть: NO_UPDATE, UPDATE, UPDATE_CRITICAL
+  String _versionMessage = '';
+  bool _isOptionalUpdateDismissed = false;
+
+  String get versionStatus => _versionStatus;
+  String get versionMessage => _versionMessage;
+  bool get isOptionalUpdateDismissed => _isOptionalUpdateDismissed;
 
   // Геттеры
   String? get userId => _userId;
@@ -143,6 +155,36 @@ class AuthProvider extends ChangeNotifier {
   Future<void> saveTokensSilently(String accessToken, String refreshToken) async {
     _parseAndSetToken(accessToken);
     await AuthService.saveTokens(access: accessToken, refresh: refreshToken);
+  }
+
+  Future<void> checkApplicationVersion() async {
+    try {
+      // 1. Получаем версию (код из предыдущего шага)
+      CheckVersionRequest info = await getAppVersionRequest();
+
+      final response = await checkVersion(info);
+
+      CheckVersionResponse data;
+      if (response.success) {
+        data = CheckVersionResponse.fromMap(response.data);
+      } else {
+        return;
+      }
+
+      if (response.data != null) {
+        _versionStatus = data.status;
+        _versionMessage = data.message;
+      }
+    } catch (e) {
+      _versionStatus = 'NO_UPDATE';
+    } finally {
+      notifyListeners();
+    }
+  }
+
+  void dismissOptionalUpdate() {
+    _isOptionalUpdateDismissed = true;
+    notifyListeners();
   }
 
 }
