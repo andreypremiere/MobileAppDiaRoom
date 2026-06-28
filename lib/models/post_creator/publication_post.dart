@@ -36,7 +36,6 @@ class PublicationPost {
       id: null,
       title: draft.name,
       previewPublicURL: null,
-      // На старте это локальный путь
       categorySlug: draft.category,
       hashtags: List.from(draft.hashtags),
       payload: null,

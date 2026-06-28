@@ -23,7 +23,6 @@ class PostCard extends StatefulWidget {
 }
 
 class _PostCardState extends State<PostCard> {
-  // Сюда инкапсулируем только логику лайка, остальной стейт ушел в дочерние компоненты
   late bool _isLiked;
   late int _likesCount;
   bool _isLikePending = false;
@@ -51,13 +50,11 @@ class _PostCardState extends State<PostCard> {
   }
 
   Future<void> _toggleLike() async {
-    if (_isLikePending) return; // Если запрос уже выполняется, игнорируем клик
+    if (_isLikePending) return;
 
-// 1. Сохраняем предыдущее состояние на случай ошибки сервера
     final bool oldIsLiked = _isLiked;
     final int oldLikesCount = _likesCount;
 
-// 2. Мгновенно обновляем UI (Optimistic UI)
     setState(() {
       _isLikePending = true;
       if (_isLiked) {
@@ -74,32 +71,27 @@ class _PostCardState extends State<PostCard> {
     try {
       final AuthResponse response;
 
-// 3. Вызываем соответствующий метод API в зависимости от СТАРОГО состояния
       if (oldIsLiked) {
         response = await unlikePost(postId: widget.post.id);
       } else {
         response = await likePost(postId: widget.post.id);
       }
 
-// 4. Проверяем успешность серверного экшена
       if (!response.success) {
-// Если сервер вернул ошибку, откатываем UI назад
         _rollbackLike(oldIsLiked, oldLikesCount, response.message ?? "Не удалось обновить лайк");
       }
     } catch (e) {
-// На случай критической ошибки сети также делаем откат
       _rollbackLike(oldIsLiked, oldLikesCount, "Проблемы с соединением");
     } finally {
       if (mounted) {
         setState(() {
-          _isLikePending = false; // Разрешаем кликать снова
+          _isLikePending = false;
         });
       }
     }
   }
 
 
-// Вспомогательный метод для отката состояния
   void _rollbackLike(bool oldIsLiked, int oldLikesCount, String errorMessage) {
     if (!mounted) return;
     setState(() {
@@ -125,11 +117,11 @@ class _PostCardState extends State<PostCard> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildHeader(context),
-          PostMediaCarousel(files: widget.post.files), // Используем общий виджет
+          PostMediaCarousel(files: widget.post.files),
           _buildActionsBar(countStyle),
-          PostDescription(description: widget.post.description), // Используем общий виджет
-          PostHashtags(hashtags: widget.post.hashtags), // Используем общий виджет
-          PostWorkshopLink(workshopLink: widget.post.workshopLink, roomId: widget.post.roomId), // Используем общий виджет
+          PostDescription(description: widget.post.description),
+          PostHashtags(hashtags: widget.post.hashtags),
+          PostWorkshopLink(workshopLink: widget.post.workshopLink, roomId: widget.post.roomId),
           PostArticleLink(articleLink: widget.post.articleLink, roomId: widget.post.roomId),
           const SizedBox(height: 6),
         ],
@@ -149,15 +141,12 @@ class _PostCardState extends State<PostCard> {
           Spacer(),
           IconButton(
             onPressed: () async {
-              // 1. Формируем ссылку и текст
               final String shareUrl = '$baseUrlClean/share/post/${widget.post.id}';
               final String shareText = 'Посмотри пост в DiaRoom! \n$shareUrl';
 
-              // 2. Высчитываем координаты для iPad
               final box = context.findRenderObject() as RenderBox?;
               final sharePositionOrigin = box != null ? box.localToGlobal(Offset.zero) & box.size : null;
 
-              // 3. Новый синтаксис share_plus 10.0+ через SharePlus.instance
               await SharePlus.instance.share(
                 ShareParams(
                   text: shareText,
@@ -177,10 +166,8 @@ class _PostCardState extends State<PostCard> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 2.0),
       child: Row(
-        // Выравниваем все элементы в Row строго по центру вертикали
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // Слева: Текст с датой публикации по центру высоты
           Text(
             formatSmartDate(widget.post.createdAt),
             style: TextStyle(
@@ -190,10 +177,8 @@ class _PostCardState extends State<PostCard> {
             ),
           ),
 
-          // Расталкивает левую (дату) и правую (лайки/комменты) части по краям
           const Spacer(),
 
-          // Справа: Комментарии
           Row(
             children: [
               IconButton(
@@ -204,7 +189,6 @@ class _PostCardState extends State<PostCard> {
             ],
           ),
 
-          // Справа: Лайки
           Row(
             children: [
               IconButton(

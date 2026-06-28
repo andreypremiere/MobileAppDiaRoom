@@ -138,7 +138,6 @@ class _ShowingPostScreenState extends State<ShowingPostScreen> {
   }
 
   Widget _buildBody() {
-    // 1. Ошибка загрузки данных -> Экран ошибки с возможностью перезапуска через _loadPost
     if (!_isLoading && _errorMessage != null && _post == null) {
       return DiaRoomErrorView(
         errorMessage: _errorMessage!,
@@ -146,14 +145,12 @@ class _ShowingPostScreenState extends State<ShowingPostScreen> {
       );
     }
 
-    // 2. Идет первоначальная загрузка -> Полноэкранный лоадер
     if (_isLoading && _post == null) {
       return const Center(
         child: DiaRoomLoader(),
       );
     }
 
-    // 3. Ситуация "Пост не найден" (если пришел пустой успешный ответ)
     if (!_isLoading && _post == null) {
       return Center(
         child: Text(
@@ -163,7 +160,6 @@ class _ShowingPostScreenState extends State<ShowingPostScreen> {
       );
     }
 
-    // 4. Успешный сценарий -> Отрисовка холста с данными поста
     return ShowingCanvas(
       blocks: _post!.payload,
       footer: PostFooter(

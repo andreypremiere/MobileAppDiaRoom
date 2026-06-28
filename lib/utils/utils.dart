@@ -1,4 +1,3 @@
-// Функция для создания полного пути из базового url и postfix
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -24,10 +23,8 @@ String formatDuration(Duration duration) {
   final seconds = duration.inSeconds.remainder(60);
 
   if (hours > 0) {
-    // Формат H:MM:SS
     return "$hours:${twoDigits(minutes)}:${twoDigits(seconds)}";
   } else {
-    // Формат M:SS
     return "${duration.inMinutes}:${twoDigits(seconds)}";
   }
 }
@@ -42,12 +39,10 @@ FontWeight getFontWeight(int value) {
 }
 
 void printError(String text) {
-  // Добавляем красный цвет и жирность
   print('\x1B[31;1m$text\x1B[0m');
 }
 
 String? isValidRoomId(String input) {
-  // Если строка пустая или слишком короткая, сразу false
   if (input.isEmpty) return "id не должен быть пустой : (";
 
   if (input.length > 100) {
@@ -63,7 +58,6 @@ String? isValidRoomId(String input) {
   final regExp = RegExp(r'^[a-zA-Z][a-zA-Z0-9_]*[a-zA-Z0-9]$');
 
   // Дополнительная проверка для строк длиной в 1 символ
-  // (так как наше выражение выше рассчитано минимум на 2 символа: начало и конец)
   if (input.length == 1) {
     final result = RegExp(r'^[a-zA-Z]$').hasMatch(input);
     if (!result) return error;

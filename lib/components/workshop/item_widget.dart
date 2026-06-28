@@ -5,7 +5,7 @@ import 'package:dia_room/models/enums/workshop/item_type.dart';
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:dia_room/utils/utils.dart';
 import 'package:flutter/material.dart';
-import '../../models/enums/workshop/item_actions.dart'; // Создай этот Enum по аналогии с папками
+import '../../models/enums/workshop/item_actions.dart';
 import '../../models/workshop/item.dart';
 
 class FileItem extends StatelessWidget {
@@ -29,15 +29,12 @@ class FileItem extends StatelessWidget {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          // 1. Сначала рисуем контент (картинку/статус)
           _buildMainContent(context),
 
-          // 2. Иконка типа
           Positioned(top: 8, left: 8, child: _buildTypeBadge(context)),
 
           item.itemType == ItemType.video ? Positioned(bottom: 8, right: 8,child: _buildDuration(context),) : SizedBox.shrink(),
 
-          // 3. Статус
           if (item.status == ItemStatus.uploading)
             const Center(child: DiaRoomLoader()),
 
@@ -78,7 +75,6 @@ class FileItem extends StatelessWidget {
       );
     }
 
-    // Твой готовый метод для кэшированных изображений
     return buildRectangleImage(
       item.previewUrl != null ? getFullUrl(item.previewUrl!) : "",
     );
@@ -116,7 +112,6 @@ class FileItem extends StatelessWidget {
     );
   }
 
-  // Метод для отрисовки ошибки загрузки изображения
   Widget _buildErrorWidget(BuildContext context) {
     return Container(
       color: context.ui.containerColor.withOpacity(0.3),
@@ -128,11 +123,9 @@ class FileItem extends StatelessWidget {
     );
   }
 
-  // Заглушка для твоего метода
   Widget buildRectangleImage(String imageUrl, {double borderRadius = 0}) {
     return CachedNetworkImage(
       imageUrl: imageUrl,
-      // ВАЖНО: оборачиваем в IgnorePointer, чтобы картинка не перехватывала жесты
       imageBuilder: (context, imageProvider) => IgnorePointer(
         child: Container(
           decoration: BoxDecoration(
@@ -164,17 +157,14 @@ class FileItem extends StatelessWidget {
       BuildContext context,
       LongPressStartDetails details,
       ) async {
-    // 1. Получаем RenderBox оверлея
     final RenderBox overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
 
-    // 2. Преобразуем глобальную позицию в локальную для оверлея
     final Offset localPosition = overlay.globalToLocal(details.globalPosition);
 
-    // 3. Используем полученную точку для создания Rect
     final result = await showMenu<ItemAction>(
       context: context,
       position: RelativeRect.fromRect(
-        localPosition & const Size(40, 40), // Размер блока для меню
+        localPosition & const Size(40, 40),
         Offset.zero & overlay.size,
       ),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),

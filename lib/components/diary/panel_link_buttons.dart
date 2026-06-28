@@ -34,7 +34,6 @@ class AttachedLinksBlock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Если ссылок нет, ничего не рисуем
     if (workshopLink == null && postLink == null && postV2Link == null) {
       return const SizedBox.shrink();
     }
@@ -42,7 +41,6 @@ class AttachedLinksBlock extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 6),
       child: Column(
-        // Используем Column с отступами между элементами
         children: [
           if (workshopLink != null)
             CustomLinkButton(
@@ -52,7 +50,6 @@ class AttachedLinksBlock extends StatelessWidget {
               onClose: onRemoveWorkshop,
             ),
 
-          // Добавляем небольшой зазор между кнопками, если их две
           if (workshopLink != null && postLink != null)
             const SizedBox(height: 4),
 
@@ -67,10 +64,9 @@ class AttachedLinksBlock extends StatelessWidget {
           if (postLink != null && postV2Link != null)
             const SizedBox(height: 4),
 
-          // 3. Блок второй Публикации (Новый)
           if (postV2Link != null)
             CustomLinkButton(
-              icon: Icons.featured_video_outlined, // Можно заменить иконку, если нужно дифференцировать посты
+              icon: Icons.featured_video_outlined,
               label: labelPostV2,
               onTap: onTapPostV2,
               onClose: onRemovePostV2,

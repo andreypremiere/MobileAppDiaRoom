@@ -44,7 +44,7 @@ class PhotosBlockWidget extends StatelessWidget {
           await block.addPath(file.path);
         }
 
-        onChanged(); // Сообщаем родителю, что список путей изменился
+        onChanged();
       }
     } catch (e) {
       if (context.mounted) {
@@ -74,14 +74,13 @@ class PhotosBlockWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(8),
-      height: 70 + 32, // blockHeight + padding
+      height: 70 + 32,
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 8),
           child: Row(
             children: [
-              // Кнопка добавления фото
               if (!block.isFull)
                 GestureDetector(
                   onTap: () => _pickImages(context),
@@ -96,7 +95,6 @@ class PhotosBlockWidget extends StatelessWidget {
                 ),
               if (block.listPhoto.isNotEmpty) const SizedBox(width: 8),
 
-              // Список фото
               ...block.listPhoto.asMap().entries.map((entry) {
                 final int photoIndex = entry.key;
                 final String path = entry.value.filePath;

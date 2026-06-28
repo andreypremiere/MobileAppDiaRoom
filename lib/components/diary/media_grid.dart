@@ -45,7 +45,7 @@ class MediaGrid extends StatelessWidget {
         extra: {
           'urls': photoList,
           'index': currentPhotoIndex,
-          'type': FileType.network, // Твой enum FileType
+          'type': FileType.network,
         },
       );
     }
@@ -94,7 +94,6 @@ class MediaGrid extends StatelessWidget {
       case 5:
         return Column(
           children: [
-            // Верхний ряд: 2 больших фото
             Row(
               children: [
                 Expanded(child: _item(context, 0, height: 180)),
@@ -103,7 +102,6 @@ class MediaGrid extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 2),
-            // Нижний ряд: 3 маленьких фото
             Row(
               children: [
                 Expanded(child: _item(context, 2, height: 110)),
@@ -118,7 +116,6 @@ class MediaGrid extends StatelessWidget {
       case 7:
         return Column(
           children: [
-            // Верхний ряд: 3 маленьких фото
             Row(
               children: [
                 Expanded(child: _item(context, 0, height: 100)),
@@ -129,7 +126,6 @@ class MediaGrid extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 2),
-            // Сетка снизу: 4 фото (2x2)
             GridView.count(
               crossAxisCount: 2,
               shrinkWrap: true,
@@ -147,7 +143,6 @@ class MediaGrid extends StatelessWidget {
           ],
         );
       default:
-        // Для 4, 6 и более 7 вложений (стандартная сетка)
         return GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
@@ -176,7 +171,6 @@ class MediaGrid extends StatelessWidget {
               height: height,
               width: double.infinity,
               fit: BoxFit.cover,
-              // Отображается во время загрузки
               placeholder: (context, url) => Container(
                 color: context.ui.fontColorHint.withAlpha(50),
                 child: const Center(
@@ -187,7 +181,6 @@ class MediaGrid extends StatelessWidget {
                   ),
                 ),
               ),
-              // Отображается при ошибке (например, 404 или нет сети)
               errorWidget: (context, url, error) => Container(
                 color: context.ui.fontColorHint.withAlpha(30),
                 child: const Icon(
@@ -198,7 +191,6 @@ class MediaGrid extends StatelessWidget {
             ),
           ),
 
-          // Если это видео — накладываем иконку поверх закешированного превью
           if (att.attType == AttachmentType.video)
             Container(
               width: double.infinity,
@@ -216,7 +208,7 @@ class MediaGrid extends StatelessWidget {
 
           Positioned.fill(
             child: Material(
-              color: Colors.transparent, // Делаем Material прозрачным
+              color: Colors.transparent,
               child: InkWell(onTap: () => _openFullScreen(context, index)),
             ),
           ),

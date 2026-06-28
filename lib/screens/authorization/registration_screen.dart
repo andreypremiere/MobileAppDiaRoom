@@ -17,7 +17,6 @@ class Registration extends StatefulWidget {
 }
 
 class _RegistrationState extends State<Registration> {
-  // Контроллеры для управления вводом данных пользователя
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _passwordAgainController =
@@ -26,14 +25,12 @@ class _RegistrationState extends State<Registration> {
 
   @override
   void dispose() {
-    // Освобождение ресурсов всех контроллеров при уничтожении виджета
     _emailController.dispose();
     _passwordController.dispose();
     _passwordAgainController.dispose();
     super.dispose();
   }
 
-  // _handleRegistration собирает данные и отправляет запрос на бэкенд
   void _handleRegistration() async {
     final email = _emailController.text.trim();
     final password = _passwordController.text;
@@ -96,14 +93,12 @@ class _RegistrationState extends State<Registration> {
         extendBodyBehindAppBar: true,
         body: SafeArea(child: Stack(
           children: [
-            // Кнопка "Назад" в верхнем левом углу
             Positioned(
               top: 10,
               left: 10,
               child: const AppBackButton(),
             ),
 
-            // Ссылка на политику конфиденциальности внизу экрана
             Positioned(
               bottom: 20,
               left: 0,
@@ -123,7 +118,6 @@ class _RegistrationState extends State<Registration> {
               ),
             ),
 
-            // Центральная карточка с формой ввода
             Center(
               child: AuthFormContainer(
                 child: Column(
@@ -159,7 +153,6 @@ class _RegistrationState extends State<Registration> {
                     ),
                     const SizedBox(height: 20),
 
-                    // Кнопка отправки данных формы
                     AuthButton(
                       text: "Регистрация",
                       backgroundColor: context.ui.primaryColor,

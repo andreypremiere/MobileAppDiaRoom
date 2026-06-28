@@ -28,15 +28,14 @@ class AppEnumPicker<T extends HasLabel> extends StatelessWidget {
           children: [
             const SizedBox(height: 8),
 
-            // Динамически рендерим список из переданного Enum
             ...values.map((item) => InkWell(
-              onTap: () => Navigator.pop(context, item), // Возвращает выбранный enum
+              onTap: () => Navigator.pop(context, item),
               borderRadius: BorderRadius.circular(8),
               child: Container(
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 child: Text(
-                  item.label, // Доступно благодаря интерфейсу HasLabel
+                  item.label,
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 16,
@@ -50,7 +49,6 @@ class AppEnumPicker<T extends HasLabel> extends StatelessWidget {
 
             const SizedBox(height: 16),
 
-            // Кнопка Отмена
             Align(
               alignment: Alignment.centerLeft,
               child: DialogButton(text: "Отмена", onPressed: () {

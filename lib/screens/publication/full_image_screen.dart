@@ -27,15 +27,12 @@ class _FullImageScreenState extends State<FullImageScreen> with SingleTickerProv
   late int _currentIndex;
   double _dragOffset = 0.0;
 
-  // Флаг: увеличен ли сейчас масштаб картинки
   bool _isZoomed = false;
 
-  // Контроллеры для управления зумом и его анимацией
   final TransformationController _transformationController = TransformationController();
   late AnimationController _animationController;
   Animation<Matrix4>? _zoomAnimation;
 
-  // Сохраняем позицию пальца при тапе, чтобы зумить именно в это место
   TapDownDetails? _doubleTapDetails;
 
   @override
@@ -44,10 +41,8 @@ class _FullImageScreenState extends State<FullImageScreen> with SingleTickerProv
     _currentIndex = widget.initialIndex;
     _pageController = PageController(initialPage: widget.initialIndex);
 
-    // Слушаем изменение масштаба картинки
     _transformationController.addListener(() {
       final scale = _transformationController.value.getMaxScaleOnAxis();
-      // Если масштаб больше 1.0 (с небольшой погрешностью), значит есть зум
       final isZoomed = scale > 1.001;
 
       if (_isZoomed != isZoomed) {
@@ -57,7 +52,6 @@ class _FullImageScreenState extends State<FullImageScreen> with SingleTickerProv
       }
     });
 
-    // Настраиваем анимацию для двойного тапа
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 250),
@@ -89,14 +83,11 @@ class _FullImageScreenState extends State<FullImageScreen> with SingleTickerProv
     Matrix4 targetMatrix;
 
     if (currentScale > 1.001) {
-      // Если уже есть какой-то зум -> возвращаем в исходное положение
       targetMatrix = Matrix4.identity();
     } else {
-      // Если исходное положение -> зумим в 1.5 раза в точку тапа
       final position = _doubleTapDetails?.localPosition ?? Offset.zero;
       const targetScale = 1.5;
 
-      // Рассчитываем сдвиг, чтобы зум произошел ровно под пальцем
       final x = -position.dx * (targetScale - 1);
       final y = -position.dy * (targetScale - 1);
 
@@ -105,7 +96,6 @@ class _FullImageScreenState extends State<FullImageScreen> with SingleTickerProv
         ..scale(targetScale);
     }
 
-    // Запускаем плавную анимацию матрицы трансформации
     _zoomAnimation = Matrix4Tween(
       begin: currentMatrix,
       end: targetMatrix,
@@ -119,7 +109,6 @@ class _FullImageScreenState extends State<FullImageScreen> with SingleTickerProv
     return Scaffold(
       backgroundColor: Colors.black,
       body: GestureDetector(
-        // Отключаем вертикальный свайп на закрытие, если картинка увеличена
         onVerticalDragUpdate: _isZoomed ? null : (details) {
           setState(() {
             _dragOffset += details.primaryDelta ?? 0;
@@ -137,12 +126,10 @@ class _FullImageScreenState extends State<FullImageScreen> with SingleTickerProv
         child: Stack(
           fit: StackFit.expand,
           children: [
-            // Transform.translate нужен, чтобы картинка двигалась вверх/вниз при свайпе
             Transform.translate(
               offset: Offset(0, _dragOffset),
               child: PageView.builder(
                 controller: _pageController,
-                // Отключаем свайпы влево/вправо у PageView, если картинка увеличена
                 physics: _isZoomed
                     ? const NeverScrollableScrollPhysics()
                     : const BouncingScrollPhysics(),
@@ -150,7 +137,6 @@ class _FullImageScreenState extends State<FullImageScreen> with SingleTickerProv
                 onPageChanged: (index) {
                   setState(() {
                     _currentIndex = index;
-                    // Сбрасываем зум при перелистывании на следующую картинку
                     _transformationController.value = Matrix4.identity();
                   });
                 },
@@ -161,10 +147,9 @@ class _FullImageScreenState extends State<FullImageScreen> with SingleTickerProv
                       onDoubleTap: _handleDoubleTap,
                       child: InteractiveViewer(
                         transformationController: _transformationController,
-                        panEnabled: true, // Включает перемещение (пан)
-                        // boundaryMargin: EdgeInsets.zero не даст утащить фото за пределы экрана
+                        panEnabled: true,
                         boundaryMargin: EdgeInsets.zero,
-                        minScale: 1.0, // Не дает уменьшить фото меньше оригинала
+                        minScale: 1.0,
                         maxScale: 4.0,
                         child: _buildImage(widget.imageUrls[index]),
                       ),
@@ -210,7 +195,6 @@ class _FullImageScreenState extends State<FullImageScreen> with SingleTickerProv
     );
   }
 
-  // Универсальный загрузчик картинки
   Widget _buildImage(String path) {
     if (widget.type == FileType.local) {
       return Image.file(

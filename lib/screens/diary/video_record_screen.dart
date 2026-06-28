@@ -39,7 +39,6 @@ class _VideoRecordScreenState extends State<VideoRecordScreen> with WidgetsBindi
   Timer? _timer;
   int _recordDuration = 0;
 
-  // Для управления плеером
   final ValueNotifier<Duration> _videoPosition = ValueNotifier(Duration.zero);
 
   @override
@@ -53,7 +52,6 @@ class _VideoRecordScreenState extends State<VideoRecordScreen> with WidgetsBindi
   void didChangeAppLifecycleState(AppLifecycleState state) {
     final CameraController? cameraController = _controller;
 
-    // Если приложение свернуто - освобождаем камеру
     if (cameraController == null || !cameraController.value.isInitialized) return;
 
     if (state == AppLifecycleState.inactive) {
@@ -71,14 +69,12 @@ class _VideoRecordScreenState extends State<VideoRecordScreen> with WidgetsBindi
   }
 
   Future<void> _onNewCameraSelected(CameraDescription description) async {
-    // 1. Сначала полностью останавливаем и удаляем старый контроллер
     if (_controller != null) {
       final oldController = _controller;
-      _controller = null; // Обнуляем ссылку сразу, чтобы UI не пытался к нему обращаться
+      _controller = null;
       await oldController!.dispose();
     }
 
-    // 2. Создаем новый контроллер
     final CameraController cameraController = CameraController(
       description,
       ResolutionPreset.low,
@@ -91,7 +87,6 @@ class _VideoRecordScreenState extends State<VideoRecordScreen> with WidgetsBindi
 
     try {
       await cameraController.initialize();
-      // 3. Если во время инициализации пользователь уже ушел с экрана — закрываем камеру
       if (!mounted) return;
       if (mounted) {
         setState(() {});
@@ -112,8 +107,6 @@ class _VideoRecordScreenState extends State<VideoRecordScreen> with WidgetsBindi
     _videoPosition.dispose();
     super.dispose();
   }
-
-  // --- Логика записи ---
 
   Future<void> _startRecording() async {
     if (_controller == null || !_controller!.value.isInitialized) return;
@@ -201,7 +194,6 @@ class _VideoRecordScreenState extends State<VideoRecordScreen> with WidgetsBindi
         return;
       }
 
-      // Теперь это условие проверяется каждую секунду!
       if (_recordDuration >= limitRecordVideoNoteInDiary) {
         _stopRecording();
       }
@@ -212,15 +204,12 @@ class _VideoRecordScreenState extends State<VideoRecordScreen> with WidgetsBindi
     _timer?.cancel();
   }
 
-  // --- Управление плеером ---
-
   Future<void> _initVideoPlayer(File file) async {
     _videoPlayerController = VideoPlayerController.file(file);
     await _videoPlayerController!.initialize();
 
     _videoPlayerController!.addListener(() {
       _videoPosition.value = _videoPlayerController!.value.position;
-      // Если дошло до конца - сбрасываем на начало и ставим паузу
       if (_videoPlayerController!.value.position >= _videoPlayerController!.value.duration) {
         _videoPlayerController!.seekTo(Duration.zero);
         _videoPlayerController!.pause();
@@ -270,7 +259,6 @@ class _VideoRecordScreenState extends State<VideoRecordScreen> with WidgetsBindi
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // 1. Контейнер с видео (теперь тут только видео)
           SizedBox(
             height: size,
           child:
@@ -283,18 +271,16 @@ class _VideoRecordScreenState extends State<VideoRecordScreen> with WidgetsBindi
                 color: Colors.grey[900],
               ),
               clipBehavior: Clip.antiAlias,
-              child: _buildMediaView(), // Убрали Stack и контролы отсюда
+              child: _buildMediaView(),
             ),
           )),
 
-          // 2. Панель управления (появляется только при просмотре)
           if (_isPreviewMode)
             Padding(
               padding: EdgeInsets.symmetric(horizontal: (MediaQuery.of(context).size.width - size) / 2),
               child: _buildPlayerControls(),
             ),
 
-          // 3. Таймер (скрываем, когда смотрим превью)
           if (!_isPreviewMode) ...[
             const SizedBox(height: 20),
             Text(
@@ -305,7 +291,6 @@ class _VideoRecordScreenState extends State<VideoRecordScreen> with WidgetsBindi
 
           const SizedBox(height: 30),
 
-          // 4. Кнопки управления (Удалить, Запись, Отправить)
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
@@ -319,10 +304,8 @@ class _VideoRecordScreenState extends State<VideoRecordScreen> with WidgetsBindi
                 _buildActionButton(Icons.send_rounded, context.ui.primaryColor, () async {
                   final file = File(_videoPath!);
 
-                  // 1. Сначала считываем размер файла (здесь происходит async gap)
                   final int fileSize = await file.length();
 
-                  // Проверяем mounted строго ПЕРЕД использованием BuildContext
                   if (context.mounted) {
                     Navigator.pop(
                       context,
@@ -341,7 +324,7 @@ class _VideoRecordScreenState extends State<VideoRecordScreen> with WidgetsBindi
                   _isPaused ? _resumeRecording : _pauseRecording,
                 )
               else
-                const SizedBox(width: 50), // Заглушка для симметрии
+                const SizedBox(width: 50),
             ],
           ),
         ],
@@ -350,9 +333,7 @@ class _VideoRecordScreenState extends State<VideoRecordScreen> with WidgetsBindi
   }
 
   Widget _buildMediaView() {
-    // --- 1. РЕЖИМ ПЛЕЕРА ---
     if (_isPreviewMode && _videoPlayerController != null) {
-      // Ждем инициализации, чтобы не было ошибки 99681 пиксель
       if (!_videoPlayerController!.value.isInitialized) {
         return const Center(child: CircularProgressIndicator());
       }
@@ -371,7 +352,7 @@ class _VideoRecordScreenState extends State<VideoRecordScreen> with WidgetsBindi
             width: videoSize.width,
             height: videoSize.height,
             child: Transform.scale(
-              scaleX: isFront ? -1 : 1, // Зеркалим плеер для фронталки
+              scaleX: isFront ? -1 : 1,
               child: VideoPlayer(_videoPlayerController!),
             ),
           ),
@@ -379,7 +360,6 @@ class _VideoRecordScreenState extends State<VideoRecordScreen> with WidgetsBindi
       );
     }
 
-    // --- 2. РЕЖИМ КАМЕРЫ ---
     if (!_isPreviewMode && _controller != null && _controller!.value.isInitialized) {
       final previewSize = _controller!.value.previewSize;
       if (previewSize == null) return const Center(child: CircularProgressIndicator());
@@ -390,10 +370,10 @@ class _VideoRecordScreenState extends State<VideoRecordScreen> with WidgetsBindi
         child: FittedBox(
           fit: BoxFit.cover,
           child: SizedBox(
-            width: previewSize.height, // Для Android высота и ширина инвертированы
+            width: previewSize.height,
             height: previewSize.width,
             child: Transform.scale(
-              scaleX: isFront ? 1 : 1, // Зеркалим превью для фронталки
+              scaleX: isFront ? 1 : 1,
               child: CameraPreview(_controller!),
             ),
           ),
@@ -401,7 +381,6 @@ class _VideoRecordScreenState extends State<VideoRecordScreen> with WidgetsBindi
       );
     }
 
-    // Резервное состояние (загрузка)
     return const Center(child: CircularProgressIndicator());
   }
 
@@ -411,7 +390,6 @@ class _VideoRecordScreenState extends State<VideoRecordScreen> with WidgetsBindi
         const SizedBox(height: 10),
         Row(
           children: [
-            // Кнопка Play/Pause
             IconButton(
               onPressed: () {
                 _videoPlayerController!.value.isPlaying
@@ -428,7 +406,6 @@ class _VideoRecordScreenState extends State<VideoRecordScreen> with WidgetsBindi
               ),
             ),
 
-            // Слайдер
             Expanded(
               child: ValueListenableBuilder(
                 valueListenable: _videoPosition,
@@ -436,9 +413,7 @@ class _VideoRecordScreenState extends State<VideoRecordScreen> with WidgetsBindi
                   final double durationMs = _videoPlayerController!.value.duration.inMilliseconds.toDouble();
                   final double positionMs = pos.inMilliseconds.toDouble();
 
-                  // Убеждаемся, что max всегда хотя бы 1.0 и не меньше текущей позиции
                   final double maxSafe = durationMs > 0 ? durationMs : (positionMs > 0 ? positionMs : 1.0);
-                  // Убеждаемся, что текущее значение не вылетает за границы [0, maxSafe]
                   final double valueSafe = positionMs.clamp(0.0, maxSafe);
 
                   return SliderTheme(

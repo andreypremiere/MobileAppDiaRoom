@@ -6,25 +6,22 @@ class AuthorShimmerTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Автоматически подстраиваем цвета под темную/светлую тему
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final baseColor = isDark ? Colors.grey[800]! : Colors.grey[300]!;
     final highlightColor = isDark ? Colors.grey[700]! : Colors.grey[100]!;
 
     return Row(
-      mainAxisSize: MainAxisSize.min, // По контенту
+      mainAxisSize: MainAxisSize.min,
       children: [
-        // Скелет аватара
         Shimmer.fromColors(
           baseColor: baseColor,
           highlightColor: highlightColor,
           child: const CircleAvatar(
-            radius: 18, // width & height = 36
+            radius: 18,
             backgroundColor: Colors.white,
           ),
         ),
         const SizedBox(width: 10),
-        // Скелет имени автора
         Shimmer.fromColors(
           baseColor: baseColor,
           highlightColor: highlightColor,

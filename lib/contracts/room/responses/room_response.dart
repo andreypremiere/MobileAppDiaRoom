@@ -25,7 +25,6 @@ class RoomResponse {
     return RoomResponse(
       roomUniqueId: map['roomUniqueId'] ?? '',
       roomName: map['roomName'] ?? '',
-      // Безопасное приведение списка категорий
       listCategory: List<String>.from(map['listCategory'] ?? []).map((slug) => Categories.fromSlug(slug)).toList(),
       bio: map['bio'] ?? '',
       avatarPath: map['avatarPath'] ?? '',

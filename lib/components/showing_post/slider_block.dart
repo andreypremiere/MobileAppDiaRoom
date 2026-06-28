@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
-import 'photo_tile_item.dart'; // Импортируем наш универсальный кирпичик
+import 'photo_tile_item.dart';
 
 class PhotoSlider extends StatefulWidget {
   final List<String> urls;
-  final bool isLocal; // Добавляем флаг локального хранилища
+  final bool isLocal;
   final Function(int index) onTap;
 
   const PhotoSlider({
     super.key,
     required this.urls,
     required this.onTap,
-    this.isLocal = false, // По умолчанию сеть
+    this.isLocal = false,
   });
 
   @override
@@ -24,7 +24,6 @@ class _PhotoSliderState extends State<PhotoSlider> {
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        // Основной слайдер
         PageView.builder(
           itemCount: widget.urls.length,
           onPageChanged: (index) {
@@ -33,7 +32,6 @@ class _PhotoSliderState extends State<PhotoSlider> {
             });
           },
           itemBuilder: (context, index) {
-            // Используем PhotoTileItem для универсальности
             return PhotoTileItem(
               path: widget.urls[index],
               allPaths: widget.urls,
@@ -44,7 +42,6 @@ class _PhotoSliderState extends State<PhotoSlider> {
           },
         ),
 
-        // Индикатор страниц (например, 1/5)
         if (widget.urls.length > 1)
           Positioned(
             bottom: 12,
@@ -63,7 +60,6 @@ class _PhotoSliderState extends State<PhotoSlider> {
                     color: Colors.white,
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    // Используем твой шрифт из темы
                     fontFamily: 'SNPro',
                   ),
                 ),

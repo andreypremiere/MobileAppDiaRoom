@@ -3,8 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../../../models/post_view/author.dart';
 import '../app_avatar.dart';
-// Импортируй свой AppAvatar, если он лежит в другом месте
-// import 'package:your_project/widgets/app_avatar.dart';
+
 
 class AuthorTile extends StatelessWidget {
   final Author author;
@@ -18,12 +17,11 @@ class AuthorTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // ВСТАВЛЯЕМ MATERIAL ТУТ
     return Material(
-      color: Colors.transparent, // Чтобы не перекрыть фон карточки
+      color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12), // Скругление для эффекта
+        borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.symmetric(
             horizontal: 4,

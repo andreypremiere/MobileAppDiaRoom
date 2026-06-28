@@ -1,9 +1,4 @@
-// Здесь будет класс, который будет выполнять полный цикл
-// публикации поста, от начала конфигурации данных, заканчивая
-// статусом, что пост опубликован и отправкой уведомления
-
 import 'dart:io';
-
 import 'package:camera/camera.dart';
 import 'package:dia_room/api/auth_response.dart';
 import 'package:dia_room/models/post_creator/block_photos.dart';
@@ -109,7 +104,6 @@ class CreatingPostService {
           );
         }
       } else if (block is BlockVideoUpload) {
-        // Основное видео
         if (block.filePath.isNotEmpty) {
           files.add(
             UploadFileInfo(
@@ -119,7 +113,6 @@ class CreatingPostService {
             ),
           );
         }
-        // Превью видео
         if (block.previewPath.isNotEmpty) {
           files.add(
             UploadFileInfo(
@@ -138,7 +131,7 @@ class CreatingPostService {
   /// Применяет ответ от сервера и обновляет все блоки публичными и presigned ссылками
   void applyPresignedResponse(
     List<BlockUpload> uploadBlocks,
-    List<dynamic> serverFiles, // массив из 'files' в ответе
+    List<dynamic> serverFiles,
   ) {
     final Map<String, dynamic> responseMap = {
       for (var file in serverFiles) file['uploadId']: file,
@@ -154,14 +147,12 @@ class CreatingPostService {
           }
         }
       } else if (block is BlockVideoUpload) {
-        // Видео
         final videoData = responseMap[block.uploadIdVideo];
         if (videoData != null) {
           block.publicUrlVideo = videoData['publicUrl'];
           block.presignedUrlVideo = videoData['presignedUrl'];
         }
 
-        // Превью
         final previewData = responseMap[block.uploadIdPreview];
         if (previewData != null) {
           block.publicUrlPreview = previewData['publicUrl'];
@@ -176,7 +167,6 @@ class CreatingPostService {
 
     for (final block in uploadBlocks) {
       if (block is BlockPhotoUpload) {
-        // Загружаем список фотографий в блоке
         for (final photo in block.listPhoto) {
           if (photo.presignedUrl.isNotEmpty) {
             final success = await uploadSingleMediaFile(
@@ -188,22 +178,20 @@ class CreatingPostService {
           }
         }
       } else if (block is BlockVideoUpload) {
-        // 1. Загружаем само видео
         if (block.presignedUrlVideo != null && block.presignedUrlVideo!.isNotEmpty) {
           final videoSuccess = await uploadSingleMediaFile(
             block.filePath,
             block.presignedUrlVideo!,
-            'video/mp4', // убедитесь, что это поле есть (обычно video/mp4)
+            'video/mp4',
           );
           if (!videoSuccess) allSuccess = false;
         }
 
-        // 2. Загружаем превью (обложку) видео
         if (block.presignedUrlPreview != null && block.presignedUrlPreview!.isNotEmpty) {
           final previewSuccess = await uploadSingleMediaFile(
             block.previewPath,
             block.presignedUrlPreview!,
-            'image/jpeg', // или block.contentTypePreview
+            'image/jpeg',
           );
           if (!previewSuccess) allSuccess = false;
         }
@@ -216,14 +204,11 @@ class CreatingPostService {
   /// Метод, выполняющий полный цикл создания поста
   Future<void> startCreating() async {
     String? compressedPreview;
-    print("--- [START] Процесс создания поста запущен ---");
-    /// Создаем модель превью
     Map<String, dynamic> modelPreview;
     try {
       const uuid = Uuid();
 
       if (post.previewPath == null) {
-        print("❌ [ШАГ 1: Превью] previewUrl отсутствует в post. Создание остановлено.");
         return;
       }
 
@@ -242,16 +227,14 @@ class CreatingPostService {
         "contentType": 'image/jpeg',
         "size": await File(compressedPreview).length(),
       };
-      print("✅ [ШАГ 1: Превью] Модель превью успешно сформирована: $modelPreview");
     } catch (e) {
-      print("🚨 [ШАГ 1: Превью] Ошибка при формировании модели: $e");
       return;
     }
 
     AuthResponse resultCreating;
 
-    /// Выполняем запрос на создание поста и получаем сразу ссылки
-    /// на превью (публичную и загрузку)
+    // Выполняем запрос на создание поста и получаем сразу ссылки
+    // на превью (публичную и загрузку)
     try {
       final postCreating = {
         "title": publicationPost.title,
@@ -266,23 +249,16 @@ class CreatingPostService {
         modelPreview: modelPreview ,
       );
 
-      print("📡 [ШАГ 2: API] Отправка запроса createPost...");
-      print("   > Данные поста: $postCreating");
-      print('Результат создания поста: ${resultCreating.success}');
     } catch (e) {
-      print("🚨 [ШАГ 2: API] Критическая ошибка при вызове createPost: $e");
       return;
     }
 
-    /// Загружаем превью в объектное хранилище
+    // Загружаем превью в объектное хранилище
     if (!resultCreating.success) {
-      print('⛔ [ОСТАНОВКА] Дальнейшие действия невозможны из-за ошибки API.');
       return;
     }
 
-    /// ---Расскоментировать блок, когда нужно будет добавлять в хранилище
     publicationPost.previewPublicURL = resultCreating.data!['preview']['publicUrl'];
-    print("🔗 [ИНФО] Публичный URL превью получен: ${publicationPost.previewPublicURL}");
     final resultUploadPreview = await uploadSingleMediaFile(
       compressedPreview,
       resultCreating.data!['preview']['presignedUrl'],
@@ -293,46 +269,33 @@ class CreatingPostService {
       print('Превью не было загружено, продолжаем создание поста');
     }
 
-    /// Формируем список для будущего payload поста (В createUploadFiles выполняется сжатие)
-    print("🛠️ [ШАГ 3: Payload] Сбор файлов из блоков контента...");
+    // Формируем список для будущего payload поста (В createUploadFiles выполняется сжатие)
     publicationPost.payload = await createUploadFiles(post.blocks);
 
     List<UploadFileInfo> uploadFiles = collectUploadFiles(
       publicationPost.payload!,
     );
-    print("📦 [ШАГ 3: Payload] Найдено файлов для загрузки: ${uploadFiles.length}");
 
-    /// Запрос ссылок
-    print("📡 [ШАГ 4: S3 Links] Запрос Presigned URLs для медиа-файлов...");
+    // Запрос ссылок
     final responseUrls = await requestPresignedUrls(
       mediaForUrls: uploadFiles,
       postId: resultCreating.data!['postId'],
     );
 
     if (!responseUrls.success) {
-      print('❌ [ШАГ 4: S3 Links] Ошибка: ответ от сервера пустой (null)');
       return;
     } else {
-      print("✅ [ШАГ 4: S3 Links] Ссылки успешно получены.");
     }
 
-    print("📝 [ШАГ 5: Payload Update] Привязка полученных ссылок к блокам...");
     applyPresignedResponse(publicationPost.payload!, responseUrls.data!['files']);
 
-    print("📡 [ШАГ 6: Canvas] Отправка финального холста (Canvas) на сервер...");
     final resultCreatingCanvas = await savePostCanvas(
       postId: resultCreating.data!['postId'],
       canvasPayload: publicationPost.payloadToJson(),
     );
 
-    print('📊 [ШАГ 6: Canvas] Результат сохранения холста: $resultCreatingCanvas');
     final result = await uploadAllMediaFromBlocks(publicationPost.payload!);
-    print('Результат загрузки медиа в хранилище $result');
 
-    print("📡 [ШАГ 7: Canvas] Обновление статуса и добавление в очередь на проверку...");
     final resultStatusUpdating = await updateStatusPost(postId: resultCreating.data!['postId']);
-    print("Результат обновления статуса ${resultStatusUpdating.success}");
-
-    print('--- [FINISH] Процесс создания поста завершен успешно ---');
   }
 }

@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 
 class TextBlockWidget extends StatelessWidget {
-  final TextBlockPost block; // Строгая базовая модель
+  final TextBlockPost block;
 
   const TextBlockWidget({
     super.key,
@@ -15,8 +15,6 @@ class TextBlockWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // ВАЖНО: ВСЕГДА создаем новый, изолированный контроллер для превью.
-    // Мы берем снимок данных через block.value (который возвращает JSON-строку).
     late final QuillController controller;
 
     try {
@@ -25,7 +23,6 @@ class TextBlockWidget extends StatelessWidget {
         selection: const TextSelection.collapsed(offset: 0),
       );
     } catch (_) {
-      // Безопасный фоллбэк: если в базе вдруг оказался обычный текст, а не JSON
       controller = QuillController(
         document: Document()..insert(0, block.value),
         selection: const TextSelection.collapsed(offset: 0),
@@ -92,11 +89,10 @@ class TextBlockWidget extends StatelessWidget {
               height: 1.2,
             ),
             const HorizontalSpacing(0, 0),
-            const VerticalSpacing(10, 6), // Отступы сверху и снизу заголовка
+            const VerticalSpacing(10, 6),
             const VerticalSpacing(0, 0),
             null,
           ),
-          // Стилизация Среднего заголовка (H2)
           h2: DefaultTextBlockStyle(
             TextStyle(
               fontSize: 20,

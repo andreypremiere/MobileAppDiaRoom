@@ -7,7 +7,6 @@ class BasePost {
 
   BasePost({required this.data, required this.stats});
 
-  // Базовая фабрика, если вдруг понадобится создать просто пост
   factory BasePost.fromMap(Map<String, dynamic> map) {
     return BasePost(
       data: PostData.fromMap(map),

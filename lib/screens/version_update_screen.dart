@@ -17,10 +17,8 @@ class VersionUpdateScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Ссылка на твой сайт, где лежит APK приложения
     const String downloadUrl = 'https://diaroom.me';
 
-    // PopScope запрещает закрывать экран системной кнопкой "Назад" на Android, если обновление критическое
     return PopScope(
       canPop: !isCritical,
       child: Scaffold(
@@ -30,8 +28,6 @@ class VersionUpdateScreen extends StatelessWidget {
               IconButton(
                 icon: const Icon(Icons.close, color: Colors.black, size: 28),
                 onPressed: () {
-                  // Безопасно обновляем стейт. Провайдер вызовет notifyListeners,
-                  // GoRouter увидит, что флаг изменился, и сам уберет этот экран, вернув юзера на '/'
                   context.read<AuthProvider>().dismissOptionalUpdate();
                 },
               ),
@@ -44,7 +40,6 @@ class VersionUpdateScreen extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                // Иконка обновления
                 Icon(
                   isCritical ? Icons.gpp_bad_outlined : Icons.system_update_outlined,
                   size: 90,
@@ -52,7 +47,6 @@ class VersionUpdateScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 32),
 
-                // Заголовок
                 Text(
                   isCritical ? 'Внимание!' : 'Доступно обновление',
                   style: const TextStyle(
@@ -63,7 +57,6 @@ class VersionUpdateScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
 
-                // Текст сообщения от бэкенда
                 Text(
                   isCritical ? message : "Но можно обновить и потом",
                   textAlign: TextAlign.center,
@@ -74,7 +67,6 @@ class VersionUpdateScreen extends StatelessWidget {
                 ),
                 const Spacer(),
 
-                // Кнопка перехода на сайт
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     minimumSize: const Size(double.infinity, 54),

@@ -4,15 +4,8 @@ import 'package:flutter/material.dart';
 class DialogButton extends StatelessWidget {
   final String text;
   final VoidCallback? onPressed;
-
-  /// Если true — кнопка будет прозрачной, а текст окрасится в [textColor]
   final bool isTransparent;
-
-  /// Кастомный цвет текста/иконки (используется всегда в прозрачном режиме,
-  /// либо если нужно перекрасить текст в стандартном)
   final Color? textColor;
-
-  /// Кастомный фоновый цвет для стандартного режима
   final Color? backgroundColor;
 
   final EdgeInsets padding;
@@ -29,14 +22,10 @@ class DialogButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Определяем фоновый цвет в зависимости от режима
     final effectiveBackgroundColor = isTransparent
         ? Colors.transparent
         : (backgroundColor ?? context.ui.primaryColor);
 
-    // Определяем цвет текста:
-    // В прозрачном режиме приоритет у переданного textColor, иначе берем primaryColor.
-    // В обычном режиме приоритет у переданного textColor, иначе белый.
     final effectiveForegroundColor = isTransparent
         ? (textColor ?? context.ui.primaryColor)
         : (textColor ?? Colors.white);
@@ -52,7 +41,6 @@ class DialogButton extends StatelessWidget {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
         ),
-        // Убираем тень и эффекты Material, если кнопка прозрачная
         shadowColor: isTransparent ? Colors.transparent : null,
       ),
       child: Text(

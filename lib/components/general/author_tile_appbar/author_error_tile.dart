@@ -13,16 +13,14 @@ class AuthorEmptyTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    // Тонкие, не отвлекающие цвета для плейсхолдера
     final placeholderColor = isDark ? Colors.grey[700] : Colors.grey[300];
     final textColor = isDark ? Colors.grey[500] : Colors.grey[600];
 
     return GestureDetector(
-      onTap: onRetry, // Если передали колбэк — при тапе можно перезапустить запрос
+      onTap: onRetry,
       child: Row(
-        mainAxisSize: MainAxisSize.min, // Тоже строго по контенту
+        mainAxisSize: MainAxisSize.min,
         children: [
-          // Заглушка аватара
           Container(
             width: 36,
             height: 36,
@@ -37,14 +35,13 @@ class AuthorEmptyTile extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 10),
-          // Текст ошибки
           Text(
             message,
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w400,
               color: textColor,
-              fontStyle: FontStyle.italic, // Легкий курсив подчеркнет, что это статус
+              fontStyle: FontStyle.italic,
             ),
           ),
           if (onRetry != null) ...[

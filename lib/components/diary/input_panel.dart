@@ -47,7 +47,6 @@ class DiaryInputPanel extends StatefulWidget {
 }
 
 class _DiaryInputPanelState extends State<DiaryInputPanel> {
-  // Контроллеры теперь железно живут в State и сохраняют фокус
   final FocusNode _focusNode = FocusNode();
   final ScrollController _scrollController = ScrollController();
 
@@ -58,7 +57,6 @@ class _DiaryInputPanelState extends State<DiaryInputPanel> {
     super.dispose();
   }
 
-  // Методы форматирования rich-текста
   void _toggleAttribute(Attribute attribute) {
     final selection = widget.controller.selection;
     if (!selection.isCollapsed) {
@@ -274,23 +272,21 @@ class _DiaryInputPanelState extends State<DiaryInputPanel> {
                     enableSelectionToolbar: true,
 
                     customStyles: DefaultStyles(
-                      // Стиль для обычного текста (абзаца)
                       paragraph: DefaultTextBlockStyle(
                         TextStyle(
-                          fontSize: 16, // Делаем крупнее (по дефолту обычно 14)
-                          color: context.ui.fontColorPrimary, // Твой цвет текста из темы
-                          height: 1.3, // Высота строки для красивого отображения
+                          fontSize: 16,
+                          color: context.ui.fontColorPrimary,
+                          height: 1.3,
                         ),
                         const HorizontalSpacing(0, 0),
-                        const VerticalSpacing(0, 0), // Убираем дефолтные отступы между абзацами
+                        const VerticalSpacing(0, 0),
                         const VerticalSpacing(0, 0),
                         null,
                       ),
-                      // Стиль для плейсхолдера (размер должен совпадать с основным текстом)
                       placeHolder: DefaultTextBlockStyle(
                         TextStyle(
                           fontSize: 16,
-                          color: context.ui.fontColorHint, // Серый цвет для подсказки
+                          color: context.ui.fontColorHint,
                           height: 1.3,
                         ),
                         const HorizontalSpacing(0, 0),
@@ -300,28 +296,21 @@ class _DiaryInputPanelState extends State<DiaryInputPanel> {
                       ),
                       quote: DefaultTextBlockStyle(
                         TextStyle(
-                          fontSize: 15, // Можно сделать чуть меньше основного текста
-                          color: context.ui.fontColorPrimary.withAlpha(220), // Слегка приглушенный цвет текста
-                          fontStyle: FontStyle.italic, // Делаем текст курсивным
+                          fontSize: 15,
+                          color: context.ui.fontColorPrimary.withAlpha(220),
+                          fontStyle: FontStyle.italic,
                           height: 1.4,
                         ),
-                        const HorizontalSpacing(2, 2), // Внутренние отступы (padding) слева и справа
-                        const VerticalSpacing(8, 8),   // Отступы (margin) сверху и снизу самого блока цитаты
-                        const VerticalSpacing(6, 6),   // Внутренние отступы между строками внутри цитаты
+                        const HorizontalSpacing(2, 2),
+                        const VerticalSpacing(8, 8),
+                        const VerticalSpacing(6, 6),
                         BoxDecoration(
-                          // Делаем цвет подложки чуть светлее/темнее основного фона панели
-                          // color: context.ui.containerColor.withAlpha(20).addColorMask(Colors.black, 10),
-                          // Либо можно использовать явный полупрозрачный акцентный цвет:
                           color: context.ui.primaryColor.withAlpha(25),
-
-                          // Скругляем края (твое требование)
                           borderRadius: BorderRadius.circular(4),
-
-                          // Кастомная граница: делаем толстую вертикальную линию только СЛЕВА
                           border: Border(
                             left: BorderSide(
                               width: 4,
-                              color: context.ui.primaryColor, // Цвет вертикальной полоски (твой акцентный цвет)
+                              color: context.ui.primaryColor,
                             ),
                           ),
                         ),
@@ -331,7 +320,6 @@ class _DiaryInputPanelState extends State<DiaryInputPanel> {
                     contextMenuBuilder: (context, rawEditorState) {
                       final selection = widget.controller.selection;
 
-                      // Если текст не выделен, показываем дефолтное меню (Вставить)
                       if (selection.isCollapsed) {
                         return AdaptiveTextSelectionToolbar.buttonItems(
                           anchors: rawEditorState.contextMenuAnchors,
@@ -339,7 +327,6 @@ class _DiaryInputPanelState extends State<DiaryInputPanel> {
                         );
                       }
 
-                      // Если текст выделен — выкатываем кастомную панель стилей
                       return AdaptiveTextSelectionToolbar(
                         anchors: rawEditorState.contextMenuAnchors,
                         children: [

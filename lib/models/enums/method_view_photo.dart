@@ -16,7 +16,6 @@ enum MethodViewPhoto {
     };
   }
 
-  // Получаем из Map от сервера
   static MethodViewPhoto fromMap(Map<String, dynamic> map) {
     final mapSlug = map['methodView'] as String?;
     return MethodViewPhoto.values.firstWhere(

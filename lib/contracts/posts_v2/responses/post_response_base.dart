@@ -42,7 +42,6 @@ class PostResponseBase {
       workshopLink: map['workshopLink'] as String?,
       articleLink: map['articleLink'] as String?,
       status: PostStatus.fromMap(map['status'] as String),
-      // Парсим ISO-строку времени в локальное время девайса
       createdAt: DateTime.parse(map['createdAt'] as String).toLocal(),
       files: List<PostMediaResponse>.from(
         (map['files'] ?? []).map((x) => PostMediaResponse.fromMap(x as Map<String, dynamic>)),

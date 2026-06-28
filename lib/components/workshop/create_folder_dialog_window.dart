@@ -19,10 +19,6 @@ Future<void> showCreateFolderDialog(
     builder: (context) => AlertDialog(
       backgroundColor: context.ui.containerColor,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      // title: Text(
-      //   'Создать папку',
-      //   style: TextStyle(color: context.ui.fontColorPrimary, fontWeight: FontWeight.bold),
-      // ),
       content: TextField(
         controller: controller,
         autofocus: true,

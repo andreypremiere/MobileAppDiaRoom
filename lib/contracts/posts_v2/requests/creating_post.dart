@@ -3,7 +3,7 @@ import 'media_file_item.dart';
 class PostCreateRequest {
   final String? description;
   final List<String> hashtags;
-  final String? workshopLink; // uuid.UUID -> String?
+  final String? workshopLink;
   final String? articleLink;
   final List<MediaFileItem> files;
 

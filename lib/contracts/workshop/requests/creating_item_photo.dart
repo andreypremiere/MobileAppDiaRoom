@@ -25,15 +25,4 @@ class CreatingItemPhoto {
       'itemType': itemType.slug,
     };
   }
-
-  // // Создание объекта из Map (для чтения из БД или ответа сервера)
-  // factory CreatingItemPhoto.fromMap(Map<String, dynamic> map) {
-  //   return CreatingItemPhoto(
-  //     title: map['title'] ?? '',
-  //     mimeType: map['mimeType'] ?? '',
-  //     folderId: map['folderId'] ?? '',
-  //     sizeBytes: map['sizeBytes']?.toInt() ?? 0,
-  //     itemType: map['itemType'] ?? '',
-  //   );
-  // }
 }

@@ -64,7 +64,6 @@ class _SelectFolderScreenState extends State<SelectFolderDiaryScreen> {
 
       if (!mounted) return;
 
-      // Проверяем бизнес-логику ответа бэкенда
       if (response.success) {
         final Content root = Content.fromMap(response.data);
         setState(() {
@@ -95,14 +94,13 @@ class _SelectFolderScreenState extends State<SelectFolderDiaryScreen> {
         ),
         leading: AppBackButton(onPressed: () => context.pop()),
       ),
-      // Кнопка подтверждения
       bottomNavigationBar: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: FullWidthButton(
             text: 'Выбрать',
             onPressed: (_isLoading || _errorMessage != null)
-                ? () {} // Блокируем кнопку во время загрузки или при ошибке
+                ? () {}
                 : () {
               if (widget.currentFolderId == null) {
                 context.pop(uuidNil);
@@ -118,7 +116,6 @@ class _SelectFolderScreenState extends State<SelectFolderDiaryScreen> {
   }
 
   Widget _buildBody() {
-    // СОСТОЯНИЕ ОШИБКИ
     if (_errorMessage != null && !_isLoading) {
       return Center(
         child: DiaRoomErrorView(
@@ -128,14 +125,12 @@ class _SelectFolderScreenState extends State<SelectFolderDiaryScreen> {
       );
     }
 
-    //  СОСТОЯНИЕ ЗАГРУЗКИ
     if (_isLoading) {
       return const Center(
         child: DiaRoomLoader(),
       );
     }
 
-    // ПУСТОЙ РЕЗУЛЬТАТ
     if (_folders.isEmpty) {
       return const Center(
         child: Text(
@@ -145,7 +140,6 @@ class _SelectFolderScreenState extends State<SelectFolderDiaryScreen> {
       );
     }
 
-    // ОСНОВНОЙ КОНТЕНТ (Данные успешно загружены)
     return FolderGridView(
       folders: _folders,
       isMyRoom: false,

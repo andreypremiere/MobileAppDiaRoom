@@ -245,7 +245,7 @@ class UploadManager extends ChangeNotifier {
 
         updateProgress(0.4);
 
-        // // Выполняем запрос
+        // Выполняем запрос
         final response = await createMessage(message: creatingMessage);
 
         if (!response.success) {
@@ -315,7 +315,7 @@ class UploadManager extends ChangeNotifier {
 
         updateProgress(0.4);
 
-        // // Выполняем запрос
+        // Выполняем запрос
         final response = await createMessage(message: creatingMessage);
 
         if (!response.success) {

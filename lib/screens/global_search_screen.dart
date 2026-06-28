@@ -280,7 +280,6 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
           children: [
             Expanded(
               child: Container(
-                // Ограничиваем высоту контейнера
                 height: 46,
                 child: TextField(
                   controller: _searchController,
@@ -322,7 +321,6 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
   }
 
   Widget _buildBody() {
-    // СОСТОЯНИЕ ОШИБКИ
     if (_errorMessage != null && !_isLoading) {
       return Expanded(
         child: Center(
@@ -334,7 +332,6 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
       );
     }
 
-    // ПЕРВОНАЧАЛЬНАЯ ЗАГРУЗКА
     if (_isLoading && _foundValues.isEmpty) {
       return const Expanded(
         child: Center(
@@ -343,14 +340,12 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
       );
     }
 
-    // ПУСТОЙ ПОИСКОВОЙ ЗАПРОС
     if (_searchController.text.trim().isEmpty) {
       return const Expanded(
         child: SizedBox.shrink(),
       );
     }
 
-    // ПУСТОЙ РЕЗУЛЬТАТ ПОИСКА
     if (!_isLoading && _foundValues.isEmpty) {
       return const Expanded(
         child: Center(
@@ -362,14 +357,12 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
       );
     }
 
-    // ОСНОВНОЙ КОНТЕНТ (Данные успешно получены)
     return Expanded(
       child: ListView.separated(
         controller: _scrollController,
         separatorBuilder: (context, index) => const SizedBox(height: 6),
         itemCount: _foundValues.length + (_isLoading ? 1 : 0),
         itemBuilder: (context, index) {
-          // Индикатор пагинации в самом низу списка
           if (index == _foundValues.length) {
             return const Center(
               child: Padding(

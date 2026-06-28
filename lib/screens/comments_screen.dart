@@ -11,15 +11,12 @@ import '../components/general/comments/input_panel.dart';
 import '../models/i_comment_item.dart';
 
 class CommentsScreen<T extends ICommentItem> extends StatefulWidget {
-  final String targetId; // Это может быть либо postId, либо messageId
+  final String targetId;
 
-  // Передаем функцию запроса из нужного API
   final Future<AuthResponse> Function({required String id, required int page, required int limit}) onLoadCommentsApi;
 
-  // Передаем функцию отправки из нужного API
   final Future<AuthResponse> Function({required String id, required String text}) onSendCommentApi;
 
-  // Функция-маппер, которая знает, как превратить Map из базы в конкретный CommentResponse
   final T Function(Map<String, dynamic> map) fromMap;
 
   const CommentsScreen({
@@ -73,7 +70,6 @@ class _CommentsScreenState<T extends ICommentItem> extends State<CommentsScreen<
     setState(() => _isLoading = true);
 
     try {
-      // Вызываем переданный через конструктор API метод
       final AuthResponse response = await widget.onLoadCommentsApi(
         id: widget.targetId,
         page: _currentPage,
@@ -89,7 +85,6 @@ class _CommentsScreenState<T extends ICommentItem> extends State<CommentsScreen<
 
       final List<dynamic> rawComments = response.data['comments'] ?? [];
 
-      // Парсим с помощью динамического маппера widget.fromMap
       final List<T> fetchedComments = rawComments
           .map((c) => widget.fromMap(c as Map<String, dynamic>))
           .toList();
@@ -123,7 +118,6 @@ class _CommentsScreenState<T extends ICommentItem> extends State<CommentsScreen<
     FocusScope.of(context).unfocus();
 
     try {
-      // Вызываем переданный через конструктор API метод для создания
       final AuthResponse response = await widget.onSendCommentApi(
         id: widget.targetId,
         text: text,

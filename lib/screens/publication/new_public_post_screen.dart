@@ -28,13 +28,9 @@ class NewPublicPostScreen extends StatefulWidget {
 }
 
 class NewPublicPostState extends State<NewPublicPostScreen> {
-  /// Объект черновика, содержащий все блоки и метаданные публикации
   final PostDraft postDraft = PostDraft();
-
-  /// Индекс блока, который в данный момент редактируется пользователем
   int? _focusedIndex;
 
-  /// Управление фокусом: активирует текстовое поле или снимает фокус с системы
   void _focusBlock(int index) {
     if (_focusedIndex == index) return;
 
@@ -154,14 +150,14 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
 
     final block = postDraft.blocks[index];
 
-    // 1. Проверяем тип блока и вызываем очистку ресурсов
+    // Проверяем тип блока и вызываем очистку ресурсов
     if (block is BlockPhotosCreating) {
-      await block.deleteAllPhotos(); // Твой новый метод для очистки списка фото
+      await block.deleteAllPhotos();
     } else if (block is BlockVideoCreating) {
-      await block.clearBlock(); // Метод для удаления видео и его превью
+      await block.clearBlock();
     }
 
-    // 2. Только после удаления файлов убираем блок из UI
+    // Только после удаления файлов убираем блок из UI
     if (mounted) {
       setState(() {
         postDraft.blocks.removeAt(index);
@@ -234,7 +230,6 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      /// Глобальное снятие фокуса и выделения блока при нажатии на пустую область
       onTap: () {
         FocusScope.of(context).unfocus();
         FocusManager.instance.primaryFocus?.unfocus();
@@ -286,7 +281,6 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
           top: false,
           bottom: true,
           child: postDraft.blocks.isEmpty
-            /// Плейсхолдер для пустого экрана: кнопка добавления первого блока
             ? Container(
                 width: double.infinity,
                 child: Column(
@@ -314,7 +308,6 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
                         child: const Icon(Icons.add_rounded, size: 40),
                       ),
                       onSelected: (value) {
-                        // Даем меню закрыться, перенося добавление блока на следующий тик движка
                         Future.delayed(Duration(milliseconds: 250), () {
                           if (mounted) {
                             _addBlock(value);
@@ -405,7 +398,6 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
                         child: Icon(Icons.add_rounded, size: 40),
                       ),
                       onSelected: (value) {
-                        // Даем меню закрыться, перенося добавление блока на следующий тик движка
                         Future.delayed(Duration(milliseconds: 250), () {
                           if (mounted) {
                             _addBlock(value);
@@ -452,7 +444,6 @@ class NewPublicPostState extends State<NewPublicPostScreen> {
                         left: 10,
                         child: Container(
                           height: 56,
-                          // width: 240,
                           decoration: BoxDecoration(
                             color: context.ui.toolbarContainerColor,
                             borderRadius: BorderRadius.circular(28),

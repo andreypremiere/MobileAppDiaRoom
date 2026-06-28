@@ -45,20 +45,18 @@ class AppTheme {
       menuTheme: MenuThemeData(
         style: MenuStyle(
           backgroundColor: WidgetStateProperty.all(toolbarBackgroundColor),
-          // Здесь же можно настроить скругление углов всего тулбара, если захочешь:
           shape: WidgetStateProperty.all(
             RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           ),
         ),
       ),
 
-      // 2. Бэкап для выпадающих системных списков (копировать/вставить на старых инпутах)
+      // Бэкап для выпадающих системных списков (копировать/вставить на старых инпутах)
       popupMenuTheme: PopupMenuThemeData(
         color: toolbarBackgroundColor,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
 
-      // Исторические параметры для старых виджетов, пусть будут для надежности
       cardColor: toolbarBackgroundColor,
       canvasColor: toolbarBackgroundColor,
 
@@ -68,7 +66,6 @@ class AppTheme {
         selectionHandleColor: const Color(0xFF565656),
       ),
 
-      //  Настройка конкретных текстовых стилей
       textTheme: TextTheme(
         // bodyLarge отвечает за текст внутри TextField
         bodyLarge: TextStyle(
@@ -115,25 +112,21 @@ class AppTheme {
 
   static UICustom _lightExtension() => UICustom(
     primaryColor: const Color(0xFF722323),
-    // Цвета (существующие)
     fontColorPrimary: const Color(0xFF101010),
     iconColorPrimary: const Color(0xFF101010),
     fontColorHint: const Color(0xFFA4A4A4),
     fontColorLight: const Color(0xFFF5F5F5),
     sectionButtonColor: const Color(0xFF722323),
-    // Новые цвета (заполни сам)
     buttonColorSecondary: Colors.white,
     containerColor: Colors.white,
     inputBackgroundColor: const Color(0xFFF3F3F3),
     inputIconColor: const Color(0xFF757575),
-    // Размеры (существующие)
     fontSizeHeader: 20,
     fontSizeDefault: 16,
     radiusButtonStandard: 12,
     fontSizeTitle: 24,
     fontSizeButton: 18,
     fontSizeButtonSecondary: 16,
-    // Радиусы и остальное
     borderRadiusBig: 18,
     borderRadiusMedium: 14,
     borderRadiusSmall: 10,
@@ -153,26 +146,21 @@ class AppTheme {
 
   static UICustom _darkExtension() => UICustom(
     primaryColor: const Color(0xFF9B6D6D),
-    // Цвета (существующие)
     fontColorPrimary: const Color(0xFFE1E1E1),
     iconColorPrimary: const Color(0xFFE1E1E1),
     fontColorHint: const Color(0xFF757575),
     fontColorLight: const Color(0xFF757575),
-    // Новые цвета (заполни сам)
     buttonColorSecondary: const Color(0xFF000000),
     sectionButtonColor: const Color(0xFF9B6D6D),
     containerColor: const Color(0xFF050505),
     inputBackgroundColor: const Color(0xFF131313),
     inputIconColor: const Color(0xFFA2A2A2),
-    // Размеры (существующие)
     fontSizeHeader: 20,
     fontSizeDefault: 16,
-    // Новые размеры (заполни сам)
     fontSizeTitle: 22,
     fontSizeButton: 18,
     fontSizeButtonSecondary: 16,
     radiusButtonStandard: 12,
-    // Радиусы и остальное
     borderRadiusBig: 18,
     borderRadiusMedium: 14,
     borderRadiusSmall: 10,
@@ -193,7 +181,6 @@ class AppTheme {
 
 @immutable
 class UICustom extends ThemeExtension<UICustom> {
-  // Цвета
   final Color primaryColor;
   final Color fontColorPrimary;
   final Color fontColorHint;
@@ -207,14 +194,12 @@ class UICustom extends ThemeExtension<UICustom> {
   final Color viewingPostColor;
   final Color iconColorPrimary;
 
-  // Размеры и шрифты
   final double fontSizeHeader;
   final double fontSizeTitle;
   final double fontSizeButton;
   final double fontSizeButtonSecondary;
   final double fontSizeDefault;
 
-  // Радиусы
   final double borderRadiusBig;
   final double borderRadiusMedium;
   final double borderRadiusSmall;
@@ -222,7 +207,6 @@ class UICustom extends ThemeExtension<UICustom> {
 
   final double radiusButtonStandard;
 
-  // Иконки и аватары
   final double iconSizePanel;
   final double iconSizeCategory;
   final double iconSizeBottomPanel;
@@ -235,7 +219,6 @@ class UICustom extends ThemeExtension<UICustom> {
   final Color toolbarContainerColor;
   final Color toolbarItemColor;
 
-  // Константы начертания
   static const FontWeight textBold = FontWeight.w800;
   static const FontWeight textSemiBold = FontWeight.w700;
   static const FontWeight textMedium = FontWeight.w600;

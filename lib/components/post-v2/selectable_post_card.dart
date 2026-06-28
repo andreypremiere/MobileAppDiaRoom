@@ -16,19 +16,17 @@ class SelectablePostCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Безопасно вытаскиваем URL первой картинки
     String? finalImageUrl;
     if (post.files.isNotEmpty) {
       final rawUrl = post.files.first.urlSmall;
       if (rawUrl != null && rawUrl.isNotEmpty) {
         finalImageUrl = rawUrl.startsWith('http')
             ? rawUrl
-            : 'https://api.yourdiaapp.com$rawUrl'; // Твой базовый URL
+            : 'https://storage.yandexcloud.net/$rawUrl';
       }
     }
 
     return GestureDetector(
-      // Оставляем только одно действие — переданный извне onTap
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
@@ -40,9 +38,8 @@ class SelectablePostCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            // 1. Блок с фото строго 1:1 (Квадрат)
             AspectRatio(
-              aspectRatio: 1.0, // Фиксированное соотношение сторон 1:1
+              aspectRatio: 1.0,
               child: finalImageUrl != null
                   ? CachedNetworkImage(
                 imageUrl: finalImageUrl,
@@ -66,13 +63,11 @@ class SelectablePostCard extends StatelessWidget {
               ),
             ),
 
-            // 2. Статичный блок со статистикой (без интерактивных нажатий)
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: Row(
                 children: [
                   const Spacer(),
-                  // Комментарии
                   Icon(
                     Icons.chat_bubble_outline_rounded,
                     color: context.ui.fontColorHint,
@@ -87,7 +82,6 @@ class SelectablePostCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 16),
-                  // Лайки (Иконка меняется в зависимости от статуса, но нажать нельзя)
                   Icon(
                     post.isLiked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
                     color: post.isLiked ? Colors.redAccent : context.ui.fontColorHint,

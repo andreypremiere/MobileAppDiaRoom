@@ -7,7 +7,7 @@ enum TextType {
     size: 22,
     weight: FontWeight.w800,
     style: FontStyle.normal,
-    icon: Icons.format_size, // Или Icons.title
+    icon: Icons.format_size,
   ),
   subtitle(
     label: 'Подзаголовок',
@@ -39,7 +39,7 @@ enum TextType {
   final double size;
   final FontWeight weight;
   final FontStyle style;
-  final IconData icon; // Новое поле
+  final IconData icon;
 
   const TextType({
     required this.label,

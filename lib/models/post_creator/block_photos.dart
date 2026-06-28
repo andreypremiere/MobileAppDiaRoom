@@ -121,8 +121,8 @@ class BlockPhotoUpload extends BlockUpload {
   @override
   Map<String, dynamic> toJson() {
     return {
-      'blockType': type.slug, // Используем name из Enum (photos)
-      'methodView': methodView.slug, // Предполагаем, что это Enum
+      'blockType': type.slug,
+      'methodView': methodView.slug,
       'listPhoto': listPhoto.map((photo) => photo.toJson()).toList(),
     };
   }

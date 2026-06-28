@@ -26,8 +26,6 @@ class AppAvatar extends StatelessWidget {
     final bool hasImage = avatarPath != null && avatarPath!.isNotEmpty;
     final double diameter = radius * 2;
 
-    // Выносим декор для состояния ошибки/отсутствия картинки,
-    // чтобы не дублировать код в дереве виджетов.
     final placeholderDecoration = BoxDecoration(
       color: const Color(0xFFF0F0F0),
       shape: BoxShape.circle,

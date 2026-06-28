@@ -46,8 +46,6 @@ class _CreateInstagramPostScreenState extends State<CreateInstagramPostScreen> {
     super.dispose();
   }
 
-  // --- ЛОГИКА МУЛЬТИ-ВЫБОРА ФОТО ---
-
   Future<void> _pickMultiImages() async {
     final int currentCount = _postDraft.imagesPaths.length;
     if (currentCount >= maxImagesPostV2) {
@@ -55,13 +53,11 @@ class _CreateInstagramPostScreenState extends State<CreateInstagramPostScreen> {
       return;
     }
 
-    // Запрашиваем сразу несколько изображений
     final List<XFile> pickedFiles = await _picker.pickMultiImage(
       imageQuality: 85,
     );
 
     if (pickedFiles.isNotEmpty) {
-      // Считаем, сколько свободных слотов осталось до лимита в 5 штук
       final int availableSlots = maxImagesPostV2 - currentCount;
       final int imagesToAdd = pickedFiles.length > availableSlots ? availableSlots : pickedFiles.length;
 
@@ -79,8 +75,6 @@ class _CreateInstagramPostScreenState extends State<CreateInstagramPostScreen> {
       }
     }
   }
-
-  // --- ЛОГИКА РЕДАКТИРОВАНИЯ КОНКРЕТНОГО ФОТО ---
 
   Future<void> _editSpecificImage(int index) async {
     final String targetPath = _postDraft.imagesPaths[index];
@@ -104,7 +98,6 @@ class _CreateInstagramPostScreenState extends State<CreateInstagramPostScreen> {
       ],
     );
 
-    // Если пользователь нажал галочку и сохранил изменения — заменяем путь в массиве
     if (croppedFile != null) {
       setState(() {
         _postDraft.imagesPaths[index] = croppedFile.path;
@@ -117,8 +110,6 @@ class _CreateInstagramPostScreenState extends State<CreateInstagramPostScreen> {
       _postDraft.imagesPaths.removeAt(index);
     });
   }
-
-  // --- РАБОТА С ХЕШТЕГАМИ ---
 
   void _handleTagInput(String value) {
     if (value.endsWith(' ') || value.endsWith(',')) {
@@ -144,8 +135,6 @@ class _CreateInstagramPostScreenState extends State<CreateInstagramPostScreen> {
       _postDraft.hashtags.remove(tag);
     });
   }
-
-  // --- СВЯЗЬ С МАСТЕРСКОЙ ---
 
   Future<void> _handleBindLinkWorkshop() async {
     final roomId = context.read<AuthProvider>().roomId;
@@ -203,7 +192,6 @@ class _CreateInstagramPostScreenState extends State<CreateInstagramPostScreen> {
     }
 
     if (mounted && result.success) {
-      // print("Пост успешно создался");
       context.pop(result.data);
     }
     if (mounted && !result.success) {
@@ -262,7 +250,6 @@ class _CreateInstagramPostScreenState extends State<CreateInstagramPostScreen> {
     );
   }
 
-  // Добавь этот метод в конец класса _CreateInstagramPostScreenState
   Widget _buildSectionTitle(String text) {
     return Padding(
       padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
@@ -278,8 +265,6 @@ class _CreateInstagramPostScreenState extends State<CreateInstagramPostScreen> {
     );
   }
 
-  // --- ОБНОВЛЕННЫЙ КОМПОНЕНТ КАРУСЕЛИ ---
-
   Widget _buildMediaCarousel() {
     final bool showAddButton = _postDraft.imagesPaths.length < maxImagesPostV2;
 
@@ -287,26 +272,20 @@ class _CreateInstagramPostScreenState extends State<CreateInstagramPostScreen> {
       height: 120,
       child: ReorderableListView.builder(
         scrollDirection: Axis.horizontal,
-        // --- НОВОЕ СВОЙСТВО ДЛЯ УБИРАНИЯ ФОНА ---
         proxyDecorator: (Widget child, int index, Animation<double> animation) {
-          // AnimatedBuilder позволяет нам плавно анимировать состояние перетаскивания
           return AnimatedBuilder(
             animation: animation,
             builder: (BuildContext context, Widget? child) {
-              // Мы оборачиваем перетаскиваемый элемент (child) в Material,
-              // но задаем прозрачный цвет и убираем тень (elevation).
               return Material(
-                elevation: 0, // Убираем дефолтную тень при зажатии
-                color: Colors.transparent, // Убираем дефолтный фон (белый/серый)
+                elevation: 0,
+                color: Colors.transparent,
                 child: child,
               );
             },
             child: child,
           );
         },
-        // ----------------------------------------
         onReorder: (int oldIndex, int newIndex) {
-          // ... (старая логика onReorder остается без изменений)
           setState(() {
             if (showAddButton && (oldIndex == 0 || newIndex == 0)) return;
             int adjustedOldIndex = showAddButton ? oldIndex - 1 : oldIndex;
@@ -343,11 +322,7 @@ class _CreateInstagramPostScreenState extends State<CreateInstagramPostScreen> {
           return Container(
             key: itemKey,
             width: 120,
-            // ОЧЕНЬ ВАЖНО: Убираем margin у самого Container,
-            // чтобы при перетаскивании не было пустых отступов вокруг фото.
             margin: EdgeInsets.zero,
-            // Добавляем отступ справа через Padding ВНУТРИ карточки,
-            // чтобы он не тащился вместе с фотографией.
             child: Padding(
               padding: const EdgeInsets.only(right: 8.0),
               child: Stack(
@@ -384,8 +359,6 @@ class _CreateInstagramPostScreenState extends State<CreateInstagramPostScreen> {
       ),
     );
   }
-
-  // --- ОСТАЛЬНЫЕ КОМПОНЕНТЫ ИНТЕРФЕЙСА ---
 
   Widget _buildDescriptionField() {
     return TextField(

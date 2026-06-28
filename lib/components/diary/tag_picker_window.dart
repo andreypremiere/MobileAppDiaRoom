@@ -22,7 +22,6 @@ class _TagPickerSheetState extends State<TagPickerSheet> {
   late List<MessageTag> _tempSelected;
   final TextEditingController _newTagController = TextEditingController();
 
-  // Здесь будет загрузка из твоего API
   List<MessageTag> _allUserTags = [];
   bool _isLoading = true;
 
@@ -83,8 +82,8 @@ class _TagPickerSheetState extends State<TagPickerSheet> {
       _tempSelected.removeWhere((t) => t.id == tag.id);
     });
     if (mounted) {
-      Navigator.pop(context); // Закрыть подтверждение
-      Navigator.pop(this.context); // Закрыть основное окно редактирования
+      Navigator.pop(context);
+      Navigator.pop(this.context);
     }
   }
 
@@ -128,7 +127,6 @@ class _TagPickerSheetState extends State<TagPickerSheet> {
     );
   }
 
-  // --- Диалог редактирования / удаления тега ---
   void _showEditDeleteDialog(MessageTag tag) {
     final editController = TextEditingController(text: tag.name);
     int editColorValue = tag.color.toARGB32();
@@ -143,7 +141,6 @@ class _TagPickerSheetState extends State<TagPickerSheet> {
             child: SizedBox(height: 46,child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // 1. Квадратик цвета (высота как у TextField)
                 AspectRatio(
                   aspectRatio: 1,
                   child: GestureDetector(
@@ -161,7 +158,6 @@ class _TagPickerSheetState extends State<TagPickerSheet> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                // 2. Поле ввода с иконкой удаления
                 Expanded(
                   child: TextField(
                     controller: editController,
@@ -179,7 +175,6 @@ class _TagPickerSheetState extends State<TagPickerSheet> {
               ],
             ),),
           ),
-          // Разводим кнопки по сторонам
           actionsAlignment: MainAxisAlignment.spaceBetween,
           actions: [
             TextButton(
@@ -205,7 +200,6 @@ class _TagPickerSheetState extends State<TagPickerSheet> {
     );
   }
 
-// Вспомогательный метод для подтверждения удаления
   void _confirmDelete(MessageTag tag) {
     showDialog(
       context: context,
@@ -232,7 +226,6 @@ class _TagPickerSheetState extends State<TagPickerSheet> {
     );
   }
 
-// Логика обновления
   Future<void> _handleUpdateTag(MessageTag tag, String newName, int newColor) async {
     final response = await updateTag(tagId: tag.id, tag: UpdatingTag(name: newName, color: newColor));
 
@@ -315,13 +308,12 @@ class _TagPickerSheetState extends State<TagPickerSheet> {
   }
 
   Widget _buildNewTagInput() {
-    return SizedBox(height: 48,child: IntrinsicHeight( // Магия здесь: делает высоту Row фиксированной по самому высокому элементу
+    return SizedBox(height: 48,child: IntrinsicHeight(
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch, // Заставляет детей растягиваться по высоте
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // 1. Квадратик выбора цвета
           AspectRatio(
-            aspectRatio: 1, // Гарантирует, что ширина всегда будет равна высоте (квадрат)
+            aspectRatio: 1,
             child: GestureDetector(
               onTap: () => _showColorGridDialog(
                 currentColor: _selectedColorValue,
@@ -343,14 +335,11 @@ class _TagPickerSheetState extends State<TagPickerSheet> {
             ),
           ),
           const SizedBox(width: 8),
-          // 2. Поле ввода текста
           Expanded(
             child: TextField(
               controller: _newTagController,
-              // Убираем лишние внешние отступы, если они мешают центровке
               decoration: InputDecoration(
                 hintText: "Добавить новый тег...",
-                // Чтобы TextField диктовал высоту, можно настроить padding внутри
                 contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
                 suffixIcon: IconButton(
                   icon: const Icon(Icons.add_circle_outline),
@@ -366,7 +355,7 @@ class _TagPickerSheetState extends State<TagPickerSheet> {
 
   Widget _buildTagsList() {
     return Container(
-      constraints: const BoxConstraints(maxHeight: 200), // Ограничиваем высоту, чтобы окно не улетало вверх
+      constraints: const BoxConstraints(maxHeight: 200),
       child: SingleChildScrollView(
         padding: EdgeInsets.zero,
         child: Wrap(

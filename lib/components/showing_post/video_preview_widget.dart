@@ -34,8 +34,6 @@ class VideoPreviewWidget extends StatelessWidget {
             children: [
               _buildPreviewImage(previewPath, isLocal),
 
-              // Container(color: Colors.black.withAlpha(80)),
-
               Center(
                 child: Icon(
                   Icons.play_circle_fill,
@@ -44,7 +42,6 @@ class VideoPreviewWidget extends StatelessWidget {
                 ),
               ),
 
-              // 4. Длительность
               Positioned(
                 bottom: 12,
                 right: 12,

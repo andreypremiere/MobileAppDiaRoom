@@ -4,7 +4,6 @@ import 'package:dia_room/contracts/account-microservice/responses/check_version_
 import 'package:dia_room/utils/utils.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'dio_service.dart';
 import 'jwt_manager.dart';
 
 /// Сервис для работы с защищенным хранилищем устройства.
@@ -15,7 +14,6 @@ class AuthService {
   static const _keyRefreshToken = 'refresh_token';
   static const _keyIsConfigured = 'is_configured';
 
-  /// Сохранение токенов и статуса
   static Future<void> saveAuthData({
     required String access,
     required String refresh,
@@ -25,7 +23,6 @@ class AuthService {
     await saveStatusConfigured(status: configured);
   }
 
-  /// Сохранение токенов
   static Future<void> saveTokens({
     required String access,
     required String refresh,
@@ -42,7 +39,6 @@ class AuthService {
     ]);
   }
 
-  /// Получение данных для восстановления сессии
   static Future<Map<String, String?>> getAuthData() async {
     return await _storage.readAll();
   }
@@ -51,7 +47,6 @@ class AuthService {
     return await _storage.read(key: _keyRefreshToken);
   }
 
-  /// Удаление данных при выходе
   static Future<void> clearTokens() async {
     await _storage.delete(key: _keyAccessToken);
     await _storage.delete(key: _keyRefreshToken);
@@ -65,7 +60,6 @@ class AuthProvider extends ChangeNotifier {
   String? _userId;
   String? _roomId;
   bool _isConfigured = false;
-  // bool _isLoading = true;
 
   String _versionStatus = 'NO_UPDATE'; // Может быть: NO_UPDATE, UPDATE, UPDATE_CRITICAL
   String _versionMessage = '';
@@ -75,22 +69,15 @@ class AuthProvider extends ChangeNotifier {
   String get versionMessage => _versionMessage;
   bool get isOptionalUpdateDismissed => _isOptionalUpdateDismissed;
 
-  // Геттеры
   String? get userId => _userId;
   String? get roomId => _roomId;
   String? get accessToken => _accessToken;
   bool get isAuthenticated => _accessToken != null;
   bool get isConfigured => _isConfigured;
-  // bool get isLoading => _isLoading;
 
-  /// Загрузка при старте приложения
   Future<void> loadSession() async {
-    // _isLoading = true;
-    // notifyListeners();
-
     final data = await AuthService.getAuthData();
     final access = data['access_token'];
-    // final refresh = data['refresh_token'];
 
     _isConfigured = data['is_configured'] == 'true';
 
@@ -98,14 +85,11 @@ class AuthProvider extends ChangeNotifier {
       _parseAndSetToken(access);
     } else {
       await logout();
-      // Нужен, чтобы не было второго notify
       return;
     }
-    // _isLoading = false;
     notifyListeners();
   }
 
-  /// Вспомогательный метод для извлечения ID из JWT
   void _parseAndSetToken(String token) {
     JwtMetadata? decodedToken = JwtManager.getMetadata(token);
     if (decodedToken == null) {
@@ -116,7 +100,6 @@ class AuthProvider extends ChangeNotifier {
     _roomId = decodedToken.roomId;
   }
 
-  /// Вход / Подтверждение кода
   void login(String access, String refresh, bool configured) {
     final result = JwtManager.isTokenValid(access);
 
@@ -146,12 +129,6 @@ class AuthProvider extends ChangeNotifier {
     return await AuthService.getRefreshToken();
   }
 
-  // Future<void> saveTokens(String accessToken, String refreshToken) async {
-  //   _parseAndSetToken(accessToken);
-  //   await AuthService.saveTokens(access: accessToken, refresh: refreshToken);
-  //   notifyListeners();
-  // }
-
   Future<void> saveTokensSilently(String accessToken, String refreshToken) async {
     _parseAndSetToken(accessToken);
     await AuthService.saveTokens(access: accessToken, refresh: refreshToken);
@@ -159,7 +136,6 @@ class AuthProvider extends ChangeNotifier {
 
   Future<void> checkApplicationVersion() async {
     try {
-      // 1. Получаем версию (код из предыдущего шага)
       CheckVersionRequest info = await getAppVersionRequest();
 
       final response = await checkVersion(info);

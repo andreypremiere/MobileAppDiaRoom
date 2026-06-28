@@ -38,7 +38,7 @@ class CompactPostCard extends StatelessWidget {
                 aspectRatio: 16 / 9,
                 child: CachedNetworkImage(
                   imageUrl: post.data.preview,
-                  fit: BoxFit.cover, // Важно: заполнит область 16:9, обрезав лишнее
+                  fit: BoxFit.cover,
                   placeholder: (context, url) => Container(
                     color: context.ui.containerColor.withAlpha(120),
                     child: const Center(child: Icon(Icons.image_outlined, color: Colors.grey)),
@@ -55,7 +55,6 @@ class CompactPostCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Название в две строки
                     Text(
                       post.data.title,
                       style: TextStyle(
@@ -94,7 +93,6 @@ class CompactPostCard extends StatelessWidget {
     );
   }
 
-  // Маленький вспомогательный виджет для элемента статистики
   Widget _buildStatItem(BuildContext context, {required IconData icon, required String value}) {
     return Row(
       mainAxisSize: MainAxisSize.min,

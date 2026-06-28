@@ -1,4 +1,3 @@
-// components/room/room_header.dart
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 
@@ -27,12 +26,11 @@ class RoomHeader extends StatelessWidget {
       aspectRatio: 4 / 3,
       child: Container(
         width: double.infinity,
-        // height: 220,
         decoration: BoxDecoration(
           image: (backgroundUrl.isNotEmpty)
               ? DecorationImage(
             image: NetworkImage(backgroundUrl,
-            ), // Или NetworkImage
+            ),
             fit: BoxFit.cover,
           )
               : null,
@@ -43,7 +41,6 @@ class RoomHeader extends StatelessWidget {
           ),
           child: Stack(
             children: [
-              // Название комнаты поверх обложки с тенью для читаемости
               Positioned(
                 bottom: 15,
                 left: 15,
@@ -63,7 +60,6 @@ class RoomHeader extends StatelessWidget {
                   ),
                 ),
               ),
-              // Аватар и блок спонсора
               Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 20,

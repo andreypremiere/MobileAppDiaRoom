@@ -19,7 +19,7 @@ class PinterestPostCard extends StatefulWidget {
 
 class _PinterestPostCardState extends State<PinterestPostCard> {
   int _currentImageIndex = 0;
-  bool _isLikePending = false; // Оставляем только флаг блокировки кликов
+  bool _isLikePending = false;
 
   void _rollbackLike(bool oldIsLiked, int oldLikesCount, String message) {
     if (!mounted) return;
@@ -32,11 +32,9 @@ class _PinterestPostCardState extends State<PinterestPostCard> {
   Future<void> _toggleLike() async {
     if (_isLikePending) return;
 
-    // 1. Сохраняем предыдущее состояние из объекта
     final bool oldIsLiked = widget.post.isLiked;
     final int oldLikesCount = widget.post.likesCount;
 
-    // 2. Мгновенно обновляем сам объект (Optimistic UI)
     setState(() {
       _isLikePending = true;
       if (widget.post.isLiked) {
@@ -50,14 +48,12 @@ class _PinterestPostCardState extends State<PinterestPostCard> {
     try {
       final AuthResponse response;
 
-      // 3. Отправляем запрос, ориентируясь на старое состояние
       if (oldIsLiked) {
         response = await unlikePost(postId: widget.post.id);
       } else {
         response = await likePost(postId: widget.post.id);
       }
 
-      // 4. Если сервер ответил ошибкой — откатываемся
       if (!response.success) {
         _rollbackLike(oldIsLiked, oldLikesCount, response.message ?? "Не удалось обновить лайк");
       }
@@ -100,7 +96,6 @@ class _PinterestPostCardState extends State<PinterestPostCard> {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            // 1. Блок с фото и индикаторами
             Stack(
               alignment: Alignment.bottomCenter,
               children: [
@@ -126,7 +121,7 @@ class _PinterestPostCardState extends State<PinterestPostCard> {
 
                       String finalImageUrl = rawUrl;
                       if (!rawUrl.startsWith('http')) {
-                        const String baseUrl = 'https://api.yourdiaapp.com';
+                        const String baseUrl = 'https://storage.yandexcloud.net/';
                         finalImageUrl = '$baseUrl$rawUrl';
                       }
 
@@ -160,7 +155,6 @@ class _PinterestPostCardState extends State<PinterestPostCard> {
                   ),
                 ),
 
-                // Шарики (индикаторы)
                 if (widget.post.files.length > 1)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 8.0),
@@ -185,13 +179,11 @@ class _PinterestPostCardState extends State<PinterestPostCard> {
               ],
             ),
 
-            // 2. Блок с лайками и комментариями
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: Row(
                 children: [
                   Spacer(),
-                  // Комментарии (Работаем напрямую с widget.post)
                   Icon(
                     Icons.chat_bubble_outline_rounded,
                     color: context.ui.fontColorHint,

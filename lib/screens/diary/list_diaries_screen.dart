@@ -40,7 +40,6 @@ class _DiaryListScreenState extends State<DiaryListScreen> {
     super.dispose();
   }
 
-  // Обернули _onRefresh в Future<void>, чтобы RefreshIndicator понимал, когда прятать лоадер
   Future<void> _onRefresh() async {
     if (mounted) {
       setState(() {
@@ -54,7 +53,7 @@ class _DiaryListScreenState extends State<DiaryListScreen> {
   }
 
   Future<void> _loadRooms() async {
-    if (_isLoading) return; // Убрали !_hasMore отсюда, чтобы refresh мог пробивать конец списка
+    if (_isLoading) return;
 
     if (mounted) {
       setState(() => _isLoading = true);
@@ -116,7 +115,6 @@ class _DiaryListScreenState extends State<DiaryListScreen> {
         centerTitle: false,
       ),
       body: SafeArea(
-        // Добавили RefreshIndicator на самый верхний уровень тела экрана
         child: RefreshIndicator(
           onRefresh: _onRefresh,
           child: _buildBody(),
@@ -141,13 +139,12 @@ class _DiaryListScreenState extends State<DiaryListScreen> {
       );
     }
 
-    // Изменение 1: Заглушка для пустого списка теперь "скроллируемая"
     if (_rooms.isEmpty) {
       return ListView(
-        physics: const AlwaysScrollableScrollPhysics(), // Магия тут
+        physics: const AlwaysScrollableScrollPhysics(),
         children: [
           SizedBox(
-            height: MediaQuery.of(context).size.height * 0.7, // Центрируем текст на экране
+            height: MediaQuery.of(context).size.height * 0.7,
             child: const Center(
               child: Text(
                 "Вы ни на кого не подписаны",
@@ -159,10 +156,9 @@ class _DiaryListScreenState extends State<DiaryListScreen> {
       );
     }
 
-    // Изменение 2: Добавили физику AlwaysScrollableScrollPhysics для обычного списка
     return ListView.builder(
       controller: _scrollController,
-      physics: const AlwaysScrollableScrollPhysics(), // Позволяет тянуть, даже если записей всего 1-2
+      physics: const AlwaysScrollableScrollPhysics(),
       itemCount: _rooms.length + (_hasMore ? 1 : 0),
       itemBuilder: (context, index) {
         if (index == _rooms.length) {
@@ -190,8 +186,6 @@ class _DiaryListScreenState extends State<DiaryListScreen> {
             displayMessage = "Медиавложения";
           }
         }
-
-        // Потом сделать отображение видеозаметки, аудиосообщения или медиавложения
 
         return DiaryRoomCard(
           nickname: room.author.roomName,

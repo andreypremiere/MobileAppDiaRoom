@@ -39,7 +39,7 @@ class _StateSelectPostDiary extends State<SelectPostDiary> {
       });
     } else {
       roomId = id;
-      _loadPosts(); // Запускаем загрузку, если roomId на месте
+      _loadPosts();
     }
   }
 
@@ -90,13 +90,11 @@ class _StateSelectPostDiary extends State<SelectPostDiary> {
           'Выберите статью',
         ),
       ),
-      // Прокручиваемая колонка с постами
       body: _buildBody()
     );
   }
 
   Widget _buildBody() {
-    // СОСТОЯНИЕ ОШИБКИ
     if (_errorMessage != null && !_isLoading) {
       return Center(
         child: DiaRoomErrorView(
@@ -106,14 +104,12 @@ class _StateSelectPostDiary extends State<SelectPostDiary> {
       );
     }
 
-    // СОСТОЯНИЕ ЗАГРУЗКИ
     if (_isLoading) {
       return const Center(
         child: DiaRoomLoader(),
       );
     }
 
-    // ПУСТОЙ РЕЗУЛЬТАТ (После фильтрации ничего не подошло или постов реально нет)
     if (_posts.isEmpty) {
       return const Center(
         child: Text(
@@ -123,7 +119,6 @@ class _StateSelectPostDiary extends State<SelectPostDiary> {
       );
     }
 
-    // ОСНОВНОЙ КОНТЕНТ (Сетка с отфильтрованными карточками публикаций)
     return GridView.builder(
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(

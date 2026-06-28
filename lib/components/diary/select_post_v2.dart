@@ -26,15 +26,15 @@ class SelectPostV2 extends StatefulWidget {
 class _StateSelectPostV2 extends State<SelectPostV2> {
   final ScrollController _scrollController = ScrollController();
 
-  bool _isLoading = false;          // Первая загрузка
-  bool _isLoadMoreLoading = false;  // Подгрузка старых постов снизу
-  bool _hasMore = true;             // Есть ли еще посты на сервере
+  bool _isLoading = false;
+  bool _isLoadMoreLoading = false;
+  bool _hasMore = true;
   String? _errorMessage;
   List<PostResponse> _posts = [];
   late String roomId;
 
   int _page = 0;
-  final int _limit = 10; // Твой лимит на страницу
+  final int _limit = 10;
 
   @override
   void initState() {
@@ -60,7 +60,6 @@ class _StateSelectPostV2 extends State<SelectPostV2> {
   }
 
   void _scrollListener() {
-    // Если доскроллили почти до конца (за 200 пикселей) и загрузка не идет, грузим еще
     if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
       if (!_isLoading && !_isLoadMoreLoading && _hasMore) {
         _loadPosts(isFirstLoad: false);
@@ -98,7 +97,6 @@ class _StateSelectPostV2 extends State<SelectPostV2> {
         final postsRoom = PostsRoom.fromMap(response.data as Map<String, dynamic>);
         final List<PostResponse> allPosts = postsRoom.posts;
 
-        // Фильтруем публикации
         final filteredPosts = allPosts.where((post) {
           return post.status == PostStatus.published;
         }).toList();
@@ -106,11 +104,10 @@ class _StateSelectPostV2 extends State<SelectPostV2> {
         setState(() {
           _posts.addAll(filteredPosts);
 
-          // Если сервер вернул меньше постов, чем наш лимит, значит дальше ничего нет
           if (allPosts.length < _limit) {
             _hasMore = false;
           } else {
-            _page++; // Инкрементируем страницу для следующего запроса
+            _page++;
           }
 
           _isLoading = false;
@@ -123,7 +120,6 @@ class _StateSelectPostV2 extends State<SelectPostV2> {
           _isLoadMoreLoading = false;
         });
         if (!isFirstLoad) {
-          // Если упала пагинация, лучше показать тост или диалог, не ломая уже загруженное
           await AppInfoDialog.show(context, response.message ?? "Ошибка при подгрузке данных.");
         }
       }
@@ -155,7 +151,6 @@ class _StateSelectPostV2 extends State<SelectPostV2> {
   }
 
   Widget _buildBody() {
-    // СОСТОЯНИЕ ОШИБКИ (Только для первой загрузки)
     if (_errorMessage != null && !_isLoading) {
       return Center(
         child: DiaRoomErrorView(
@@ -165,14 +160,12 @@ class _StateSelectPostV2 extends State<SelectPostV2> {
       );
     }
 
-    // СОСТОЯНИЕ ПЕРВОЙ ЗАГРУЗКИ
     if (_isLoading) {
       return const Center(
         child: DiaRoomLoader(),
       );
     }
 
-    // ПУСТОЙ РЕЗУЛЬТАТ
     if (_posts.isEmpty) {
       return const Center(
         child: Text(
@@ -182,12 +175,11 @@ class _StateSelectPostV2 extends State<SelectPostV2> {
       );
     }
 
-    // ОСНОВНОЙ КОНТЕНТ С КРУТИЛКОЙ ВНИЗУ
     return Column(
       children: [
         Expanded(
           child: GridView.builder(
-            controller: _scrollController, // Привязали контроллер
+            controller: _scrollController,
             padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
@@ -206,7 +198,6 @@ class _StateSelectPostV2 extends State<SelectPostV2> {
           ),
         ),
 
-        // Индикатор подгрузки в самом низу экрана
         if (_isLoadMoreLoading)
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 12),

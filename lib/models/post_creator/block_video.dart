@@ -51,10 +51,8 @@ class BlockVideo extends BlockPost {
     final seconds = duration.inSeconds.remainder(60);
 
     if (hours > 0) {
-      // Формат H:MM:SS
       return "$hours:${twoDigits(minutes)}:${twoDigits(seconds)}";
     } else {
-      // Формат M:SS
       return "${duration.inMinutes}:${twoDigits(seconds)}";
     }
   }
@@ -85,7 +83,6 @@ class BlockVideoCreating extends BlockVideo implements Validatable {
     }
   }
 
-  /// Подгружает имя файла, размер файла, длительность файла
   Future<bool> loadMetadata(String videoPath, int length) async {
     try {
       localPath = videoPath;
@@ -96,7 +93,6 @@ class BlockVideoCreating extends BlockVideo implements Validatable {
           .split('/')
           .last;
 
-      // Получаем длительность через временный контроллер
       final controller = VideoPlayerController.file(file);
       await controller.initialize();
       duration = controller.value.duration;
@@ -132,10 +128,8 @@ class BlockVideoCreating extends BlockVideo implements Validatable {
     final seconds = duration.inSeconds.remainder(60);
 
     if (hours > 0) {
-      // Формат H:MM:SS
       return "$hours:${twoDigits(minutes)}:${twoDigits(seconds)}";
     } else {
-      // Формат M:SS
       return "${duration.inMinutes}:${twoDigits(seconds)}";
     }
   }
@@ -192,11 +186,9 @@ class BlockVideoUpload extends BlockUpload {
   @override
   Map<String, dynamic> toJson() {
     return {
-      'blockType': type.slug, // videos
+      'blockType': type.slug,
       'fileSize': fileSize,
-      'durationMs': duration.inMilliseconds, // Длительность лучше хранить в мс
-      // 'uploadIdVideo': uploadIdVideo,
-      // 'uploadIdPreview': uploadIdPreview,
+      'durationMs': duration.inMilliseconds,
       'publicUrlVideo': publicUrlVideo,
       'publicUrlPreview': publicUrlPreview,
     };

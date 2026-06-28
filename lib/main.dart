@@ -49,7 +49,7 @@ import 'contracts/posts_v2/responses/post_response.dart';
 import 'models/enums/diary/search_method.dart';
 import 'models/enums/global_search/global_search_method.dart';
 import 'package:flutter_quill/flutter_quill.dart';
-import 'package:flutter_localizations/flutter_localizations.dart'; // Нужен для Global локализаций
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -96,11 +96,11 @@ class App extends StatelessWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
 
-        // Делегат самого flutter_quill, который исправляет ошибку
+        // Делегат flutter_quill
         FlutterQuillLocalizations.delegate,
       ],
       supportedLocales: const [
-        Locale('ru', 'RU'), // Основной язык твоего приложения DiaRoom
+        Locale('ru', 'RU'),
         Locale('en', 'US'),
       ],
 
@@ -167,9 +167,7 @@ class App extends StatelessWidget {
           return null;
         },
         routes: [
-          // Главный экран ленты
           GoRoute(path: '/', builder: (context, state) => MainPageScreenV2()),
-          // GoRoute(path: '/', builder: (context, state) => QuillEditorScreen()),
 
           GoRoute(
             path: '/update_critical',
@@ -248,7 +246,6 @@ class App extends StatelessWidget {
             name: 'verifyCode',
             path: '/verifyCode/:userId',
             builder: (context, state) {
-              // Извлекаем параметр из state.pathParameters
               final userId = state.pathParameters['userId']!;
               final email = state.uri.queryParameters['email'] ?? '';
               return VerifyCode(userId: userId, email: email);
@@ -258,7 +255,6 @@ class App extends StatelessWidget {
             path: '/post_preview',
             builder: (context, state) {
               PostDraft? draft = context.read<DraftProvider>().currentDraft;
-              // Если вдруг зашли сюда напрямую без черновика — редирект на начало
               if (draft == null) return NewPublicPostScreen();
               return PostPreviewScreen(postDraft: draft);
             },
@@ -275,7 +271,6 @@ class App extends StatelessWidget {
             },
           ),
 
-          // Экраны регистрации и входа
           GoRoute(
             name: 'registration',
             path: '/registration',
@@ -287,7 +282,6 @@ class App extends StatelessWidget {
             builder: (context, state) => const Login(),
           ),
 
-          // Экран просмотра конкретного поста
           GoRoute(
             path: "/showPost/:roomId/:postId",
             builder: (context, state) {
@@ -305,7 +299,6 @@ class App extends StatelessWidget {
             },
           ),
 
-          // Профиль комнаты
           GoRoute(
             path: '/room/:roomId',
             builder: (context, state) {
@@ -313,14 +306,7 @@ class App extends StatelessWidget {
               return RoomScreen(roomId: roomId);
             },
           ),
-          // GoRoute(
-          //   path: '/room_list/:roomId',
-          //   builder: (context, state) {
-          //     final roomId = state.pathParameters['roomId']!;
-          //     return RoomListScreen(title: '', loadAction: (int page, int limit) {  },);
-          //   },
-          // ),
-          // Список постов внутри комнаты
+
           GoRoute(
             path: '/personalRoomPosts/:roomId',
             builder: (context, state) {
@@ -345,9 +331,9 @@ class App extends StatelessWidget {
                 targetId: postId,
                 fromMap: post_contract.CommentResponse.fromMap,
                 onLoadCommentsApi: ({required id, required page, required limit}) =>
-                    getComments(postId: id, page: page, limit: limit), // твой метод API для постов
+                    getComments(postId: id, page: page, limit: limit),
                 onSendCommentApi: ({required id, required text}) =>
-                    createComment(postId: id, text: text), // твой метод API для постов
+                    createComment(postId: id, text: text),
               );
             },
           ),
@@ -359,18 +345,17 @@ class App extends StatelessWidget {
                 targetId: messageId,
                 fromMap: message_contract.CommentResponse.fromMap,
                 onLoadCommentsApi: ({required id, required page, required limit}) =>
-                    getMessageComments(messageId: id, page: page, limit: limit), // твой метод API для сообщений (замени имя на свое)
+                    getMessageComments(messageId: id, page: page, limit: limit),
                 onSendCommentApi: ({required id, required text}) =>
-                    createMessageComment(messageId: id, text: text), // твой метод API для сообщений (замени имя на свое)
+                    createMessageComment(messageId: id, text: text),
               );
             },
           ),
 
           GoRoute(
-            path: '/share/post/:id', // Слушаем именно браузерный путь из Gateway
+            path: '/share/post/:id',
             redirect: (context, state) {
               final postId = state.pathParameters['id'] ?? '';
-              // Мгновенно перенаправляем пользователя на твой стандартный экран
               return '/post_v2/$postId';
             },
           ),
@@ -395,7 +380,6 @@ class App extends StatelessWidget {
             },
           ),
 
-          // Новый пост для витрины
           GoRoute(
             path: '/newPublicPost',
             builder: (context, state) => const NewPublicPostScreen(),
@@ -404,7 +388,6 @@ class App extends StatelessWidget {
           GoRoute(
             path: '/full_image_screen',
             builder: (context, state) {
-              // Достаем параметры из extra
               final Map<String, dynamic> params =
                   state.extra as Map<String, dynamic>;
               final List<String> paths = params['urls'] as List<String>;
@@ -444,7 +427,6 @@ class App extends StatelessWidget {
             routes: [
               GoRoute(
                 path: ':folderId',
-                // Дочерний маршрут: /workshop/:roomId/:folderId
                 builder: (context, state) {
                   final String roomId = state.pathParameters['roomId']!;
                   final String? folderId = state.pathParameters['folderId'];

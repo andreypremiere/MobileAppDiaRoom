@@ -5,7 +5,7 @@ import '../../models/diary/tag.dart';
 class TagChip extends StatelessWidget {
   final MessageTag tag;
   final bool isSelected;
-  final Function(bool)? onSelected; // Если null, чип работает как кнопка
+  final Function(bool)? onSelected;
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
   final Function(String id)? onClose;
@@ -23,7 +23,7 @@ class TagChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final Color tagColor = tag.color;
-    final bool active = isSelected || onSelected == null; // Если не передали выбор, считаем активным
+    final bool active = isSelected || onSelected == null;
 
     return GestureDetector(
       onLongPress: onLongPress,
@@ -31,7 +31,6 @@ class TagChip extends StatelessWidget {
       child:
       FilterChip(
         backgroundColor: context.ui.containerColor,
-        // Настройка внутренних отступов для компактности
         visualDensity: VisualDensity.compact,
         label: Row(
           mainAxisSize: MainAxisSize.min,

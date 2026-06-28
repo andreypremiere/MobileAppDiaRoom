@@ -39,7 +39,6 @@ class _VerifyCodeState extends State<VerifyCode> {
     _startTimer();
   }
 
-  // Запуск обратного отсчета
   void _startTimer() {
     setState(() {
       _startSeconds = 120;
@@ -59,7 +58,6 @@ class _VerifyCodeState extends State<VerifyCode> {
     });
   }
 
-  // Форматирование секунд в вид 02:10
   String _formatTime(int seconds) {
     int minutes = seconds ~/ 60;
     int remainingSeconds = seconds % 60;
@@ -68,7 +66,7 @@ class _VerifyCodeState extends State<VerifyCode> {
 
   @override
   void dispose() {
-    _timer?.cancel(); // Важно отменить таймер при выходе
+    _timer?.cancel();
     _codeController.dispose();
     super.dispose();
   }
@@ -79,7 +77,6 @@ class _VerifyCodeState extends State<VerifyCode> {
     _startTimer();
   }
 
-  // _handleSendCode отправляет код на проверку и авторизует пользователя
   void _handleSendCode() async {
     final code = _codeController.text.trim();
     if (code.isEmpty) {
@@ -127,7 +124,6 @@ class _VerifyCodeState extends State<VerifyCode> {
         extendBodyBehindAppBar: true,
         body:  SafeArea(child: Stack(
           children: [
-          // Кнопка "Назад" в верхнем левом углу
           Positioned(
           top: 10,
           left: 10,
@@ -137,7 +133,6 @@ class _VerifyCodeState extends State<VerifyCode> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // ОСНОВНОЙ БЕЛЫЙ КОНТЕЙНЕР
                 AuthFormContainer(
                   padding: const EdgeInsets.all(14),
                   borderRadius: 18,
@@ -184,11 +179,9 @@ class _VerifyCodeState extends State<VerifyCode> {
                           onPressed: _handleResendCode,
                           style: TextButton.styleFrom(
                             padding: EdgeInsets.zero,
-                            // Убираем внутренние отступы
                             minimumSize: Size.zero,
-                            // Убираем минимальный размер
                             tapTargetSize: MaterialTapTargetSize
-                                .shrinkWrap, // Схлопываем область нажатия до размера текста
+                                .shrinkWrap,
                           ),
                           child: Text(
                             "Отправить код еще раз",

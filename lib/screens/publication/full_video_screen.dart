@@ -148,7 +148,6 @@ class _FullScreenVideoScreenState extends State<FullScreenVideoScreen> {
                 child: AppBackButton(color: context.ui.elementsVideoPlayerColor),
               ),
 
-              // Затемнение снизу для контроллеров
               Positioned(
                 bottom: 0,
                 left: 0,
@@ -164,10 +163,9 @@ class _FullScreenVideoScreenState extends State<FullScreenVideoScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // Прогресс бар
                       VideoProgressIndicator(
                         _controller,
-                        allowScrubbing: true, // Позволяет перематывать свайпом
+                        allowScrubbing: true,
                         colors: const VideoProgressColors(
                           playedColor: Color(0xFFFF5E5E),
                           bufferedColor: Colors.white24,
@@ -176,7 +174,6 @@ class _FullScreenVideoScreenState extends State<FullScreenVideoScreen> {
                       ),
                       const SizedBox(height: 12),
 
-                      // Кнопка Play/Pause и таймер
                       Row(
                         children: [
                           GestureDetector(

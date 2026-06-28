@@ -10,7 +10,6 @@ import '../../components/auth_screens/auth_form_container.dart';
 import '../../components/general/keyboard_dismissible.dart';
 
 
-// Login представляет экран входа пользователя в систему
 class Login extends StatefulWidget {
   const Login({super.key});
 
@@ -75,7 +74,6 @@ class _LoginState extends State<Login> {
         extendBodyBehindAppBar: true,
         body: SafeArea(child: Stack(
           children: [
-            // Кнопка перехода к регистрации в верхнем углу
             Positioned(
               top: 10,
               right: 10,
@@ -100,7 +98,6 @@ class _LoginState extends State<Login> {
                 ),
               ),
             ),
-            // Центрированная форма входа
             Center(
               child: AuthFormContainer(
                 padding: const EdgeInsets.all(14),
@@ -116,7 +113,6 @@ class _LoginState extends State<Login> {
                       ),
                     ),
                     const SizedBox(height: 10),
-                    // Поле ввода идентификатора пользователя
                     AppTextField(controller: _emailController, hint: "Email"),
                     const SizedBox(height: 10),
                     AppTextField(
@@ -127,7 +123,6 @@ class _LoginState extends State<Login> {
                       onVisibilityToggle: () => setState(() => _obscurePassword = !_obscurePassword),
                     ),
                     const SizedBox(height: 10),
-                    // Кнопка подтверждения входа
                     AuthButton(
                       text: "Войти",
                       backgroundColor: context.ui.primaryColor,

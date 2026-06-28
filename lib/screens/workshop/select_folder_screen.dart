@@ -87,7 +87,6 @@ class _SelectFolderScreenState extends State<SelectFolderScreen> {
   }
 
   Widget _buildBody() {
-    //  Состояние ошибки
     if (!_isLoading && _errorMessage != null) {
       return Center(
         child: DiaRoomErrorView(
@@ -97,12 +96,10 @@ class _SelectFolderScreenState extends State<SelectFolderScreen> {
       );
     }
 
-    // 2. Состояние загрузки
     if (_isLoading) {
       return const Center(child: DiaRoomLoader());
     }
 
-    // 3. Пустая папка
     if (_folders.isEmpty) {
       return Center(
         child: Text(
@@ -140,7 +137,6 @@ class _SelectFolderScreenState extends State<SelectFolderScreen> {
         title: Text('Выберите каталог'),
         leading: AppBackButton(onPressed: () => context.pop()),
       ),
-      // Кнопка подтверждения
       bottomNavigationBar: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16.0),

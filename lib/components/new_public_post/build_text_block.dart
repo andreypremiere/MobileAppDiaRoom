@@ -22,7 +22,6 @@ class _TextBlockWidgetState extends State<TextBlockWidget> {
   @override
   void initState() {
     super.initState();
-    // Слушаем фокус: если тапнули прямо в текст Quill, сообщаем родителю
     widget.block.focusNode.addListener(_onFocusChange);
   }
 
@@ -38,7 +37,6 @@ class _TextBlockWidgetState extends State<TextBlockWidget> {
     }
   }
 
-  // --- Методы форматирования из Diary ---
   void _toggleAttribute(Attribute attribute) {
     final selection = widget.block.controller.selection;
     if (!selection.isCollapsed) {
@@ -115,7 +113,6 @@ class _TextBlockWidgetState extends State<TextBlockWidget> {
           config: QuillEditorConfig(
             placeholder: "Введите текст...",
             autoFocus: false,
-            // scrollable ставим false: блок текста должен расширяться вниз (как maxLines: null)
             scrollable: false,
             expands: false,
             showCursor: true,
@@ -172,11 +169,10 @@ class _TextBlockWidgetState extends State<TextBlockWidget> {
                   height: 1.2,
                 ),
                 const HorizontalSpacing(0, 0),
-                const VerticalSpacing(10, 6), // Отступы сверху и снизу заголовка
+                const VerticalSpacing(10, 6),
                 const VerticalSpacing(0, 0),
                 null,
               ),
-              // Стилизация Среднего заголовка (H2)
               h2: DefaultTextBlockStyle(
                 TextStyle(
                   fontSize: 20,
@@ -203,7 +199,6 @@ class _TextBlockWidgetState extends State<TextBlockWidget> {
               return AdaptiveTextSelectionToolbar(
                 anchors: rawEditorState.contextMenuAnchors,
                 children: [
-                  // 2. СТАНДАРТНЫЕ СТИЛИ
                   IconButton(
                     icon: const Icon(Icons.format_bold, size: 20),
                     onPressed: () {
@@ -290,11 +285,8 @@ class _TextBlockWidgetState extends State<TextBlockWidget> {
                       rawEditorState.hideToolbar();
                     },
                     icon: const Icon(Icons.format_clear, size: 18, color: Colors.redAccent),
-                    // child: Text('Сбросить стиль', style: TextStyle(color: context.ui.fontColorPrimary)),
                   ),
 
-
-                  // 3. МЕНЮ ТРОЕТОЧИЯ через MenuAnchor
                   MenuAnchor(
                     builder: (BuildContext context, MenuController controller, Widget? child) {
                       return IconButton(
@@ -326,8 +318,6 @@ class _TextBlockWidgetState extends State<TextBlockWidget> {
                         leadingIcon: Icon(Icons.cut_rounded, size: 18, color: context.ui.fontColorPrimary),
                         child: Text('Вырезать', style: TextStyle(color: context.ui.fontColorPrimary)),
                       ),
-                      // const PubMenuDividerWrap(), // Разделитель (кастомный или стандартный, см. ниже)
-
                     ],
                   ),
                 ],

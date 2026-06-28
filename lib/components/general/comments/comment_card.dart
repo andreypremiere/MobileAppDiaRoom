@@ -28,7 +28,6 @@ class CommentCard extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 1. Аватарка пользователя слева
             ClipRRect(
               borderRadius: BorderRadius.circular(20),
               child: CachedNetworkImage(
@@ -47,7 +46,6 @@ class CommentCard extends StatelessWidget {
             ),
             const SizedBox(width: 12),
 
-            // 2. Никнейм, текст комментария и дата справа
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -70,11 +68,10 @@ class CommentCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 6),
-                  // Прижимаем дату к правому нижнему углу внутри колонки
                   Align(
                     alignment: Alignment.bottomRight,
                     child: Text(
-                      formatSmartDate(comment.createdAt), // Метод форматирования даты в твоей модели (напр. "12:40")
+                      formatSmartDate(comment.createdAt),
                       style: TextStyle(
                         color: context.ui.fontColorHint,
                         fontSize: 11,

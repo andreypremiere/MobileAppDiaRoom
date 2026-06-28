@@ -6,20 +6,17 @@ import 'package:provider/provider.dart';
 
 import 'bottom_menu_item.dart';
 
-// BottomMenu представляет собой навигационную панель в нижней части экрана
 class BottomMenu extends StatelessWidget {
   const BottomMenu({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      // Внутренние отступы для элементов меню
       padding: EdgeInsets.all(2),
-      // Стилизация контейнера: белый фон и скругление углов
       decoration: ShapeDecoration(
         color: context.ui.containerColor,
-        shape: const StadiumBorder(), // Идеальное скругление сторон
-        shadows: [ // В ShapeDecoration используется 'shadows', а не 'boxShadow'
+        shape: const StadiumBorder(),
+        shadows: [
           BoxShadow(
             blurRadius: 8,
             color: Colors.black.withAlpha(25),

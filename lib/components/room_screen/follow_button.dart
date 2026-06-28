@@ -15,8 +15,8 @@ class FollowButton extends StatefulWidget {
 }
 
 class _FollowButtonState extends State<FollowButton> {
-  bool? _isFollowed; // null пока идет загрузка
-  bool _isLoading = false; // для обработки нажатия
+  bool? _isFollowed;
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -24,7 +24,6 @@ class _FollowButtonState extends State<FollowButton> {
     _checkFollowStatus();
   }
 
-  // Метод инициализации состояния с сервера
   Future<void> _checkFollowStatus() async {
     final result = await checkSubscription(widget.roomId);
     if (result.success) {
@@ -37,7 +36,6 @@ class _FollowButtonState extends State<FollowButton> {
 
   }
 
-  // Метод переключения подписки
   Future<void> _toggleFollow() async {
     setState(() => _isLoading = true);
 
@@ -73,7 +71,6 @@ class _FollowButtonState extends State<FollowButton> {
       );
     }
 
-    // Стили зависят от состояния подписки
     final bool followed = _isFollowed!;
     final Color bgColor = followed ? context.ui.containerColor : context.ui.primaryColor;
     final Color textColor = followed ? context.ui.primaryColor : context.ui.fontColorLight;

@@ -11,7 +11,6 @@ class Author {
 
   factory Author.fromMap(Map<String, dynamic> map) {
     return Author(
-      // Используем те ключи, которые приходят в твоем "плоском" ответе
       roomId: map['roomId'] ?? '',
       roomName: map['roomName'] ?? 'Unknown Room',
       avatar: map['avatarUrl'] ?? '',

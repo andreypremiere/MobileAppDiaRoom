@@ -17,11 +17,9 @@ class PhotosBlockWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     if (block.listPhoto.isEmpty) return const SizedBox.shrink();
 
-    // Определяем тип данных по первой фотографии
     final bool isLocal = block.listPhoto.first.publicUrl.isEmpty &&
         block.listPhoto.first.filePath.isNotEmpty;
 
-    // Формируем список путей/ссылок
     final List<String> paths = block.listPhoto
         .map((e) => isLocal ? e.filePath : getFullUrl(e.publicUrl))
         .toList();
@@ -41,7 +39,6 @@ class PhotosBlockWidget extends StatelessWidget {
     );
   }
 
-  // Универсальный метод открытия галереи
   void _openGalleryPreview(BuildContext context, List<String> paths, int startIndex, bool isLocal) {
     context.push('/full_image_screen', extra: {
       'urls': paths,
@@ -93,7 +90,6 @@ class PhotosBlockWidget extends StatelessWidget {
       );
     }
 
-    // 4 и более фото
     return Column(
       children: [
         Expanded(

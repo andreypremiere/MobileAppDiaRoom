@@ -53,13 +53,12 @@ class _SetSettingsForPostState extends State<SetSettingsForPostScreen> {
       if (tag.isNotEmpty) {
         setState(() {
           if (widget.postDraft.hashtags.length < PostDraft.maxCountHashtags) {
-          // Добавляем в список, если такого тега еще нет
           if (!widget.postDraft.hashtags.contains(tag)) {
             widget.postDraft.hashtags.add(tag);
           }} else {
             AppInfoDialog.show(context, "Можно добавить только 6 хештегов.");
           }
-          _tagsController.clear(); // Очищаем поле для нового ввода
+          _tagsController.clear();
         });
       }
     }
@@ -73,7 +72,6 @@ class _SetSettingsForPostState extends State<SetSettingsForPostScreen> {
 
   Future<void> _startPublication() async {
     if (widget.postDraft.name.isEmpty) {
-      // Вызываем статический метод, а не просто создаем виджет
       AppInfoDialog.show(context, "Название поста не должно быть пустым.");
       return;
     }
@@ -82,11 +80,6 @@ class _SetSettingsForPostState extends State<SetSettingsForPostScreen> {
       AppInfoDialog.show(context, "Необходимо выбрать превью.");
       return;
     }
-
-    // if (widget.postDraft.category == Categories.defaultVal) {
-    //   AppInfoDialog.show(context, "Необходимо выбрать категорию публикации.");
-    //   return;
-    // }
 
     CreatingPostService service = CreatingPostService(post: widget.postDraft);
     service.startCreating();
@@ -144,8 +137,8 @@ class _SetSettingsForPostState extends State<SetSettingsForPostScreen> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8.0),
       child: Wrap(
-        spacing: 8.0, // Расстояние между тегами по горизонтали
-        runSpacing: 4.0, // Расстояние между строками
+        spacing: 8.0,
+        runSpacing: 4.0,
         children: widget.postDraft.hashtags.map((tag) => _buildTagChip(tag)).toList(),
       ),
     );
@@ -270,13 +263,12 @@ class _SetSettingsForPostState extends State<SetSettingsForPostScreen> {
                   ]),
                 ),
               ),
-              // Магия здесь: заполняет оставшееся пространство экрана
               SliverFillRemaining(
-                hasScrollBody: false, // Важно! Позволяет внутреннему Column не ломать скролл
+                hasScrollBody: false,
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
-                    mainAxisAlignment: MainAxisAlignment.end, // Прижимает контент к низу
+                    mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       _buildPublishButton(),
                     ],
@@ -289,8 +281,6 @@ class _SetSettingsForPostState extends State<SetSettingsForPostScreen> {
       ),
     );
   }
-
-  // --- UI КОМПОНЕНТЫ ---
 
   PreferredSizeWidget _buildAppBar(BuildContext context) {
     return AppBar(
@@ -321,7 +311,6 @@ class _SetSettingsForPostState extends State<SetSettingsForPostScreen> {
       controller: controller,
       style: const TextStyle(fontFamily: 'SNPro', fontSize: 16),
       decoration: InputDecoration(
-        // hintText: hint,
         filled: true,
         fillColor: Colors.white,
         contentPadding: const EdgeInsets.symmetric(
@@ -435,7 +424,6 @@ class _SetSettingsForPostState extends State<SetSettingsForPostScreen> {
   //         mainAxisAlignment: MainAxisAlignment.spaceBetween,
   //         children: [
   //           Text(
-  //             // Если категория дефолтная — пишем заглушку, иначе — её название
   //             widget.postDraft.category == Categories.defaultVal
   //                 ? "Выберите категорию..."
   //                 : widget.postDraft.category.label,
@@ -455,7 +443,6 @@ class _SetSettingsForPostState extends State<SetSettingsForPostScreen> {
   // }
 
   void _showCategoryDialog() {
-    // Прячем клавиатуру перед открытием диалога, чтобы UI не прыгал
     FocusScope.of(context).unfocus();
 
     showDialog(
@@ -474,17 +461,14 @@ class _SetSettingsForPostState extends State<SetSettingsForPostScreen> {
             ),
           ),
           content: SizedBox(
-            // Ограничиваем ширину, чтобы на планшетах не растягивалось во весь экран
             width: double.maxFinite,
             child: ListView.builder(
-              shrinkWrap: true, // Позволяет диалогу адаптироваться под размер контента
+              shrinkWrap: true,
               physics: const BouncingScrollPhysics(),
               itemCount: Categories.values.length,
               itemBuilder: (context, index) {
                 final category = Categories.values[index];
 
-                // Если в твоем enums есть дефолтное техническое значение (например, defaultVal),
-                // мы просто скрываем его из списка выбора, чтобы юзер не мог его кликнуть.
                 if (category == Categories.defaultVal) {
                   return const SizedBox.shrink();
                 }
@@ -510,7 +494,7 @@ class _SetSettingsForPostState extends State<SetSettingsForPostScreen> {
                     setState(() {
                       widget.postDraft.category = category;
                     });
-                    Navigator.of(context).pop(); // Закрываем диалог после выбора
+                    Navigator.of(context).pop();
                   },
                 );
               },
@@ -557,7 +541,6 @@ class _SetSettingsForPostState extends State<SetSettingsForPostScreen> {
   Widget _buildWorkShopBinding() {
     final bool isLinkSelected = widget.postDraft.workshopLink.isExist();
 
-    // Состояние 2: Ссылка выбрана
     if (isLinkSelected) {
       return CustomLinkButton(
         icon: Icons.burst_mode_outlined,
@@ -566,7 +549,6 @@ class _SetSettingsForPostState extends State<SetSettingsForPostScreen> {
       );
     }
 
-    // Состояние 1: Ссылка не выбрана (стиль как у селектора категории)
     return InkWell(
       onTap: _handleBindLinkWorkshop,
       borderRadius: BorderRadius.circular(12),

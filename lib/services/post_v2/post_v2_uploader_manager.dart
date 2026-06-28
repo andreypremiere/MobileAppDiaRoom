@@ -40,7 +40,6 @@ class MediaService {
         throw Exception("Файл не найден по пути: $filePath");
       }
 
-      // Используем getSizeResult вместо устаревшего getSize
       final sizeResult = ImageSizeGetter.getSizeResult(FileInput(file));
 
       return MediaSizeResult(
@@ -49,18 +48,13 @@ class MediaService {
       );
     } catch (e) {
       print("Ошибка при получении разрешения изображения: $e");
-      // Возвращаем дефолтные значения в случае сбоя
       return null;
     }
   }
 
   Future<String?> getMimeType(String filePath) async {
     try {
-      // lookupMimeType берет на себя всю работу: анализирует расширение
-      // и, если нужно, может даже проверить магические байты заголовка.
       final mimeType = lookupMimeType(filePath);
-
-      // Если библиотека не смогла определить тип, возвращаем безопасный дефолт
       return mimeType;
     } catch (e) {
       print("Ошибка при определении MimeType через lookupMimeType: $e");
@@ -130,11 +124,11 @@ class PostV2UploaderManager {
     final String postId = responseData.post.id;
     bool hasUploadErrors = false;
 
-    // Создаем список асинхронных задач (Futures)
+    // Создаем список асинхронных задач
     final List<Future<void>> uploadTasks = [];
 
     for (final uploadItem in responseData.uploadItems) {
-      // Находим локальный путь к файлу по его индексу (order)
+      // Находим локальный путь к файлу по его индексу
       final String localPath = draft.imagesPaths[uploadItem.order];
       final File file = File(localPath);
 
@@ -166,7 +160,6 @@ class PostV2UploaderManager {
               status: MediaStatus.failed
           );
 
-          // Сразу пинаем бэкенд, что этот файл сломался
           await api.updateMediaStatus(mediaStatus: updatingStatus);
         } catch (e) {
           print("Не удалось обновить статусы при ошибке загрузки;");
@@ -180,9 +173,6 @@ class PostV2UploaderManager {
     // Запускаем все загрузки одновременно и ждем завершения задач
     await Future.wait(uploadTasks);
 
-    // ==========================================
-    // ФИНАЛЬНЫЙ СТАТУС ПОСТА
-    // ==========================================
     if (hasUploadErrors) {
       final UpdatingPostStatus updatingPost = UpdatingPostStatus(
         id: postId,

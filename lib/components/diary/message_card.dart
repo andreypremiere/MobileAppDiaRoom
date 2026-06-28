@@ -27,24 +27,19 @@ class DiaryMessageCard extends StatelessWidget {
     final double screenWidth = MediaQuery.of(context).size.width;
     final double screenHeight = MediaQuery.of(context).size.height;
     const double menuWidth = 200.0;
-    const double menuHeight = 120.0; // примерная высота меню (зависит от количества пунктов)
+    const double menuHeight = 120.0;
 
-    // Вычисляем позицию: левый верхний угол меню
     double left = tapPosition.dx;
     double top = tapPosition.dy;
 
-    // Корректировка, чтобы не выходило за правый край
     if (left + menuWidth > screenWidth) {
     left = screenWidth - menuWidth - 16;
     }
-    // Корректировка, чтобы не выходило за левый край
     if (left < 16) left = 16;
 
-    // Корректировка по вертикали: если не помещается снизу, показываем выше касания
     if (top + menuHeight > screenHeight) {
     top = tapPosition.dy - menuHeight;
     }
-    // Корректировка, чтобы не выходило за верхний край
     if (top < 16) top = 16;
 
     final result = await showMenu<MessageAction>(
@@ -105,7 +100,6 @@ class DiaryMessageCard extends StatelessWidget {
     } else if (dateToCheck == yesterday) {
       return "Вчера в $timePart";
     } else {
-      // Для старых дат выводим день и время
       return "$timePart · ${DateFormat('dd.MM.yy').format(localDate)}";
     }
   }
@@ -116,7 +110,6 @@ class DiaryMessageCard extends StatelessWidget {
 
     if (workshopId == null) return;
 
-    // Если это "нулевой" ID, переходим только по roomId, иначе добавляем folderId
     final String path = (workshopId == uuidNil)
         ? '/workshop/$roomId'
         : '/workshop/$roomId/$workshopId';
@@ -143,24 +136,19 @@ class DiaryMessageCard extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // 1. Отображение Rich Text (Quill Editor в режиме Read-Only)
         if (message.message.contentJson != null && message.message.contentJson!.isNotEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
             child: Builder(
               builder: (context) {
                 try {
-                  // Загружаем Delta JSON в документ Quill
                   final doc = Document.fromJson(message.message.contentJson!);
 
-                  // Оборачиваем в стандартный DefaultTextStyle.
-                  // Теперь QuillEditor автоматически унаследует цвет и размер текста приложения!
                   return DefaultTextStyle(
                     style: TextStyle(color: context.ui.fontColorPrimary, fontSize: 15),
                     child: QuillEditor(
                       focusNode: FocusNode(),
                       scrollController: ScrollController(),
-                      // 🔥 ИСПРАВЛЕНИЕ 1: Переносим readOnly: true прямо в конструктор QuillController
                       controller: QuillController(
                         document: doc,
                         selection: const TextSelection.collapsed(offset: 0),
@@ -169,29 +157,27 @@ class DiaryMessageCard extends StatelessWidget {
                       config: QuillEditorConfig(
                         autoFocus: false,
                         expands: false,
-                        scrollable: false, // Отключаем внутренний скролл, чтобы не ломать ListView чата
+                        scrollable: false,
                         showCursor: false,
-                        enableInteractiveSelection: true, // Позволяет выделять и копировать текст
+                        enableInteractiveSelection: true,
                         enableSelectionToolbar: true,
 
                         customStyles: DefaultStyles(
-                          // Стиль для обычного текста (абзаца)
                           paragraph: DefaultTextBlockStyle(
                             TextStyle(
-                              fontSize: 16, // Делаем крупнее (по дефолту обычно 14)
-                              color: context.ui.fontColorPrimary, // Твой цвет текста из темы
-                              height: 1.3, // Высота строки для красивого отображения
+                              fontSize: 16,
+                              color: context.ui.fontColorPrimary,
+                              height: 1.3,
                             ),
                             const HorizontalSpacing(0, 0),
-                            const VerticalSpacing(0, 0), // Убираем дефолтные отступы между абзацами
+                            const VerticalSpacing(0, 0),
                             const VerticalSpacing(0, 0),
                             null,
                           ),
-                          // Стиль для плейсхолдера (размер должен совпадать с основным текстом)
                           placeHolder: DefaultTextBlockStyle(
                             TextStyle(
                               fontSize: 16,
-                              color: context.ui.fontColorHint, // Серый цвет для подсказки
+                              color: context.ui.fontColorHint,
                               height: 1.3,
                             ),
                             const HorizontalSpacing(0, 0),
@@ -201,40 +187,30 @@ class DiaryMessageCard extends StatelessWidget {
                           ),
                           quote: DefaultTextBlockStyle(
                             TextStyle(
-                              fontSize: 15, // Можно сделать чуть меньше основного текста
-                              color: context.ui.fontColorPrimary.withAlpha(220), // Слегка приглушенный цвет текста
-                              fontStyle: FontStyle.italic, // Делаем текст курсивным
+                              fontSize: 15,
+                              color: context.ui.fontColorPrimary.withAlpha(220),
+                              fontStyle: FontStyle.italic,
                               height: 1.4,
                             ),
-                            const HorizontalSpacing(2, 2), // Внутренние отступы (padding) слева и справа
-                            const VerticalSpacing(8, 8),   // Отступы (margin) сверху и снизу самого блока цитаты
-                            const VerticalSpacing(6, 6),   // Внутренние отступы между строками внутри цитаты
+                            const HorizontalSpacing(2, 2),
+                            const VerticalSpacing(8, 8),
+                            const VerticalSpacing(6, 6),
                             BoxDecoration(
-                              // Делаем цвет подложки чуть светлее/темнее основного фона панели
-                              // color: context.ui.containerColor.withAlpha(20).addColorMask(Colors.black, 10),
-                              // Либо можно использовать явный полупрозрачный акцентный цвет:
                               color: context.ui.primaryColor.withAlpha(25),
-
-                              // Скругляем края (твое требование)
                               borderRadius: BorderRadius.circular(4),
-
-                              // Кастомная граница: делаем толстую вертикальную линию только СЛЕВА
                               border: Border(
                                 left: BorderSide(
                                   width: 4,
-                                  color: context.ui.primaryColor, // Цвет вертикальной полоски (твой акцентный цвет)
+                                  color: context.ui.primaryColor,
                                 ),
                               ),
                             ),
                           ),
                         ),
-                        // 🔥 ИСПРАВЛЕНИЕ 2: Убрали капризный customStyles с его VerticalSpacing.
-                        // Текст теперь стилизуется стабильно через DefaultTextStyle выше.
                       ),
                     ),
                   );
                 } catch (e) {
-                  // Защита на случай, если в базе остались старые сообщения в виде обычных строк
                   return Text(
                     message.message.content ?? "Ошибка отображения формата текста",
                     style: TextStyle(fontSize: 15, color: context.ui.fontColorPrimary),
@@ -244,11 +220,9 @@ class DiaryMessageCard extends StatelessWidget {
             ),
           ),
 
-        // 2. Вложения (Media Grid)
         if (message.attachments.isNotEmpty)
           MediaGrid(attachments: message.attachments),
 
-        // 3. Кнопки ссылок (Объекты мастерской/посты)
         if (message.message.attachedObjectWorkshopId != null ||
             message.message.attachedObjectPostId != null || message.message.attachedObjectPostV2Id != null)
           AttachedLinksBlock(
@@ -260,7 +234,6 @@ class DiaryMessageCard extends StatelessWidget {
               onTapPost: () => _handleOnTapPost(context),
               onTapPostV2: () => _handleOnTapPostV2(context)),
 
-        // 4. Теги сообщения
         if (message.tags.isNotEmpty)
           TagsWidget(
             tags: message.tags,
@@ -289,20 +262,16 @@ class DiaryMessageCard extends StatelessWidget {
     }
 
     return Padding(
-      // Нижний отступ между сообщениями в ленте
       padding: const EdgeInsets.only(bottom: 12),
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          // 1. Основной кликабельный контейнер (теперь он чуть выше, чтобы вместить таблетку)
           GestureDetector(
             onLongPressStart: onLongPress != null
                 ? (details) async => _showPopUp(context, details)
                 : null,
             child: Container(
               padding: const EdgeInsets.all(4),
-              // Важно: делаем нижний маргин внутри контейнера, чтобы визуально карточка
-              // кончалась выше, а физически ее границы доходили до конца таблетки!
               margin: const EdgeInsets.only(bottom: 12),
               decoration: BoxDecoration(
                 color: context.ui.containerColor,
@@ -321,9 +290,8 @@ class DiaryMessageCard extends StatelessWidget {
                 children: [
                   messageContent,
 
-                  // Общий футер с датой
                   Padding(
-                    padding: const EdgeInsets.only(bottom: 16, right: 10, top: 2), // Дали больше отступа снизу
+                    padding: const EdgeInsets.only(bottom: 16, right: 10, top: 2),
                     child: Align(
                       alignment: Alignment.bottomRight,
                       child: Text(
@@ -340,13 +308,11 @@ class DiaryMessageCard extends StatelessWidget {
             ),
           ),
 
-          // 2. Таблетка комментария. Теперь у нее позиция bottom: 0!
-          // Она сидит на физической границе Stack и контейнера, поэтому кликается идеально.
           Positioned(
             bottom: 0,
             left: 16,
             child: GestureDetector(
-              behavior: HitTestBehavior.opaque, // Гарантирует обработку тапа по всей площади
+              behavior: HitTestBehavior.opaque,
               onTap: onCommentsTap,
               child: Container(
                 height: 32,

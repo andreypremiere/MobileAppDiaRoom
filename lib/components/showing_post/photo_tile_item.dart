@@ -28,7 +28,6 @@ class PhotoTileItem extends StatelessWidget {
         fit: BoxFit.cover,
         width: double.infinity,
         height: double.infinity,
-        // Обработка ошибки, если локальный файл удален
         errorBuilder: (context, error, stackTrace) => _buildErrorWidget(),
       )
           : CachedNetworkImage(

@@ -35,12 +35,12 @@ class ApiService {
     final HttpClient client = HttpClient(context: context);
 
     client.badCertificateCallback = (X509Certificate cert, String host, int port) {
-      // Если мы стучимся на локальный IP или localhost — отключаем SSL Pinning для тестов
+      // Если мы запрос на локальный IP или localhost — отключаем SSL Pinning для тестов
       if (host == 'localhost' || host == '10.0.2.2' || host.startsWith('192.168.')) {
         return true; // Разрешаем локальный http/https без проверок
       }
 
-      // На проде — жесткая проверка хэша
+      // На проде — проверка хэша
       if (host == 'diaroom.me') {
         final serverDer = cert.der;
         return _checkCertificateHash(serverDer);
@@ -52,22 +52,19 @@ class ApiService {
 
   // Метод проверки хэша
   static bool _checkCertificateHash(List<int> der) {
-    // Хэшируем DER-последовательность сертификата от Let's Encrypt
     final sha256Hash = sha256.convert(der).toString();
 
     if (sha256Hash == _expectedHash) {
       return true; // Сертификаты совпадают, пропускаем запрос
     }
 
-    print("SSL Pinning Error! Кэш сервера: $sha256Hash не совпадает с ожидаемым!");
-    return false; // Хэш изменился — блокируем запрос (защита от MitM)
+    return false;
   }
 
   static void init(AuthProvider authProvider) {
-    print("🚀 API_SERVICE_INIT: Инициализация! baseUrl равен: '$baseUrl'");
+    print("API_SERVICE_INIT: Инициализация! baseUrl равен: '$baseUrl'");
     _dio.interceptors.clear();
     _dio.interceptors.add(QueuedInterceptorsWrapper(
-      // 1. ПЕРЕД ОТПРАВКОЙ (Добавляем Access Token)
       onRequest: (options, handler) async {
         // Список путей-исключений
         const whiteList = ['/account/login', '/account/register', '/account/verifyCode', '/account/refreshSession', '/account/logout'];
@@ -105,13 +102,13 @@ class ApiService {
           // Если не найдено значение в бд
           // Если истек срок токена ( запрос attemptRefresh вернул 401 ошибку)
           if (success == null) {
-            // Сервер ответил 401 или 404 (NOT_FOUND) на рефреш — жесткий логаут
+            // Сервер ответил 401 или 404 на рефреш — логаут
             await authProvider.logout();
             return handler.next(e); // Возвращаем изначальную ошибку
           }
 
           else if (success.success) {
-            // Токен успешно обновился! Повторяем исходный запрос
+            // Токен успешно обновился. Повторяем исходный запрос
             final String? newToken = authProvider.accessToken;
             final options = e.requestOptions;
             options.headers['Authorization'] = 'Bearer $newToken';
@@ -138,20 +135,14 @@ class ApiService {
       },
     ));
 
-    // _dio.httpClientAdapter = IOHttpClientAdapter(
-    //   createHttpClient: _getSecureHttpClient,
-    // );
-
     if (baseUrl.startsWith('https')) {
       _dio.httpClientAdapter = IOHttpClientAdapter(
         createHttpClient: _getSecureHttpClient,
       );
     } else {
-      // Для локального http используем дефолтный клиент без SSL-мусора
       _dio.httpClientAdapter = IOHttpClientAdapter(
         createHttpClient: () {
           final client = HttpClient();
-          // На всякий случай разрешаем плохие сертификаты, если вдруг дернем локальный https
           client.badCertificateCallback = (cert, host, port) => true;
           return client;
         },
@@ -220,7 +211,6 @@ class ApiService {
     }
   }
 
-  // Универсальный POST
   static Future<Response> post(String path, {dynamic data, Options? options}) async {
     return await _dio.post(path, data: data, options: options);
   }
@@ -247,7 +237,6 @@ class ApiService {
     required String contentType,
   }) async {
     // Создаем отдельный экземпляр Dio, чтобы не срабатывали интерцепторы авторизации
-    // (S3 не примет наш Bearer токен в заголовке)
     final uploadDio = Dio();
 
     final bytes = await file.readAsBytes();
@@ -264,7 +253,6 @@ class ApiService {
     );
   }
 
-  // Можно оставить как обертку для совместимости или удалить
   static Future<Response> uploadImage(String presignedUrl, File file) async {
     return await putBinaryFile(
       url: presignedUrl,

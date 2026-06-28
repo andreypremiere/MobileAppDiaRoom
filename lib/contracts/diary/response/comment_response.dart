@@ -27,7 +27,6 @@ class CommentResponse implements ICommentItem {
       createdAt: map['createdAt'] != null
           ? DateTime.parse(map['createdAt']).toLocal()
           : DateTime.now(),
-      // Безопасно парсим автора, если он пришел в ответе
       author: map['author'] != null ? Author.fromMap(map['author']) : null,
     );
   }

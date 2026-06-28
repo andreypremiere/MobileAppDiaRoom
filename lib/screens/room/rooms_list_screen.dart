@@ -114,7 +114,6 @@ class _RoomListScreenState extends State<RoomListScreen> {
   }
 
   Widget _buildBody() {
-    // 1. Сценарий: Первая загрузка пуста и прилетела ошибка (сеть/сервер) -> Полноэкранная ошибка
     if (!_isLoading && _errorMessage != null && _users.isEmpty) {
       return DiaRoomErrorView(
         errorMessage: _errorMessage!,
@@ -122,14 +121,12 @@ class _RoomListScreenState extends State<RoomListScreen> {
       );
     }
 
-    // 2. Сценарий: Первая загрузка в процессе, данных ещё нет -> Полноэкранный лоадер
     if (_isLoading && _users.isEmpty) {
       return const Center(
         child: DiaRoomLoader(),
       );
     }
 
-    // 3. Сценарий: Загрузка завершена успешно, но сервер вернул пустой список -> Заглушка
     if (!_isLoading && _users.isEmpty) {
       return Center(
         child: Text(
@@ -139,14 +136,13 @@ class _RoomListScreenState extends State<RoomListScreen> {
       );
     }
 
-    // 4. Сценарий: Данные есть (или идет дозагрузка пагинации) -> Показываем список с RefreshIndicator
     return RefreshIndicator(
       color: context.ui.primaryColor,
       onRefresh: _onRefresh,
       child: ListView.builder(
         controller: _scrollController,
         padding: const EdgeInsets.symmetric(vertical: 10),
-        physics: const AlwaysScrollableScrollPhysics(), // Важно, чтобы пулл-ту-рефреш работал даже на полупустом экране
+        physics: const AlwaysScrollableScrollPhysics(),
         itemCount: _users.length + (_hasMore ? 1 : 0),
         itemBuilder: (context, index) {
           if (index < _users.length) {

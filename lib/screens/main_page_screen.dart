@@ -166,7 +166,6 @@ class _StateMainPageScreen extends State<MainPageScreen> {
                   child: CustomScrollView(
                     controller: _scrollController,
                     slivers: [
-                      // Основной список постов
                       SliverSafeArea(
                         top: true,
                         sliver: SliverPadding(
@@ -202,7 +201,6 @@ class _StateMainPageScreen extends State<MainPageScreen> {
                         ),
                       ),
 
-                      // Индикатор загрузки в самом низу (футер)
                       if (_isLoading && _posts.isNotEmpty)
                         SliverToBoxAdapter(
                           child: Padding(
@@ -214,15 +212,11 @@ class _StateMainPageScreen extends State<MainPageScreen> {
                             ),
                           ),
                         ),
-
-                      // // Отступ снизу, чтобы контент не перекрывался меню
-                      // SliverToBoxAdapter(child: SizedBox(height: MediaQuery.of(context).padding.bottom + 2)),
                     ],
                   ),
                 ),
               ),
 
-        // Стрелка вверх
         floatingActionButton: AnimatedOpacity(
           duration: const Duration(milliseconds: 300),
           opacity: _showBackToTop ? 1.0 : 0.0,
@@ -246,7 +240,6 @@ class _StateMainPageScreen extends State<MainPageScreen> {
           ),
         ),
 
-        // Нижнее меню
         bottomNavigationBar: AnimatedSlide(
           duration: const Duration(milliseconds: 300),
           offset: _isBottomMenuVisible ? Offset.zero : const Offset(0, 2),

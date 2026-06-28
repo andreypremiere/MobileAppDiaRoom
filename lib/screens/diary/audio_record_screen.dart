@@ -29,7 +29,6 @@ class AudioRecordScreen extends StatefulWidget {
 class _AudioRecordScreenState extends State<AudioRecordScreen> {
   final AudioRecorder _audioRecorder = AudioRecorder();
 
-  // Плеер и его состояние
   final AudioPlayer _audioPlayer = AudioPlayer();
   bool _isPlaying = false;
   Duration _duration = Duration.zero;
@@ -46,7 +45,6 @@ class _AudioRecordScreenState extends State<AudioRecordScreen> {
   void initState() {
     super.initState();
 
-    // Слушаем состояние плеера
     _audioPlayer.onPlayerStateChanged.listen((state) {
       if (mounted) {
         setState(() => _isPlaying = state == PlayerState.playing);
@@ -75,11 +73,10 @@ class _AudioRecordScreenState extends State<AudioRecordScreen> {
   void dispose() {
     _timer?.cancel();
     _audioRecorder.dispose();
-    _audioPlayer.dispose(); // Не забываем освобождать ресурсы
+    _audioPlayer.dispose();
     super.dispose();
   }
 
-  // --- Логика воспроизведения ---
   Future<void> _playPause() async {
     if (_path == null) return;
 
@@ -90,7 +87,6 @@ class _AudioRecordScreenState extends State<AudioRecordScreen> {
     }
   }
 
-  // --- Управление записью ---
   Future<void> _start() async {
     try {
       if (await _audioRecorder.hasPermission()) {
@@ -98,9 +94,9 @@ class _AudioRecordScreenState extends State<AudioRecordScreen> {
         final path = '${dir.path}/audio_${DateTime.now().millisecondsSinceEpoch}.m4a';
 
         const recordConfig = RecordConfig(
-          encoder: AudioEncoder.aacLc, // AAC — лучший баланс между сжатием и качеством
+          encoder: AudioEncoder.aacLc, // AAC
           bitRate: 32000,              // 32 kbps
-          sampleRate: 22050,           // 22.05 kHz — стандарт для речи
+          sampleRate: 22050,           // 22.05 kHz
           numChannels: 1,              // Моно
           autoGain: true,              // Авто-усиление: выравнивает тихий голос
           echoCancel: true,            // Эхоподавление
@@ -134,7 +130,6 @@ class _AudioRecordScreenState extends State<AudioRecordScreen> {
       _isPaused = false;
       _path = path;
     });
-    // Загружаем файл в плеер сразу после остановки, чтобы получить длительность
     if (path != null) {
       await _audioPlayer.setSourceDeviceFile(path);
     } else {
@@ -160,7 +155,6 @@ class _AudioRecordScreenState extends State<AudioRecordScreen> {
     });
   }
 
-  // --- Вспомогательные методы ---
   void _startTimer() {
     _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 1), (Timer t) {
@@ -193,7 +187,6 @@ class _AudioRecordScreenState extends State<AudioRecordScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Таймер записи или Плеер
             if (_path == null) ...[
               Text(
                 _formatDuration(Duration(seconds: _recordDuration)),
@@ -205,7 +198,7 @@ class _AudioRecordScreenState extends State<AudioRecordScreen> {
                 ),
               ),
             ] else ...[
-              _buildPlayerUI(), // Показываем плеер, если запись готова
+              _buildPlayerUI(),
             ],
 
             const SizedBox(height: 10),
@@ -218,7 +211,6 @@ class _AudioRecordScreenState extends State<AudioRecordScreen> {
 
             const SizedBox(height: 60),
 
-            // Кнопки управления
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -257,7 +249,6 @@ class _AudioRecordScreenState extends State<AudioRecordScreen> {
     );
   }
 
-  // Виджет плеера (Слайдер + время)
   Widget _buildPlayerUI() {
     return Column(
       children: [
@@ -293,11 +284,10 @@ class _AudioRecordScreenState extends State<AudioRecordScreen> {
 
   Widget _buildMainButton() {
     bool showStop = _isRecording;
-    // Если запись готова, центральная кнопка может либо ничего не делать, либо перезаписывать
     return GestureDetector(
       onTap: _path != null ? null : (showStop ? _stop : _start),
       child: Opacity(
-        opacity: _path != null ? 0.3 : 1.0, // Скрываем, если уже записали
+        opacity: _path != null ? 0.3 : 1.0,
         child: Container(
           width: 80,
           height: 80,
@@ -330,7 +320,6 @@ class _AudioRecordScreenState extends State<AudioRecordScreen> {
     );
   }
 
-  // Методы паузы/продолжения записи (нужны для кнопок)
   Future<void> _pause() async {
     await _audioRecorder.pause();
     _stopTimer();

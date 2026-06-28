@@ -23,7 +23,6 @@ class FolderItem extends StatelessWidget {
 
     final result = await showMenu<FolderAction>(
       context: context,
-      // Позиция меню там, где был зажат палец
       position: RelativeRect.fromRect(
         details.globalPosition & const Size(40, 40),
         Offset.zero & overlay.size,
@@ -31,7 +30,7 @@ class FolderItem extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
       ),
-      elevation: 4, // Та же тень
+      elevation: 4,
       color: context.ui.containerColor,
       items: [
         _buildPopupItem(context, value: FolderAction.rename, icon: Icons.edit_rounded, label: 'Переименовать'),
@@ -45,7 +44,6 @@ class FolderItem extends StatelessWidget {
     }
   }
 
-  // Твой метод создания айтемов (адаптирован под Enum)
   PopupMenuItem<FolderAction> _buildPopupItem(
       BuildContext context, {
         required FolderAction value,

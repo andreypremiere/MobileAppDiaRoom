@@ -1,12 +1,12 @@
 import 'package:dia_room/components/general/app_avatar.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart'; // Не забудь про импорт intl для DateFormat внутри функции
+import 'package:intl/intl.dart';
 import '../../../utils/app_theme.dart';
 
 class DiaryRoomCard extends StatelessWidget {
   final String nickname;
   final String? avatarUrl;
-  final DateTime? lastMessageAt; // Теперь активно используем!
+  final DateTime? lastMessageAt;
   final String lastMessage;
   final int unreadCount;
   final VoidCallback onTap;
@@ -21,7 +21,6 @@ class DiaryRoomCard extends StatelessWidget {
     required this.onTap,
   });
 
-  // Твоя умная функция форматирования даты
   String _formatSmartDate(DateTime date) {
     final localDate = date.toLocal();
     final now = DateTime.now();
@@ -35,9 +34,9 @@ class DiaryRoomCard extends StatelessWidget {
     if (dateToCheck == today) {
       return timePart;
     } else if (dateToCheck == yesterday) {
-      return "Вчера"; // Для краткости в списке чатов "в $timePart" обычно опускают, но если нужно — верни свой вариант
+      return "Вчера";
     } else {
-      return DateFormat('dd.MM.yy').format(localDate); // В списке чатов красивее смотрится просто компактная дата
+      return DateFormat('dd.MM.yy').format(localDate);
     }
   }
 
@@ -57,7 +56,6 @@ class DiaryRoomCard extends StatelessWidget {
             ),
             const SizedBox(width: 12),
 
-            // Никнейм и последнее сообщение
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -89,12 +87,10 @@ class DiaryRoomCard extends StatelessWidget {
             ),
             const SizedBox(width: 8),
 
-            // Правая колонка: Время и Счетчик непрочитанных
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Показываем дату, только если она передана (lastMessageAt != null)
                 if (lastMessageAt != null)
                   Text(
                     _formatSmartDate(lastMessageAt!),
@@ -105,21 +101,19 @@ class DiaryRoomCard extends StatelessWidget {
                     ),
                   ),
 
-                // Делаем отступ между датой и счетчиком, только если счетчик будет отображаться
                 if (lastMessageAt != null && unreadCount > 0)
                   const SizedBox(height: 6),
 
-                // Счетчик непрочитанных
                 if (unreadCount > 0)
                   Container(
-                    height: 22, // Чуть уменьшил высоту для компактности рядом с датой
+                    height: 22,
                     padding: const EdgeInsets.symmetric(horizontal: 6),
                     constraints: const BoxConstraints(
                       minWidth: 22,
                     ),
                     decoration: BoxDecoration(
                       color: context.ui.appBarColor,
-                      borderRadius: BorderRadius.circular(12), // Скругленные углы лучше подходят для '99+'
+                      borderRadius: BorderRadius.circular(12),
                     ),
                     child: Center(
                       child: Text(
@@ -133,8 +127,6 @@ class DiaryRoomCard extends StatelessWidget {
                     ),
                   ),
 
-                // Корректирующая заглушка-распорка, чтобы высота правой колонки не прыгала,
-                // когда счетчика нет, удерживая никнейм и сообщение по центру аватарки
                 if (unreadCount == 0 && lastMessageAt != null)
                   const SizedBox(height: 16),
               ],

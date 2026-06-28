@@ -2,8 +2,6 @@ import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:go_router/go_router.dart';
-
-// Импорты твоих новых сервисов, моделей и компонентов
 import '../api/post_v2_api.dart';
 import '../components/post-v2/card.dart';
 import '../components/general/keyboard_dismissible.dart';
@@ -25,14 +23,12 @@ class MainPageScreenV2 extends StatefulWidget {
 }
 
 class _StateMainPageScreen extends State<MainPageScreenV2> {
-  // 1. Переключаемся на новую модель PostResponse
   List<PostResponse> _posts = [];
   int _currentPage = 0;
   final int _limit = 20;
   bool _isLoading = false;
   bool _hasMore = true;
   String? _errorMessage;
-  // Добавляем флаг переключения вида
   bool _isPinterestView = false;
 
   bool _isBottomMenuVisible = true;
@@ -80,23 +76,19 @@ class _StateMainPageScreen extends State<MainPageScreenV2> {
   }
 
   Future<void> _navigateToPost(PostResponse post) async {
-    // Ждем возврата объекта из детального экрана
     final updatedPost = await context.push<PostResponse>(
       '/post_v2/${post.id}',
       extra: post,
     );
 
-    // Если вернулся обновленный пост (пользователь лайкнул или оставил коммент)
     if (updatedPost != null && mounted) {
       setState(() {
-        // Находим индекс старого поста в массиве и заменяем его на обновленный
         final index = _posts.indexWhere((p) => p.id == post.id);
         if (index != -1) {
           _posts[index] = updatedPost;
         }
       });
     } else if (mounted) {
-      // На случай, если объект мутировал по ссылке (для Pinterest вида)
       setState(() {});
     }
   }
@@ -132,12 +124,9 @@ class _StateMainPageScreen extends State<MainPageScreenV2> {
     }
 
     try {
-      // 2. Вызываем новый метод API
       final response = await getGlobalFeed(page: _currentPage, limit: _limit);
 
       if (response.success) {
-        // Так как метод API возвращает сырой response.data,
-        // маппим его в модель PostsRoom прямо здесь, на уровне экрана
         final postsRoom = PostsRoom.fromMap(response.data as Map<String, dynamic>);
         final List<PostResponse> newPosts = postsRoom.posts;
 
@@ -202,7 +191,7 @@ class _StateMainPageScreen extends State<MainPageScreenV2> {
               slivers: [
                 SliverAppBar(
                   backgroundColor: context.ui.appBarColor,
-                  floating: false, // Скрывается при скролле вниз, появляется при скролле вверх
+                  floating: false,
                   title: Text(
                     'Главная',
                   ),
@@ -220,7 +209,6 @@ class _StateMainPageScreen extends State<MainPageScreenV2> {
                     ),
                   ],
                 ),
-                // Основной список постов
                 SliverSafeArea(
                   top: false,
                   sliver: SliverPadding(
@@ -254,14 +242,13 @@ class _StateMainPageScreen extends State<MainPageScreenV2> {
                       delegate: SliverChildBuilderDelegate((context, index) {
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 10),
-                          child: PostCard(post: _posts[index]), // Твоя старая карточка
+                          child: PostCard(post: _posts[index]),
                         );
                       }, childCount: _posts.length),
                     ),
                   ),
                 ),
 
-                // Индикатор загрузки в самом низу (футер)
                 if (_isLoading && _posts.isNotEmpty)
                   SliverToBoxAdapter(
                     child: Padding(
@@ -278,9 +265,8 @@ class _StateMainPageScreen extends State<MainPageScreenV2> {
           ),
         ),
 
-        // Стрелка вверх
         floatingActionButton: Visibility(
-          visible: _showBackToTop, // Если false, полностью выключает кликабельность виджета
+          visible: _showBackToTop,
           child: AnimatedOpacity(
             duration: const Duration(milliseconds: 300),
             opacity: _showBackToTop ? 1.0 : 0.0,
@@ -305,7 +291,6 @@ class _StateMainPageScreen extends State<MainPageScreenV2> {
           ),
         ),
 
-        // Нижнее меню
         bottomNavigationBar: AnimatedSlide(
           duration: const Duration(milliseconds: 300),
           offset: _isBottomMenuVisible ? Offset.zero : const Offset(0, 2),

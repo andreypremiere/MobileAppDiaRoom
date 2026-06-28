@@ -23,19 +23,15 @@ class DiaryUtils {
   static String? getSupportedMimeType(String filePath) {
     final ext = p.extension(filePath).toLowerCase();
 
-    // 1. Проверяем, входит ли расширение в наши списки
     final isSupported = videoExtensions.contains(ext) || photoExtensions.contains(ext);
 
     if (!isSupported) {
-      return null; // Файл не поддерживается
+      return null;
     }
 
-    // 2. Если расширение ок, пытаемся определить mimeType через библиотеку
-    // Если библиотека не справится, возвращаем дефолтный тип на основе наших списков
     final mime = lookupMimeType(filePath);
     if (mime != null) return mime;
 
-    // 3. Фолбэк (запасной вариант), если lookupMimeType вернул null, но расширение в нашем списке
     if (videoExtensions.contains(ext)) return 'video/mp4';
     if (photoExtensions.contains(ext)) return 'image/jpeg';
     if (audioExtensions.contains(ext)) return 'audio/m4a';
@@ -44,7 +40,6 @@ class DiaryUtils {
   }
 
   static AttachmentType? getAttachmentType(String filePath) {
-    // Получаем расширение в нижнем регистре
     final extension = p.extension(filePath).toLowerCase();
 
     if (videoExtensions.contains(extension)) {
@@ -114,10 +109,8 @@ class DiaryUtils {
       final file = File(path);
       if (await file.exists()) {
         await file.delete();
-        print("Квадратик был удален");
       }
     } catch (e) {
-      print('Файл не был удален');
     }
   }
 

@@ -38,7 +38,6 @@ class _VideoBlockWidgetState extends State<VideoBlockWidget> {
       final file = File(video.path);
       final bytes = await file.length();
 
-      // Проверка на размер
       if (bytes > limitSizeVideoInPost) {
         await widget.block.clearBlock();
         if (context.mounted) {
@@ -78,7 +77,6 @@ class _VideoBlockWidgetState extends State<VideoBlockWidget> {
       return _buildAddButton();
     }
 
-    // Если видео обрабатывается, показываем индикатор загрузки
     if (_isProcessing) {
       return const Padding(
         padding: EdgeInsets.all(16.0),
@@ -86,25 +84,19 @@ class _VideoBlockWidgetState extends State<VideoBlockWidget> {
       );
     }
 
-    // Дизайн в виде СТРОКИ (Row)
     return Padding(
       padding: const EdgeInsets.all(12.0),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // 1. Квадратное превью (100x100)
           _buildSquarePreview(),
-          const SizedBox(width: 12), // Отступ между превью и текстом
+          const SizedBox(width: 12),
 
-          // 2. Блок с текстом (Имя, Время, Размер)
-          // Используем Expanded, чтобы текст занимал всё оставшееся место,
-          // но не выдавливал иконку удаления.
           Expanded(
             child: _buildVideoInfo(),
           ),
           const SizedBox(width: 8),
 
-          // 3. Кнопка удаления в самом конце (Справа)
           _buildDeleteIcon(),
         ],
       ),
@@ -155,7 +147,6 @@ class _VideoBlockWidgetState extends State<VideoBlockWidget> {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        // Имя файла (жирное, с обрезкой)
         Text(
           widget.block.fileName,
           style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
@@ -164,7 +155,6 @@ class _VideoBlockWidgetState extends State<VideoBlockWidget> {
         ),
         const SizedBox(height: 6),
 
-        // Вторая строка (Длительность | Размер)
         Row(
           children: [
             const Icon(Icons.access_time_filled, size: 16, color: Color(0xFF797979)),
@@ -173,7 +163,7 @@ class _VideoBlockWidgetState extends State<VideoBlockWidget> {
               widget.block.getFormattedDuration(),
               style: const TextStyle(fontSize: 14, color: Color(0xFF333333)),
             ),
-            const SizedBox(width: 12), // Отступ между временем и размером
+            const SizedBox(width: 12),
             const Icon(Icons.storage_rounded, size: 16, color: Color(0xFF797979)),
             const SizedBox(width: 4),
             Text(
@@ -189,13 +179,12 @@ class _VideoBlockWidgetState extends State<VideoBlockWidget> {
   Widget _buildDeleteIcon() {
     return Container(
       padding: EdgeInsets.all(2),
-      // margin: const EdgeInsets.only(left: 8), // Небольшой отступ от текста
       decoration: BoxDecoration(
-        color: Colors.white, // Белый фон круга
+        color: Colors.white,
         borderRadius: BorderRadius.circular(6),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withAlpha(10), // Легкая тень, чтобы круг не сливался с фоном
+            color: Colors.black.withAlpha(10),
             blurRadius: 4,
             offset: const Offset(0, 0),
           ),
@@ -203,16 +192,15 @@ class _VideoBlockWidgetState extends State<VideoBlockWidget> {
       ),
       child: IconButton(
         constraints: const BoxConstraints(),
-        // 2. Схлопываем лишние внутренние отступы темы
-        visualDensity: VisualDensity.compact,        padding: const EdgeInsets.all(8),    // Настраиваем внутренний отступ
+        visualDensity: VisualDensity.compact,        padding: const EdgeInsets.all(8),
         onPressed: () async {
-          await widget.block.clearBlock(); // Убедись, что имя поля совпадает (thumbnailPath)
+          await widget.block.clearBlock();
           widget.onChanged();
         },
         icon: const Icon(
           Icons.delete_outline,
           color: Color(0xFF696969),
-          size: 22, // Чуть уменьшил размер для баланса внутри круга
+          size: 22,
         ),
       ),
     );

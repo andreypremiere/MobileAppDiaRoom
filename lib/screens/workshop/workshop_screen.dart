@@ -352,7 +352,6 @@ class _WorkshopScreenState extends State<WorkshopScreen> {
   }
 
   Widget _buildBody() {
-    // Ошибка (сеть/сервер) при пустом списке
     if (!_isLoading && _errorMessage != null && _allContent.isEmpty) {
       return DiaRoomErrorView(
         errorMessage: _errorMessage!,
@@ -360,12 +359,10 @@ class _WorkshopScreenState extends State<WorkshopScreen> {
       );
     }
 
-    // 2. Первичная загрузка
     if (_isLoading && _allContent.isEmpty) {
       return const Center(child: DiaRoomLoader());
     }
 
-    // 3. Успешный ответ, но папка пуста
     if (!_isLoading && _allContent.isEmpty) {
       return RefreshIndicator(
         onRefresh: _handleRefresh,
@@ -385,12 +382,11 @@ class _WorkshopScreenState extends State<WorkshopScreen> {
       );
     }
 
-    // 4. Отображение контента
     return RefreshIndicator(
       onRefresh: _handleRefresh,
       color: context.ui.primaryColor,
       child: GridView.builder(
-        physics: const AlwaysScrollableScrollPhysics(), // Разрешает pull-to-refresh даже если контента мало
+        physics: const AlwaysScrollableScrollPhysics(),
         padding: EdgeInsets.only(
           top: 8,
           left: 8,
@@ -507,7 +503,7 @@ class _WorkshopScreenState extends State<WorkshopScreen> {
                       List<XFile> filteredPhotos = pathPhotos;
 
                       if (pathPhotos.length > limitPhotosForLoadInWorkshop) {
-                        filteredPhotos = pathPhotos.sublist(0, limitPhotosForLoadInWorkshop); // Используем правильную константу
+                        filteredPhotos = pathPhotos.sublist(0, limitPhotosForLoadInWorkshop);
 
                         if (context.mounted) {
                           AppInfoDialog.show(
@@ -531,7 +527,7 @@ class _WorkshopScreenState extends State<WorkshopScreen> {
                       List<XFile> filteredVideos = pathVideos;
 
                       if (pathVideos.length > limitVideosForLoadInWorkshop) {
-                        filteredVideos = pathVideos.sublist(0, limitVideosForLoadInWorkshop); // Используем правильную константу
+                        filteredVideos = pathVideos.sublist(0, limitVideosForLoadInWorkshop);
 
                         if (context.mounted) {
                           AppInfoDialog.show(
@@ -601,7 +597,6 @@ class _WorkshopScreenState extends State<WorkshopScreen> {
       ),
       body: Column(
         children: [
-          // Прогресс бар загрузки (если активен UploaderManager)
           Consumer<UploaderManager>(
             builder: (context, manager, child) {
               if (!manager.isUploading) return const SizedBox.shrink();
@@ -625,7 +620,6 @@ class _WorkshopScreenState extends State<WorkshopScreen> {
             },
           ),
 
-          // Основной контент (Grid, Loader, ErrorView или Пустота)
           Expanded(
             child: _buildBody(),
           ),

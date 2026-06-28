@@ -22,7 +22,6 @@ class AuthorListTile extends StatelessWidget {
           fontWeight: FontWeight.w600,
         ),
       ),
-      // trailing: Icon(Icons.arrow_forward_ios_rounded, size: 16, color: context.ui.fontColorHint),
     );
   }
 }

@@ -14,7 +14,6 @@ import '../../api/auth_response.dart';
 import '../../components/post_card/own_card.dart';
 import '../../utils/auth_service.dart';
 
-// Твои новые компоненты для единообразия
 import '../../components/general/author_tile_appbar/author_error_tile.dart';
 import '../../components/general/author_tile_appbar/author_loading_tile.dart';
 import '../../components/general/author_tile_appbar/author_tile.dart';
@@ -31,12 +30,9 @@ class PersonalPostsScreen extends StatefulWidget {
 }
 
 class _StatePersonalPostsScreen extends State<PersonalPostsScreen> {
-  // Состояния для постов
   List<dynamic> _posts = [];
   bool _isLoading = false;
   String? _errorMessage;
-
-  // Состояния для информации о комнате (если это не наша комната)
   Author? _author;
   bool _isLoadingRoomInfo = false;
 
@@ -46,7 +42,6 @@ class _StatePersonalPostsScreen extends State<PersonalPostsScreen> {
   void initState() {
     super.initState();
 
-    // Проверяем, принадлежит ли комната текущему пользователю
     final myId = context.read<AuthProvider>().roomId;
     _isMyRoom = widget.roomId == myId;
 
@@ -57,7 +52,6 @@ class _StatePersonalPostsScreen extends State<PersonalPostsScreen> {
     }
   }
 
-  /// Загрузка информации о чужой комнате для AppBar
   Future<void> _loadRoomInfo() async {
     if (_isLoadingRoomInfo) return;
 
@@ -76,7 +70,6 @@ class _StatePersonalPostsScreen extends State<PersonalPostsScreen> {
         });
       }
     } catch (e) {
-      // Игнорируем ошибку здесь, компонент AuthorEmptyTile покажет кнопку повтора
     } finally {
       if (mounted) {
         setState(() {
@@ -86,7 +79,6 @@ class _StatePersonalPostsScreen extends State<PersonalPostsScreen> {
     }
   }
 
-  /// Загрузка списка постов
   Future<void> _loadPosts() async {
     if (mounted) {
       setState(() {
@@ -125,7 +117,6 @@ class _StatePersonalPostsScreen extends State<PersonalPostsScreen> {
     }
   }
 
-  /// Обновление по свайпу (pull-to-refresh)
   Future<void> _handleRefresh() async {
     if (!_isMyRoom && _author == null) {
       _loadRoomInfo();
@@ -162,15 +153,9 @@ class _StatePersonalPostsScreen extends State<PersonalPostsScreen> {
       actions: _isMyRoom
           ? [
         IconButton(
-          // onPressed: () => context.push('/newPublicPost'),
-          // icon: const Icon(Icons.add_rounded, size: 34),
-          // color: context.ui.fontColorPrimary,
           onPressed: () => context.push('/create_post_v2'),
           icon: const Icon(Icons.add_rounded, size: 34),
           color: context.ui.fontColorPrimary,
-          // onPressed: () => context.push('/create_post_v2'),
-          // icon: const Icon(Icons.add_rounded, size: 34),
-          // color: context.ui.fontColorPrimary,
         ),
       ]
           : null,
@@ -178,7 +163,6 @@ class _StatePersonalPostsScreen extends State<PersonalPostsScreen> {
   }
 
   Widget _buildBody() {
-    // 1. Ошибка загрузки постов
     if (!_isLoading && _errorMessage != null && _posts.isEmpty) {
       return DiaRoomErrorView(
         errorMessage: _errorMessage!,
@@ -186,14 +170,12 @@ class _StatePersonalPostsScreen extends State<PersonalPostsScreen> {
       );
     }
 
-    // 2. Идет загрузка постов
     if (_isLoading && _posts.isEmpty) {
       return const Center(
         child: DiaRoomLoader(),
       );
     }
 
-    // 3. Данные получены, но список пуст (с поддержкой pull-to-refresh)
     if (!_isLoading && _posts.isEmpty) {
       return RefreshIndicator(
         color: context.ui.primaryColor,
@@ -214,13 +196,10 @@ class _StatePersonalPostsScreen extends State<PersonalPostsScreen> {
       );
     }
 
-    // 4. Успешный рендер списка постов
     return RefreshIndicator(
       color: context.ui.primaryColor,
       onRefresh: _handleRefresh,
       child: ListView.separated(
-        // AlwaysScrollableScrollPhysics нужен, чтобы pull-to-refresh работал,
-        // даже если постов мало и они не заполняют весь экран
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
         itemCount: _posts.length + 1,

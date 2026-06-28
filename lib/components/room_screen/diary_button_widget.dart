@@ -3,8 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:dia_room/utils/app_theme.dart';
 
-import '../../api/post_api.dart';
-import '../../api/post_v2_api.dart'; // Твой путь к теме
+import '../../api/post_v2_api.dart';
 
 class _StatShimmer extends StatelessWidget {
   final double width;
@@ -48,28 +47,7 @@ class _DiaryButtonWidgetState extends State<DiaryButtonWidget> {
   @override
   void initState() {
     super.initState();
-    // _fetchDiaryStats();
   }
-
-  // Future<void> _fetchDiaryStats() async {
-  //   try {
-  //     // TODO: Твой запрос к API
-  //     await Future.delayed(const Duration(milliseconds: 800));
-  //     if (mounted) {
-  //       setState(() {
-  //         notesCount = 12;
-  //         isLoading = false;
-  //       });
-  //     }
-  //   } catch (e) {
-  //     if (mounted) {
-  //       setState(() {
-  //         isLoading = false;
-  //         hasError = true;
-  //       });
-  //     }
-  //   }
-  // }
 
   @override
   Widget build(BuildContext context) {
@@ -114,23 +92,6 @@ class _DiaryButtonWidgetState extends State<DiaryButtonWidget> {
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  // const SizedBox(height: 6),
-                  // if (isLoading)
-                  //   const _StatShimmer(width: 70)
-                  // else if (hasError)
-                  //   Text(
-                  //     'Ошибка',
-                  //     style: TextStyle(color: Colors.redAccent.withAlpha(200), fontSize: 13),
-                  //   )
-                  // else
-                  //   Text(
-                  //     '$notesCount заметок',
-                  //     style: TextStyle(
-                  //       color: context.ui.fontColorHint,
-                  //       fontSize: 13,
-                  //       fontWeight: FontWeight.w500,
-                  //     ),
-                  //   ),
                 ],
               ),
             ),
@@ -141,9 +102,6 @@ class _DiaryButtonWidgetState extends State<DiaryButtonWidget> {
   }
 }
 
-// ============================================================================
-// 2. ВИТРИНА
-// ============================================================================
 class ShowcaseButtonWidget extends StatefulWidget {
   final String roomId;
   const ShowcaseButtonWidget({super.key, required this.roomId});
@@ -191,7 +149,7 @@ class _ShowcaseButtonWidgetState extends State<ShowcaseButtonWidget> {
       aspectRatio: 1,
       child: Container(
         decoration: BoxDecoration(
-          color: context.ui.containerColor, // Сделали сплошной фон, как у дневника
+          color: context.ui.containerColor,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
@@ -205,7 +163,6 @@ class _ShowcaseButtonWidgetState extends State<ShowcaseButtonWidget> {
           color: Colors.transparent,
           child: InkWell(
             borderRadius: BorderRadius.circular(16),
-            // onTap: () => context.push('/personalRoomPosts/${widget.roomId}'),
             onTap: () => context.push('/personalRoomPostsV2/${widget.roomId}'),
             child: Padding(
               padding: const EdgeInsets.all(8.0),
@@ -249,9 +206,6 @@ class _ShowcaseButtonWidgetState extends State<ShowcaseButtonWidget> {
   }
 }
 
-// ============================================================================
-// 3. МАСТЕРСКАЯ
-// ============================================================================
 class WorkshopButtonWidget extends StatefulWidget {
   final String roomId;
   const WorkshopButtonWidget({super.key, required this.roomId});
@@ -269,36 +223,14 @@ class _WorkshopButtonWidgetState extends State<WorkshopButtonWidget> {
   @override
   void initState() {
     super.initState();
-    // _fetchWorkshopStats();
   }
-
-  // Future<void> _fetchWorkshopStats() async {
-  //   try {
-  //     // TODO: Твой запрос к API
-  //     await Future.delayed(const Duration(milliseconds: 2000));
-  //     if (mounted) {
-  //       setState(() {
-  //         foldersCount = 5;
-  //         valuesCount = 42;
-  //         isLoading = false;
-  //       });
-  //     }
-  //   } catch (e) {
-  //     if (mounted) {
-  //       setState(() {
-  //         isLoading = false;
-  //         hasError = true;
-  //       });
-  //     }
-  //   }
-  // }
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: context.ui.containerColor, // Сплошной чистый фон
+        color: context.ui.containerColor,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -317,7 +249,6 @@ class _WorkshopButtonWidgetState extends State<WorkshopButtonWidget> {
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
             child: Row(
               children: [
-                // Убрана сложная подложка, оставлена лаконичная иконка
                 Icon(Icons.burst_mode_outlined, color: context.ui.primaryColor, size: 28),
                 const SizedBox(width: 16),
                 Expanded(
@@ -332,23 +263,6 @@ class _WorkshopButtonWidgetState extends State<WorkshopButtonWidget> {
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-                      // const SizedBox(height: 6),
-                      // if (isLoading)
-                      //   const _StatShimmer(width: 120)
-                      // else if (hasError)
-                      //   Text(
-                      //     'Ошибка загрузки',
-                      //     style: TextStyle(color: Colors.redAccent.withAlpha(200), fontSize: 13),
-                      //   )
-                      // else
-                      //   Text(
-                      //     '$foldersCount папок • $valuesCount значений',
-                      //     style: TextStyle(
-                      //       color: context.ui.fontColorHint,
-                      //       fontSize: 13,
-                      //       fontWeight: FontWeight.w500,
-                      //     ),
-                      //   ),
                     ],
                   ),
                 ),
@@ -379,36 +293,14 @@ class _ArticleButtonWidgetState extends State<ArticleButtonWidget> {
   @override
   void initState() {
     super.initState();
-    // _fetchWorkshopStats();
   }
-
-  // Future<void> _fetchWorkshopStats() async {
-  //   try {
-  //     // TODO: Твой запрос к API
-  //     await Future.delayed(const Duration(milliseconds: 2000));
-  //     if (mounted) {
-  //       setState(() {
-  //         foldersCount = 5;
-  //         valuesCount = 42;
-  //         isLoading = false;
-  //       });
-  //     }
-  //   } catch (e) {
-  //     if (mounted) {
-  //       setState(() {
-  //         isLoading = false;
-  //         hasError = true;
-  //       });
-  //     }
-  //   }
-  // }
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: context.ui.containerColor, // Сплошной чистый фон
+        color: context.ui.containerColor,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -427,7 +319,6 @@ class _ArticleButtonWidgetState extends State<ArticleButtonWidget> {
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
             child: Row(
               children: [
-                // Убрана сложная подложка, оставлена лаконичная иконка
                 Icon(Icons.article_outlined, color: context.ui.primaryColor, size: 28),
                 const SizedBox(width: 16),
                 Expanded(
@@ -442,23 +333,6 @@ class _ArticleButtonWidgetState extends State<ArticleButtonWidget> {
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-                      // const SizedBox(height: 6),
-                      // if (isLoading)
-                      //   const _StatShimmer(width: 120)
-                      // else if (hasError)
-                      //   Text(
-                      //     'Ошибка загрузки',
-                      //     style: TextStyle(color: Colors.redAccent.withAlpha(200), fontSize: 13),
-                      //   )
-                      // else
-                      //   Text(
-                      //     '$foldersCount папок • $valuesCount значений',
-                      //     style: TextStyle(
-                      //       color: context.ui.fontColorHint,
-                      //       fontSize: 13,
-                      //       fontWeight: FontWeight.w500,
-                      //     ),
-                      //   ),
                     ],
                   ),
                 ),

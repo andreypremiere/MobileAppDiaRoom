@@ -13,12 +13,11 @@ class PostBlockWrapper extends StatelessWidget {
   final BlockPost block;
   final bool isFocused;
 
-  // Колбэки для управления блоком из главного экрана
   final VoidCallback onFocus;
   final VoidCallback onMoveUp;
   final VoidCallback onMoveDown;
   final VoidCallback onDelete;
-  final VoidCallback onChanged; // Для перерисовки (например, фото)
+  final VoidCallback onChanged;
 
   const PostBlockWrapper({
     super.key,
@@ -67,7 +66,7 @@ class PostBlockWrapper extends StatelessWidget {
     if (block is BlockPhotosCreating) {
       return PhotosBlockWidget(
         block: block as BlockPhotosCreating,
-        onChanged: onChanged, // Передаем колбэк для обновления фото
+        onChanged: onChanged,
       );
     }
     if (block is BlockVideoCreating) {
@@ -90,7 +89,6 @@ class PostBlockWrapper extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            // Сам контент с рамкой
             Container(
               width: double.infinity,
               decoration: BoxDecoration(
@@ -104,7 +102,6 @@ class PostBlockWrapper extends StatelessWidget {
               child: _buildBlockContent(),
             ),
 
-            // Панель управления (показывается только если в фокусе)
             if (isFocused)
               Container(
                 margin: const EdgeInsets.only(top: 2, right: 4),

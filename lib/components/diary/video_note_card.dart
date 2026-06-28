@@ -64,7 +64,6 @@ class _VideoMessageBubbleState extends State<VideoMessageBubble> {
       }
     }
 
-    // Дальше логика управления воспроизведением без изменений
     if (_isPlaying) {
       await _controller!.pause();
     } else {
@@ -83,18 +82,17 @@ class _VideoMessageBubbleState extends State<VideoMessageBubble> {
 
   @override
   Widget build(BuildContext context) {
-    final maxWidth = MediaQuery.of(context).size.width * 0.7; // 70% ширины
+    final maxWidth = MediaQuery.of(context).size.width * 0.7;
     final previewUrl = widget.message.attachments.first.previewS3Key;
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start, // Всегда слева
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 1. Квадратик видео (70% ширины)
           Container(
             width: maxWidth,
-            height: maxWidth, // Квадрат
+            height: maxWidth,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(16),
               color: Colors.black12,
@@ -105,7 +103,6 @@ class _VideoMessageBubbleState extends State<VideoMessageBubble> {
               child: Stack(
                 alignment: Alignment.center,
                 children: [
-                  // Показываем видео, если инициализировано, иначе превью
                   _isInitialized
                       ? SizedBox.expand(
                     child: FittedBox(
@@ -128,7 +125,6 @@ class _VideoMessageBubbleState extends State<VideoMessageBubble> {
                   )
                       : Container(color: Colors.black87)),
 
-                  // Иконка Play поверх превью (если не играет)
                   if (!_isPlaying)
                     Container(
                       padding: const EdgeInsets.all(8),
@@ -142,12 +138,10 @@ class _VideoMessageBubbleState extends State<VideoMessageBubble> {
 
           const SizedBox(height: 8),
 
-          // 2. Блок управления (как в аудио, но под видео)
           SizedBox(
             width: maxWidth,
             child: Row(
               children: [
-                // Кнопка Play/Pause
                 GestureDetector(
                   onTap: _togglePlay,
                   child: Container(
@@ -167,7 +161,6 @@ class _VideoMessageBubbleState extends State<VideoMessageBubble> {
 
                 const SizedBox(width: 8),
 
-                // Слайдер и время
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.end,

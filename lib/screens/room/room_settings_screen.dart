@@ -58,8 +58,6 @@ class _RoomSettingsScreenState extends State<RoomSettingsScreen> {
     super.dispose();
   }
 
-  // --- ОБРАБОТКА ИЗОБРАЖЕНИЙ ---
-
   Future<void> _handlePickAndCropAvatar() async {
     final croppedImage = await PickerImageService.pickAndCropAvatar();
     if (croppedImage != null) {
@@ -78,8 +76,6 @@ class _RoomSettingsScreenState extends State<RoomSettingsScreen> {
       }
     }
   }
-
-  // --- ОБРАБОТКА КАТЕГОРИЙ ---
 
   void _showCategoryPopup() {
     final categoriesToDisplay = Categories.values
@@ -258,8 +254,6 @@ class _RoomSettingsScreenState extends State<RoomSettingsScreen> {
     }
   }
 
-  // --- ОСНОВНОЙ BUILD ---
-
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -319,8 +313,6 @@ class _RoomSettingsScreenState extends State<RoomSettingsScreen> {
     );
   }
 
-  // --- UI КОМПОНЕНТЫ ---
-
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
       backgroundColor: context.ui.appBarColor,
@@ -344,7 +336,7 @@ class _RoomSettingsScreenState extends State<RoomSettingsScreen> {
             fontFamily: 'SNPro',
             fontWeight: FontWeight.w600,
             color: Colors
-                .black, // Добавь цвет, иначе в RichText он может быть белым по умолчанию
+                .black,
           ),
           children: [
             if (isRequired)
@@ -495,8 +487,6 @@ class _RoomSettingsScreenState extends State<RoomSettingsScreen> {
           top: 8,
           child: Row(
             children: [
-              // _buildCircleBtn(Icons.edit, _pickAndCropBackground),
-              // const SizedBox(width: 8),
               _buildCircleBtn(Icons.delete_outline, () async {
                 await PickerImageService.deletePhysicalFile(_backgroundPath);
 

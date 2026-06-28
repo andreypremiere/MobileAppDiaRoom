@@ -48,16 +48,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
   late String _bio;
   String? _backgroundPath;
   String? _avatarPath;
-
-  // bool _compressMedia = true;
-
   bool _isLoading = true;
   String? _errorMessage;
 
   int _avatarVersion = 0;
   int _backgroundVersion = 0;
-
-  // Новые переменные состояния
   final List<Categories> _selectedCategories = [];
 
   // double _fontSizeLevel = 2.0; // 1.0 - мелкий, 2.0 - средний, 3.0 - крупный
@@ -111,7 +106,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _handleUpdateAvatar() async {
     final ActionImageSettings? result = await showDialog<ActionImageSettings>(
       context: context,
-      barrierDismissible: true, // Закрыть при нажатии на пустую область
+      barrierDismissible: true,
       builder: (context) => const AppEnumPicker(values: ActionImageSettings.values),
     );
 
@@ -199,7 +194,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _handleUpdateBackground() async {
     final ActionImageSettings? result = await showDialog<ActionImageSettings>(
       context: context,
-      barrierDismissible: true, // Закрыть при нажатии на пустую область
+      barrierDismissible: true,
       builder: (context) => const AppEnumPicker(values: ActionImageSettings.values),
     );
 
@@ -347,23 +342,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<bool> _handleUpdateCategories(List<Categories> newCategories) async {
-    // 1. Формируем запрос
     final request = UpdatingCategoriesRequest(categories: newCategories);
 
-    // 2. Отправляем запрос на сервер
     final response = await updateCategories(request);
 
-    // 3. Обрабатываем результат
     if (response.success) {
-      return true; // Успех
+      return true;
     } else {
-      // Показать ошибку?
-      return false; // Ошибка
+      return false;
     }
   }
 
   Future<void> _handleLogout(BuildContext context) async {
-    // Выполнить запрос выхода
     final result = await requestLogout(context);
     if (result == null) {
       if (context.mounted) {
@@ -385,18 +375,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
-  // --- МОДАЛЬНОЕ ОКНО ВЫБОРА КАТЕГОРИЙ ---
-
   void _showCategoriesDialog() {
-    // Создаем ВРЕМЕННУЮ копию текущих выбранных категорий
     List<Categories> tempSelectedCategories = List.from(_selectedCategories);
 
-    // Флаг для отображения индикатора загрузки
     bool isLoading = false;
 
     showDialog(
       context: context,
-      // Запрещаем закрывать окно случайным тапом мимо, пока идет загрузка
       barrierDismissible: !isLoading,
       builder: (BuildContext context) {
         return StatefulBuilder(
@@ -428,7 +413,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       padding: const EdgeInsets.only(bottom: 8.0, left: 4.0),
                       child: Text(
                         "Выбрано: ${tempSelectedCategories.length}/3",
-                        // Используем временный список
                         style: const TextStyle(
                           fontFamily: 'SNPro',
                           fontSize: 14,
@@ -442,7 +426,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         itemCount: categoriesToDisplay.length,
                         itemBuilder: (context, index) {
                           final category = categoriesToDisplay[index];
-                          // Проверяем временный список
                           final isSelected = tempSelectedCategories.contains(
                             category,
                           );
@@ -459,7 +442,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             activeColor: const Color(0xFF525252),
                             contentPadding: EdgeInsets.zero,
                             dense: true,
-                            // Отключаем чекбоксы, пока идет отправка данных
                             enabled: !isLoading,
                             onChanged: (bool? checked) {
                               if (mounted) {
@@ -514,17 +496,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 setStateDialog(() => isLoading = true);
                               }
 
-                              // 2. Отправляем запрос
                               final success = await _handleUpdateCategories(
                                 tempSelectedCategories,
                               );
 
-                              // 3. Скрываем лоадер
                               if (mounted) {
                                 setStateDialog(() => isLoading = false);
                               }
 
-                              // 4. Если всё хорошо — обновляем ГЛАВНЫЙ стейт экрана и закрываем диалог
                               if (success) {
                                 if (mounted) {
                                   setState(() {
@@ -555,15 +534,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  // --- Вспомогательный метод получения текста для подзаголовка категорий ---
   String _getCategoriesSubtitle() {
     if (_selectedCategories.isEmpty) {
       return "Не выбраны";
     }
     return _selectedCategories.map((e) => e.label).join(", ");
   }
-
-  // --- ОСНОВНОЙ BUILD ---
 
   @override
   Widget build(BuildContext context) {
@@ -585,12 +561,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
       );
     }
 
-    // ПЕРВОНАЧАЛЬНАЯ ЗАГРУЗКА: Пока данных нет, крутим фирменный лоадер
     if (_isLoading && room == null) {
       return const Scaffold(body: Center(child: DiaRoomLoader()));
     }
 
-    // 3. ПРЕДОХРАНИТЕЛЬ: Если загрузка завершилась, но данных почему-то нет
     if (room == null) {
       return Scaffold(
         appBar: AppBar(
@@ -731,7 +705,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildBackgroundContainer() {
-    // Проверяем, есть ли ссылка
     bool hasImage = _backgroundPath != null && _backgroundPath!.isNotEmpty;
 
     return GestureDetector(onTap: _backgroundPath != null && _backgroundPath!.isNotEmpty ? () {
@@ -914,7 +887,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   //   );
   // }
 
-  // Кастомный элемент списка с трехпозиционным ползунком
   // Widget _buildDiscreteSliderTile({
   //   required String title,
   //   required double value,
@@ -966,7 +938,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   //                   min: 1.0,
   //                   max: 3.0,
   //                   divisions: 2,
-  //                   // Разделяет слайдер ровно на 3 точки: 1.0, 2.0 и 3.0
   //                   onChanged: onChanged,
   //                 ),
   //               ),

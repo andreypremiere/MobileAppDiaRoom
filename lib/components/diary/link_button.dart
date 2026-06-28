@@ -41,7 +41,7 @@ class CustomLinkButton extends StatelessWidget {
                 child: Text(
                   label,
                   style: const TextStyle(fontWeight: FontWeight.w600),
-                  overflow: TextOverflow.ellipsis, // Защита от длинного текста
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
               if (onClose != null)

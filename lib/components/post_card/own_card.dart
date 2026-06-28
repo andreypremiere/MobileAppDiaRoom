@@ -25,7 +25,6 @@ class OwnPostComponent extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(6),
         decoration: BoxDecoration(
-          // Белая слегка прозрачная подложка
           color: Colors.white.withAlpha(85),
           shape: BoxShape.circle,
         ),
@@ -36,7 +35,6 @@ class OwnPostComponent extends StatelessWidget {
         ),
       ),
 
-      // Элементы меню
       onSelected: (value) {
         if (value == 'delete') {
           onDelete.call();
@@ -54,7 +52,6 @@ class OwnPostComponent extends StatelessWidget {
     );
   }
 
-  /// Вспомогательный метод для создания пунктов меню в едином стиле
   PopupMenuItem<String> _buildPopupItem(
       BuildContext context, {
         required String value,
@@ -121,7 +118,6 @@ class OwnPostComponent extends StatelessWidget {
     return _BadgeContainer(label: label, color: color);
   }
 
-  // Бейджик статуса проверки нейросетью
   Widget _AiStatusBadge({required String status}) {
     Color color;
     String label;
@@ -146,12 +142,11 @@ class OwnPostComponent extends StatelessWidget {
     return _BadgeContainer(label: label, color: color, isAi: true);
   }
 
-  // Универсальный контейнер для бейджиков
   Widget _BadgeContainer({required String label, required Color color, bool isAi = false}) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
-        color: color.withAlpha(30), // Легкий полупрозрачный фон
+        color: color.withAlpha(30),
         borderRadius: BorderRadius.circular(6),
         border: Border.all(color: color.withAlpha(150), width: 1),
       ),

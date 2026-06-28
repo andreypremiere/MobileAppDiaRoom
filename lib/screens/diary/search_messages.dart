@@ -134,7 +134,6 @@ class _SearchMessagesScreenState extends State<SearchMessagesScreen> {
               : BorderSide(color: context.ui.primaryColor, width: 2),
         ),
 
-        // Полезное дополнение: убирает тень, если она не нужна
         elevation: 0,
       ),
       child: Text(
@@ -216,7 +215,6 @@ class _SearchMessagesScreenState extends State<SearchMessagesScreen> {
         setState(() {
           _currentPage++;
           _messages.addAll(gotMessages.messages);
-          // Если пришло меньше чем лимит, значит данных больше нет
           if (gotMessages.messages.length < _limit) _hasMore = false;
         });
       }
@@ -266,7 +264,6 @@ class _SearchMessagesScreenState extends State<SearchMessagesScreen> {
           children: [
             Expanded(
               child: Container(
-                // Ограничиваем высоту контейнера
                 height: 46,
                 child: TextField(
                   controller: _searchController,
@@ -293,7 +290,6 @@ class _SearchMessagesScreenState extends State<SearchMessagesScreen> {
           ],
         ),
       ),
-      // Сделать отладку при ошибке.
       body: Column(
         children: [
           _panelButtons(),

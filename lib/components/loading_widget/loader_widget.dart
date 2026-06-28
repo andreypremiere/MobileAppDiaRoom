@@ -10,7 +10,7 @@ class DiaRoomLoader extends StatefulWidget {
 
   const DiaRoomLoader({
     super.key,
-    this.color = const Color(0xFF722323), // Твой цвет
+    this.color = const Color(0xFF722323),
     this.size = 40.0,
   });
 
@@ -26,7 +26,7 @@ class _DiaRoomLoaderState extends State<DiaRoomLoader> with SingleTickerProvider
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1000), // Плавное быстрое вращение
+      duration: const Duration(milliseconds: 1000),
     )..repeat();
   }
 
@@ -39,14 +39,12 @@ class _DiaRoomLoaderState extends State<DiaRoomLoader> with SingleTickerProvider
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.transparent, // Фон Scaffold виден сквозь
+      color: Colors.transparent,
       width: widget.size,
       height: widget.size,
       child: AnimatedBuilder(
         animation: _controller,
         builder: (context, child) {
-          // Мы вращаем ВЕСЬ CustomPaint, а не дугу внутри него.
-          // Это убирает любые артефакты стыковки.
           return Transform.rotate(
             angle: _controller.value * 2 * pi,
             child: CustomPaint(

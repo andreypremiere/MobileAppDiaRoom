@@ -24,13 +24,11 @@ class _VoiceMessageBubbleState extends State<VoiceMessageBubble> {
     super.initState();
     _audioPlayer = AudioPlayer();
 
-    // Берем данные из вложения (duration там в миллисекундах)
     if (widget.message.attachments.isNotEmpty) {
       final att = widget.message.attachments.first;
       _duration = Duration(milliseconds: att.duration!);
     }
 
-    // Слушаем изменения плеера
     _audioPlayer.onPlayerStateChanged.listen((state) {
       if (mounted) setState(() => _isPlaying = state == PlayerState.playing);
     });
@@ -69,7 +67,6 @@ class _VoiceMessageBubbleState extends State<VoiceMessageBubble> {
       padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
       child: Row(
         children: [
-          // Кнопка Play/Pause
           GestureDetector(
             onTap: _togglePlay,
             child: Container(
@@ -89,12 +86,10 @@ class _VoiceMessageBubbleState extends State<VoiceMessageBubble> {
 
           const SizedBox(width: 12),
 
-          // Полоса воспроизведения и время
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                // Длительность над полоской
                 Text(
                   _formatDuration(_isPlaying ? _position : _duration),
                   style: TextStyle(
@@ -103,7 +98,6 @@ class _VoiceMessageBubbleState extends State<VoiceMessageBubble> {
                   ),
                 ),
 
-                // Слайдер (перемотка)
                 SliderTheme(
                   data: SliderTheme.of(context).copyWith(
                     trackHeight: 3,

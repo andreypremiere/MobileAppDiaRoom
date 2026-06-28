@@ -11,8 +11,6 @@ enum PostStatus {
 
   String toMap() => value;
 
-  /// Безопасный парсинг из Map/JSON строки.
-  /// Если бэкенд пришлет неизвестный статус, вернет по умолчанию [PostStatus.error]
   factory PostStatus.fromMap(dynamic mapValue) {
     if (mapValue == null) return PostStatus.error;
 

@@ -22,7 +22,7 @@ class SaveRoomRequest {
 
   String? _getFileName(String? path) {
     if (path == null || path.isEmpty) return '';
-    return p.basename(path); // Извлекает например 'image_picker_432.jpg'
+    return p.basename(path);
   }
 
   Map<String, dynamic> toMap() {

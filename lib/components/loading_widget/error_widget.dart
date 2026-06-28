@@ -39,7 +39,6 @@ class DiaRoomErrorView extends StatelessWidget {
             ),
             const SizedBox(height: 24),
 
-            // Кнопка в стиле приложения DiaRoom
             ElevatedButton(
               onPressed: onRefresh,
               style: ElevatedButton.styleFrom(

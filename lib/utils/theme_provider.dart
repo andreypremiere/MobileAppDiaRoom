@@ -7,13 +7,11 @@ class ThemeProvider extends ChangeNotifier {
 
   ThemeData get currentTheme => AppTheme.buildTheme(_currentSeedColor, isDark: _isDarkMode);
 
-  // Метод для динамической смены цвета
   void updateSeedColor(Color newColor) {
     _currentSeedColor = newColor;
     notifyListeners();
   }
 
-  // Метод для переключения темной темы
   void toggleTheme() {
     _isDarkMode = !_isDarkMode;
     notifyListeners();

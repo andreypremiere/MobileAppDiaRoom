@@ -6,8 +6,6 @@ import '../../models/post_creator/block_photos.dart';
 import '../../models/post_creator/block_post.dart';
 import '../../models/post_creator/block_text.dart';
 
-/// Виджет панели инструментов для редактирования конкретного блока контента.
-/// Позволяет изменять тип текста или способ отображения фотографий.
 class PostToolbar extends StatelessWidget {
   final BlockPost block;
   final VoidCallback onChanged;
@@ -29,7 +27,6 @@ class PostToolbar extends StatelessWidget {
     );
   }
 
-  /// Определяет, какой набор инструментов показать в зависимости от типа [block]
   Widget _buildContent(BuildContext context) {
     if (block is BlockTextCreating) {
       return _buildTextToolbar(context, block as BlockTextCreating);
@@ -40,7 +37,6 @@ class PostToolbar extends StatelessWidget {
     return const SizedBox();
   }
 
-  /// Собирает инструменты для работы с текстовым блоком (заголовки, подзаголовки)
   Widget _buildTextToolbar(BuildContext context, BlockTextCreating textBlock) {
     return Row(
       children: [
@@ -60,7 +56,6 @@ class PostToolbar extends StatelessWidget {
     );
   }
 
-  /// Собирает инструменты для работы с блоком фотографий (сетка или карусель)
   Widget _buildPhotoToolbar(BuildContext context, BlockPhotosCreating photoBlock) {
     return Row(
       children: [
@@ -80,7 +75,6 @@ class PostToolbar extends StatelessWidget {
     );
   }
 
-  /// Универсальный компонент для выбора параметров через выпадающее меню
   Widget _buildPopupSelector<T>({
     required BuildContext context,
     required String currentLabel,
@@ -100,7 +94,6 @@ class PostToolbar extends StatelessWidget {
       offset: const Offset(0, 45),
       onSelected: onSelected,
       child: Container(
-        // width: 120,
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
         decoration: BoxDecoration(
           color: context.ui.toolbarContainerColor,

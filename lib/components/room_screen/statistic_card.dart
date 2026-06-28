@@ -1,4 +1,3 @@
-// components/room/stat_card.dart
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 

@@ -4,7 +4,7 @@ import 'package:dio/dio.dart';
 
 import 'auth_response.dart';
 
-// Метод для обработки исключений запросов
+/// Метод для обработки исключений запросов
 AuthResponse handleDioError(DioException e, String defaultMessage) {
   String message = defaultMessage;
 
@@ -26,7 +26,7 @@ AuthResponse handleDioError(DioException e, String defaultMessage) {
   );
 }
 
-// Вспомогательный метод для системных ошибок
+/// Вспомогательный метод для системных ошибок
 AuthResponse handleSystemError(Object e) {
   return AuthResponse(success: false, message: "Непредвиденная ошибка в работе приложения. Пожалуйста, сообщите в поддержку");
 }

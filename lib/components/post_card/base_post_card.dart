@@ -40,7 +40,6 @@ class BasePostCard extends StatelessWidget {
                 child: Stack(
                   children: [
                     _buildImage(context),
-                    // category != null ? _buildCategoryBadge(context) : SizedBox.shrink(),
                     if (topAction != null)
                       Positioned(
                         top: 4,
@@ -83,7 +82,6 @@ class BasePostCard extends StatelessWidget {
     );
   }
 
-  // Вспомогательные методы для чистоты кода
   Widget _buildImage(BuildContext context) {
     return CachedNetworkImage(
       imageUrl: previewUrl ?? '',

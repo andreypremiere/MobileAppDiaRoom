@@ -50,7 +50,6 @@ class _DiaryScreenState extends State<DiaryScreen> {
   final ScrollController _scrollController = ScrollController();
   final quill.QuillController _messageController = quill.QuillController.basic();
 
-  // Состояние
   final List<MessagePresentation> _messages = [];
 
   final List<SelectedMedia> _selectedMedia = [];
@@ -238,7 +237,6 @@ class _DiaryScreenState extends State<DiaryScreen> {
     if (audio != null && mounted) {
       final uploadProvider = context.read<UploadManager>();
 
-      // Снимаем фокус с клавиатуры, если он был
       FocusScope.of(context).unfocus();
 
       uploadProvider.addMessage(
@@ -266,7 +264,6 @@ class _DiaryScreenState extends State<DiaryScreen> {
 
     if (video != null && mounted) {
       final uploadProvider = context.read<UploadManager>();
-      // Снимаем фокус с клавиатуры, если он был
       FocusScope.of(context).unfocus();
 
       uploadProvider.addMessage(
@@ -289,12 +286,11 @@ class _DiaryScreenState extends State<DiaryScreen> {
   Future<void> _handleBindLink() async {
     final LinkAction? result = await showDialog<LinkAction>(
       context: context,
-      barrierDismissible: true, // Закрыть при нажатии на пустую область
+      barrierDismissible: true,
       builder: (context) => const AppEnumPicker(values: LinkAction.values),
     );
 
     if (result != null) {
-      // Обрабатываем выбор
       switch (result) {
         case LinkAction.linkWorkshop:
           if (mounted) {
@@ -460,7 +456,6 @@ class _DiaryScreenState extends State<DiaryScreen> {
   }
 
   Widget _buildBody() {
-    // СОСТОЯНИЕ ОШИБКИ (Показываем на весь экран, если загрузка не идет)
     if (_errorMessage != null && !_isLoading) {
       return Center(
         child: DiaRoomErrorView(
@@ -470,18 +465,15 @@ class _DiaryScreenState extends State<DiaryScreen> {
       );
     }
 
-    // ПЕРВОНАЧАЛЬНАЯ ЗАГРУЗКА (Экран пуст, данных еще нет, идет первый запрос)
     if (_isLoading && _messages.isEmpty) {
       return const Center(
         child: DiaRoomLoader(),
       );
     }
 
-    // ОСНОВНОЙ КОНТЕНТ (Здесь обрабатывается и пустой список, и заполненный)
     return SafeArea(
       child: Column(
         children: [
-          // Область контента (Список или заглушка "Пусто")
           Expanded(
             child: _messages.isEmpty
                 ? const Center(
@@ -494,10 +486,8 @@ class _DiaryScreenState extends State<DiaryScreen> {
               reverse: true,
               controller: _scrollController,
               padding: const EdgeInsets.all(6),
-              // Добавляем +1 к длине только если есть еще данные для пагинации
               itemCount: _messages.length + (_hasMore ? 1 : 0),
               itemBuilder: (context, index) {
-                // При reverse: true этот лоадер красиво появится на самом верху списка при скролле
                 if (index == _messages.length) {
                   return const Center(
                     child: Padding(
@@ -513,15 +503,12 @@ class _DiaryScreenState extends State<DiaryScreen> {
                   onCommentsTap: () async {
                     final currentMessage = _messages[index];
 
-                    // Переходим на созданный нами универсальный CommentsScreen
                     final int? addedCommentsCount = await context.push<int?>(
                       '/message/comments/${currentMessage.message.id}',
                     );
 
-                    // Если пользователь написал комментарии и вернулся назад
                     if (addedCommentsCount != null && addedCommentsCount > 0 && mounted) {
                       setState(() {
-                        // Прямо по ссылке инкрементируем счетчик внутри нашего массива сообщений
                         currentMessage.message.countComments += addedCommentsCount;
                       });
                     }
@@ -531,7 +518,6 @@ class _DiaryScreenState extends State<DiaryScreen> {
             ),
           ),
 
-          // Панель ввода (Остается видимой всегда, даже если сообщений нет)
           if (isMyRoom)
             DiaryInputPanel(
               controller: _messageController,

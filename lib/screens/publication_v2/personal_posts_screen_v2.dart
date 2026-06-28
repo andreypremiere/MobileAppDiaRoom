@@ -31,10 +31,8 @@ class PersonalPostsScreenV2 extends StatefulWidget {
 }
 
 class _StatePersonalPostsScreen extends State<PersonalPostsScreenV2> {
-  // Использованием типизированный список под новые модели
   List<PostResponse> _posts = [];
 
-  // Состояния пагинации (как на главной ленте)
   int _currentPage = 0;
   final int _limit = 20;
   bool _isLoading = false;
@@ -54,7 +52,6 @@ class _StatePersonalPostsScreen extends State<PersonalPostsScreenV2> {
     final myId = context.read<AuthProvider>().roomId;
     _isMyRoom = widget.roomId == myId;
 
-    // Слушатель скролла для ленивой загрузки новых страниц
     _scrollController.addListener(() {
       if (_scrollController.position.pixels >=
           _scrollController.position.maxScrollExtent - 200) {
@@ -99,18 +96,13 @@ class _StatePersonalPostsScreen extends State<PersonalPostsScreenV2> {
   }
 
   Future<void> _handleCreatePost() async {
-    // 1. Ожидаем результат с экрана создания поста
     final result = await context.push('/create_post_v2');
 
-    // 2. Проверяем, что вернулся именно объект нового поста и виджет еще в дереве
     if (result != null && result is PostResponse && mounted) {
       setState(() {
-        // 3. Вставляем новый пост на самую первую позицию (индекс 0)
         _posts.insert(0, result);
       });
 
-      // Опционально: если список был прокручен вниз, можно плавно вернуть пользователя наверх,
-      // чтобы он сразу увидел свою новую публикацию
       if (_scrollController.hasClients) {
         _scrollController.animateTo(
           0,
@@ -121,7 +113,6 @@ class _StatePersonalPostsScreen extends State<PersonalPostsScreenV2> {
     }
   }
 
-  /// Загрузка информации о чужой комнате для AppBar
   Future<void> _loadRoomInfo() async {
     if (_isLoadingRoomInfo) return;
 
@@ -138,7 +129,6 @@ class _StatePersonalPostsScreen extends State<PersonalPostsScreenV2> {
         });
       }
     } catch (e) {
-      // Ошибка обрабатывается компонентом AuthorEmptyTile
     } finally {
       if (mounted) {
         setState(() {
@@ -148,7 +138,6 @@ class _StatePersonalPostsScreen extends State<PersonalPostsScreenV2> {
     }
   }
 
-  /// Загрузка списка постов с пагинацией (Новый метод API)
   Future<void> _fetchPosts() async {
     if (_isLoading || !_hasMore) return;
 
@@ -160,7 +149,6 @@ class _StatePersonalPostsScreen extends State<PersonalPostsScreenV2> {
     }
 
     try {
-      // Вызываем переделанный метод getPostsByRoomId
       final response = await getPostsByRoomId(
         targetRoomId: widget.roomId,
         limit: _limit,
@@ -168,7 +156,6 @@ class _StatePersonalPostsScreen extends State<PersonalPostsScreenV2> {
       );
 
       if (response.success) {
-        // Маппим данные через твой кастомный PostsRoom, как в общей ленте
         final postsRoom = PostsRoom.fromMap(response.data as Map<String, dynamic>);
         final List<PostResponse> newPosts = postsRoom.posts;
 
@@ -200,7 +187,6 @@ class _StatePersonalPostsScreen extends State<PersonalPostsScreenV2> {
     }
   }
 
-  /// Обновление по свайпу (pull-to-refresh)
   Future<void> _handleRefresh() async {
     if (mounted) {
       setState(() {
@@ -253,7 +239,6 @@ class _StatePersonalPostsScreen extends State<PersonalPostsScreenV2> {
   }
 
   Widget _buildBody() {
-    // 1. Ошибка загрузки постов (когда список пуст)
     if (!_isLoading && _errorMessage != null && _posts.isEmpty) {
       return DiaRoomErrorView(
         errorMessage: _errorMessage!,
@@ -261,14 +246,12 @@ class _StatePersonalPostsScreen extends State<PersonalPostsScreenV2> {
       );
     }
 
-    // 2. Первая загрузка постов
     if (_isLoading && _posts.isEmpty) {
       return const Center(
         child: DiaRoomLoader(),
       );
     }
 
-    // 3. Данные получены, но у пользователя нет публикаций
     if (!_isLoading && _posts.isEmpty) {
       return RefreshIndicator(
         color: context.ui.primaryColor,
@@ -289,18 +272,16 @@ class _StatePersonalPostsScreen extends State<PersonalPostsScreenV2> {
       );
     }
 
-    // 4. Успешный рендер персональной ленты постов
     return RefreshIndicator(
       color: context.ui.primaryColor,
       onRefresh: _handleRefresh,
       child: ListView.separated(
-        controller: _scrollController, // Привязали контроллер для пагинации
+        controller: _scrollController,
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 0),
-        itemCount: _posts.length + 1, // +1 для нижнего лоадера пагинации или отступа
+        itemCount: _posts.length + 1,
         separatorBuilder: (context, index) => const SizedBox(height: 12),
         itemBuilder: (context, index) {
-          // Если дошли до самого низа списка
           if (index == _posts.length) {
             if (_isLoading) {
               return const Padding(
@@ -313,9 +294,6 @@ class _StatePersonalPostsScreen extends State<PersonalPostsScreenV2> {
 
           final post = _posts[index];
 
-          // Теперь вместо Own/Another используем универсальный PostCard
-          // Если внутри карточки понадобится контекстное меню удаления для автора поста,
-          // его будет проще прокинуть через callback или проверять внутри самой карточки.
           return PostManageCard(
             post: post,
             isMyPost: _isMyRoom, processAction: processAction,

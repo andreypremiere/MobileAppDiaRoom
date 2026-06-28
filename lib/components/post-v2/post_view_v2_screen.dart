@@ -5,11 +5,11 @@ import '../../api/post_v2_api.dart';
 import '../../contracts/posts_v2/responses/post_response.dart';
 import '../../components/loading_widget/error_widget.dart';
 import '../../components/loading_widget/loader_widget.dart';
-import '../../components/post-v2/card.dart'; // Твоя стандартная PostCard
+import '../../components/post-v2/card.dart';
 
 class PostViewScreen extends StatefulWidget {
   final String postId;
-  final PostResponse? post; // Необязательный объект из ленты
+  final PostResponse? post;
 
   const PostViewScreen({
     super.key,
@@ -30,12 +30,10 @@ class _PostViewScreenState extends State<PostViewScreen> {
   void initState() {
     super.initState();
 
-    // Если объект уже передан в конструктор, сразу используем его
     if (widget.post != null) {
       _post = widget.post;
       _isLoading = false;
     } else {
-      // Если объекта нет (переход по ссылке), запускаем загрузку с бэкенда
       _loadPost();
     }
   }
@@ -48,7 +46,6 @@ class _PostViewScreenState extends State<PostViewScreen> {
     });
 
     try {
-      // Запрос к бэкенду по ID
       final response = await getPostById(postId: widget.postId);
 
       if (response.success && response.data != null) {
@@ -89,10 +86,9 @@ class _PostViewScreenState extends State<PostViewScreen> {
   @override
   Widget build(BuildContext context) {
     return PopScope(
-        canPop: false, // Блокируем дефолтный поп, чтобы обработать вручную
+        canPop: false,
         onPopInvokedWithResult: (didPop, result) async {
           if (didPop) return;
-          // Возвращаем текущее состояние поста на предыдущий экран
           _handleBack(context);
         },
         child: Scaffold(

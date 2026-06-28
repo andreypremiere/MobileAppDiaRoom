@@ -20,17 +20,8 @@ class CommentInputPanel extends StatelessWidget {
         left: 12,
         right: 4,
         top: 6,
-        bottom: 6 + MediaQuery.of(context).viewInsets.bottom, // Защита от перекрытия клавиатурой
+        bottom: 6 + MediaQuery.of(context).viewInsets.bottom,
       ),
-      // decoration: BoxDecoration(
-      //   // color: context.ui.containerColor,
-      //   border: Border(
-      //     top: BorderSide(
-      //       color: context.ui.fontColorHint.withOpacity(0.1),
-      //       width: 1,
-      //     ),
-      //   ),
-      // ),
       child: SafeArea(
         top: false,
         child: Container(

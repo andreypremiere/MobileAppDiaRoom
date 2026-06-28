@@ -56,13 +56,11 @@ class _PostManageCardState extends State<PostManageCard> {
   }
 
   Future<void> _toggleLike() async {
-    if (_isLikePending) return; // Если запрос уже выполняется, игнорируем клик
+    if (_isLikePending) return;
 
-// 1. Сохраняем предыдущее состояние на случай ошибки сервера
     final bool oldIsLiked = _isLiked;
     final int oldLikesCount = _likesCount;
 
-// 2. Мгновенно обновляем UI (Optimistic UI)
     setState(() {
       _isLikePending = true;
       if (_isLiked) {
@@ -79,32 +77,27 @@ class _PostManageCardState extends State<PostManageCard> {
     try {
       final AuthResponse response;
 
-// 3. Вызываем соответствующий метод API в зависимости от СТАРОГО состояния
       if (oldIsLiked) {
         response = await unlikePost(postId: widget.post.id);
       } else {
         response = await likePost(postId: widget.post.id);
       }
 
-// 4. Проверяем успешность серверного экшена
       if (!response.success) {
-// Если сервер вернул ошибку, откатываем UI назад
         _rollbackLike(oldIsLiked, oldLikesCount, response.message ?? "Не удалось обновить лайк");
       }
     } catch (e) {
-// На случай критической ошибки сети также делаем откат
       _rollbackLike(oldIsLiked, oldLikesCount, "Проблемы с соединением");
     } finally {
       if (mounted) {
         setState(() {
-          _isLikePending = false; // Разрешаем кликать снова
+          _isLikePending = false;
         });
       }
     }
   }
 
 
-// Вспомогательный метод для отката состояния
   void _rollbackLike(bool oldIsLiked, int oldLikesCount, String errorMessage) {
     if (!mounted) return;
     setState(() {
@@ -120,11 +113,9 @@ class _PostManageCardState extends State<PostManageCard> {
   }
 
   Future<void> _showPopUpFromButton(BuildContext buttonContext) async {
-    // Находим координаты кнопки на экране
     final RenderBox renderBox = buttonContext.findRenderObject() as RenderBox;
     final Offset offset = renderBox.localToGlobal(Offset.zero);
 
-    // Формируем прямоугольник ровно под кнопкой троеточия
     final RelativeRect position = RelativeRect.fromRect(
       Rect.fromLTWH(offset.dx, offset.dy + renderBox.size.height, renderBox.size.width, 0),
       Offset.zero & MediaQuery.of(context).size,
@@ -133,7 +124,7 @@ class _PostManageCardState extends State<PostManageCard> {
     final result = await showMenu<ActionPost>(
       color: context.ui.containerColor,
       context: context,
-      position: position, // Передаем вычисленную позицию кнопки
+      position: position,
       items: ActionPost.values.map((action) {
         return PopupMenuItem<ActionPost>(
           value: action,
@@ -183,22 +174,16 @@ class _PostManageCardState extends State<PostManageCard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 1. Измененный Хедер под новый сценарий
           _buildManageHeader(),
 
-          // 2. Общая Карусель
           PostMediaCarousel(files: widget.post.files),
 
-          // 3. Панель кнопок
           _buildActionsBar(countStyle),
 
-          // 4. Общее описание
           PostDescription(description: widget.post.description),
 
-          // 5. Общие хэштеги
           PostHashtags(hashtags: widget.post.hashtags),
 
-          // 6. Ссылка на мастерскую
           PostWorkshopLink(workshopLink: widget.post.workshopLink, roomId: widget.post.roomId),
 
           PostArticleLink(articleLink: widget.post.articleLink, roomId: widget.post.roomId),
@@ -210,19 +195,17 @@ class _PostManageCardState extends State<PostManageCard> {
   }
 
   Widget _buildManageHeader() {
-    // Проверяем статус (предполагаем, что поле называется status, подставь свою переменную, если это строка или enum)
     final bool isNotPublished = widget.post.status != PostStatus.published;
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 12),
       child: Row(
         children: [
-          // Слева сверху: отображаем статус, если он не published
           if (isNotPublished)
             Text(
-              widget.post.status.name, // Например, "ЧЕРНОВИК" или "МОДЕРАЦИЯ"
+              widget.post.status.name,
               style: const TextStyle(
-                color: Colors.deepOrangeAccent, // Замени на нужный цвет из темы
+                color: Colors.deepOrangeAccent,
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
               ),
@@ -232,18 +215,14 @@ class _PostManageCardState extends State<PostManageCard> {
 
           const Spacer(),
 
-          // Справа сверху: Кнопка Поделиться
           IconButton(
             onPressed: () async {
-              // 1. Формируем ссылку и текст
               final String shareUrl = '$baseUrlClean/share/post/${widget.post.id}';
               final String shareText = 'Посмотри пост в DiaRoom! \n$shareUrl';
 
-              // 2. Высчитываем координаты для iPad
               final box = context.findRenderObject() as RenderBox?;
               final sharePositionOrigin = box != null ? box.localToGlobal(Offset.zero) & box.size : null;
 
-              // 3. Новый синтаксис share_plus 10.0+ через SharePlus.instance
               await SharePlus.instance.share(
                   ShareParams(
                       text: shareText,
@@ -257,21 +236,16 @@ class _PostManageCardState extends State<PostManageCard> {
 
           if (widget.isMyPost)
             PopupMenuButton<ActionPost>(
-              // Задаем иконку троеточия
               icon: Icon(Icons.more_vert_rounded, color: context.ui.fontColorHint),
-              // Настройка внешнего вида самого меню
               color: context.ui.containerColor,
               elevation: 4,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              // Сдвиг меню чуть ниже иконки (опционально, подгони под дизайн)
               offset: const Offset(0, 40),
 
-              // Логика выбора элемента
               onSelected: (ActionPost action) async {
                 await widget.processAction(action, widget.post);
               },
 
-              // Генерация элементов меню
               itemBuilder: (BuildContext context) {
                 return ActionPost.values.map((action) {
                   return PopupMenuItem<ActionPost>(
@@ -299,14 +273,12 @@ class _PostManageCardState extends State<PostManageCard> {
   }
 
   Widget _buildActionsBar(TextStyle countStyle) {
-    // Оставляем как в базовой карточке (лайки и комментарии)
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 2.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // Слева: Текст с датой публикации по центру высоты
           Text(
             formatSmartDate(widget.post.createdAt),
             style: TextStyle(
@@ -316,7 +288,6 @@ class _PostManageCardState extends State<PostManageCard> {
             ),
           ),
 
-          // Расталкивает левую (дату) и правую (лайки/комменты) части по краям
           const Spacer(),
           Row(
             children: [

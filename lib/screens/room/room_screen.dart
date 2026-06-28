@@ -4,7 +4,6 @@ import 'package:dia_room/screens/room/rooms_list_screen.dart';
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../api/account_api.dart';
 import '../../components/loading_widget/error_widget.dart';
@@ -12,7 +11,6 @@ import '../../components/loading_widget/loader_widget.dart';
 import '../../components/room_screen/category_chip.dart';
 import '../../components/room_screen/diary_button_widget.dart';
 import '../../components/room_screen/room_header.dart';
-import '../../components/room_screen/section_action_button.dart';
 import '../../components/room_screen/statistic_card.dart';
 import '../../utils/auth_service.dart';
 
@@ -101,7 +99,7 @@ class _RoomState extends State<RoomScreen> {
           centerTitle: false,
           title: const Text(
             "Ошибка",
-          ), // Можно оставить пустым или написать "Комната"
+          ),
         ),
         body: Center(
           child: DiaRoomErrorView(
@@ -112,16 +110,14 @@ class _RoomState extends State<RoomScreen> {
       );
     }
 
-    // ПЕРВОНАЧАЛЬНАЯ ЗАГРУЗКА: Пока данных нет, крутим лоадер
     if (_isLoading && room == null) {
       return const Scaffold(
         body: Center(
-          child: DiaRoomLoader(), // Используем фирменный лоадер из проекта
+          child: DiaRoomLoader(),
         ),
       );
     }
 
-    // ПРЕДОХРАНИТЕЛЬ: Если загрузка завершилась, но данных почему-то нет (и ошибки тоже)
     if (room == null) {
       return Scaffold(
         appBar: AppBar(
@@ -163,11 +159,9 @@ class _RoomState extends State<RoomScreen> {
                     avatarUrl: room!.avatarUrl,
                     backgroundUrl: room!.backgroundUrl,
                   ),
-                  // Основной контент под шторкой
                   Expanded(
                     child: RefreshIndicator(
                       color: context.ui.primaryColor,
-                      // Твой фирменный цвет DiaRoom
                       onRefresh: _onRefresh,
                       child: SingleChildScrollView(
                         physics: const AlwaysScrollableScrollPhysics(),
@@ -197,7 +191,6 @@ class _RoomState extends State<RoomScreen> {
                                     ),
                                     child: Padding(
                                       padding: const EdgeInsets.all(16),
-                                      // общие отступы внутри карточки
                                       child: Column(
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
@@ -230,7 +223,7 @@ class _RoomState extends State<RoomScreen> {
                                             child: GestureDetector(
                                               onTap: () async {
                                                 final idToCopy = room!
-                                                    .uniqueRoomId; // без символа @
+                                                    .uniqueRoomId;
 
                                                 await Clipboard.setData(
                                                   ClipboardData(text: idToCopy),
@@ -251,7 +244,6 @@ class _RoomState extends State<RoomScreen> {
 
                                           const SizedBox(height: 6),
 
-                                          // Кнопка "Показать описание" по центру
                                           if (room!.bio.isNotEmpty)
                                             Center(
                                               child: InkWell(
@@ -288,9 +280,6 @@ class _RoomState extends State<RoomScreen> {
                                               ),
                                             ),
 
-                                          // const SizedBox(height: 12),
-
-                                          // Само описание (выровнено слева)
                                           if (_isBioVisible &&
                                               room!.bio.isNotEmpty)
                                             Padding(
@@ -318,9 +307,7 @@ class _RoomState extends State<RoomScreen> {
                                   const SizedBox(height: 10),
                                   Row(
                                     children: [
-                                      // Виджет Подписчики
                                       Expanded(
-                                        // Expanded теперь ПРЯМОЙ потомок Row
                                         child: StatCard(
                                           value: room!.countFollowers
                                               .toString(),
@@ -368,7 +355,6 @@ class _RoomState extends State<RoomScreen> {
                                     ],
                                   ),
                                   const SizedBox(height: 10),
-                                  // Новая сетка кнопок
                                   Row(
                                     children: [
                                       Expanded(

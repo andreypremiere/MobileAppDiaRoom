@@ -1,4 +1,3 @@
-// components/room/category_chip_component.dart
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -28,23 +27,12 @@ class CategoryChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // SvgPicture.asset(
-          //   'assets/icons/$slug.svg',
-          //   width: 16,
-          //   height: 16,
-          //   // Перекрашиваем иконку в цвет текста
-          //   colorFilter: ColorFilter.mode(
-          //     context.ui.fontColorPrimary,
-          //     BlendMode.srcIn,
-          //   ),
-          // ),
-          // const SizedBox(width: 8),
           Text(
             name,
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
-              color: context.ui.fontColorPrimary, // Цвет текста из темы
+              color: context.ui.fontColorPrimary,
             ),
           ),
         ],

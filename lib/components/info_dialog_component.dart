@@ -28,7 +28,7 @@ class AppInfoDialog extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(24.0),
         child: Column(
-          mainAxisSize: MainAxisSize.min, // Окно подстраивается под контент
+          mainAxisSize: MainAxisSize.min,
           children: [
             Text(
               message,

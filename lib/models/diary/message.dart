@@ -35,26 +35,10 @@ class Message {
     required this.countComments
   });
 
-  // Map<String, dynamic> toMap() {
-  //   return {
-  //     'id': id,
-  //     'roomId': roomId,
-  //     'msgType': msgType.toJson(),
-  //     'status': status.toJson(),
-  //     'content': content,
-  //     'attachedObjectWorkshopId': attachedObjectWorkshopId,
-  //     'attachedObjectPostId': attachedObjectPostId,
-  //     'createdAt': createdAt.toIso8601String(),
-  //     'updatedAt': updatedAt.toIso8601String(),
-  //     'deletedAt': deletedAt?.toIso8601String(),
-  //   };
-  // }
-
   factory Message.fromMap(Map<String, dynamic> map) {
 
     List<dynamic>? parsedJson;
 
-    // Безопасно парсим contentJson, если он пришел от сервера
     if (map['contentJson'] != null) {
       if (map['contentJson'] is String) {
         parsedJson = jsonDecode(map['contentJson']);

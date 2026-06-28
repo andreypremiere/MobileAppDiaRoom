@@ -65,7 +65,7 @@ class PostMediaResponse {
       order: map['order'] ?? 0,
       urlSmall: map['urlSmall'] ?? '',
       urlMedium: map['urlMedium'] ?? '',
-      status: MediaStatus.fromMap(map['status']), // Твой кастомный парсинг
+      status: MediaStatus.fromMap(map['status']),
       width: map['width'] ?? 0,
       height: map['height'] ?? 0,
     );
@@ -117,7 +117,7 @@ class PostResponse {
       hashtags: List<String>.from(map['hashtags'] ?? []),
       workshopLink: map['workshopLink'] as String?,
       articleLink: map['articleLink'] as String?,
-      status: PostStatus.fromMap(map['status']), // Твой кастомный парсинг
+      status: PostStatus.fromMap(map['status']),
       createdAt: map['createdAt'] != null
           ? DateTime.parse(map['createdAt'])
           : DateTime.now(),
@@ -133,15 +133,9 @@ class PostResponse {
 
   factory PostResponse.fromPostCreateResponse(PostResponseBase postBase, StatisticResponse statistics) {
     return PostResponse(
-      // Профиля автора при создании обычно нет, оставляем null (карточка обработает)
       roomInfo: null,
-
       id: postBase.id,
-
-      // Переносим roomId из базового ответа поста.
-      // Если в PostResponseBase его нет, добавь: postBase.roomId
       roomId: '',
-
       description: postBase.description,
       hashtags: postBase.hashtags,
       workshopLink: postBase.workshopLink,
@@ -149,13 +143,9 @@ class PostResponse {
       status: postBase.status,
       createdAt: postBase.createdAt,
       files: postBase.files.map((file) => PostMediaResponse.fromMap(file.toMap())).toList(),
-
-      // Данные из объекта статистики
       likesCount: statistics.likesCount,
       viewsCount: statistics.viewsCount,
       commentsCount: statistics.commentsCount,
-
-      // Новый или только что созданный пост по умолчанию не лайкнут текущим юзером
       isLiked: false,
     );
   }

@@ -16,7 +16,6 @@ class TextBlockPost extends BlockPost {
     required this.textType,
   }) : super(type: BlockType.text);
 
-  // Статический метод для создания объекта из Map
   static TextBlockPost fromMap(Map<String, dynamic> map) {
     return TextBlockPost(
       value: map['text'] ?? 'Не удалось извлечь значение текстового блока. Это шаблонный текст.',
@@ -37,7 +36,7 @@ class BlockTextCreating extends TextBlockPost implements Validatable {
   })  : controller = controller ?? QuillController.basic(),
         focusNode = focusNode ?? FocusNode(),
         super(
-        value: '', // Родительскому классу пока передаем пустоту
+        value: '',
         textType: TextType.text,
       );
 
@@ -49,7 +48,6 @@ class BlockTextCreating extends TextBlockPost implements Validatable {
     try {
       controller.document = Document.fromJson(jsonDecode(newValue));
     } catch (_) {
-      // Защита: если передали обычную строку, просто вставляем её без стилей
       controller.document = Document()..insert(0, newValue);
     }
   }
@@ -61,7 +59,6 @@ class BlockTextCreating extends TextBlockPost implements Validatable {
 
   @override
   bool isEmpty() {
-    // Проверяем, есть ли реальный текст (убираем пробелы и переносы)
     return controller.document.toPlainText().trim().isEmpty;
   }
 }
@@ -78,9 +75,9 @@ class BlockTextUpload extends BlockUpload {
 
   Map<String, dynamic> toJson() {
     return {
-      'blockType': type.slug, // text
+      'blockType': type.slug,
       'text': text,
-      'textType': textType.slug, // Например: header, paragraph
+      'textType': textType.slug,
     };
   }
 }

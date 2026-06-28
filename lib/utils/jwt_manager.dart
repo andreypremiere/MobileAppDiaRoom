@@ -8,7 +8,6 @@ class JwtMetadata {
 }
 
 class JwtManager {
-  /// Проверка: просрочен ли токен или валиден
   static bool isTokenValid(String? token) {
     if (token == null || token.isEmpty) return false;
     try {
@@ -18,7 +17,6 @@ class JwtManager {
     }
   }
 
-  /// Извлечение данных из Payload
   static JwtMetadata? getMetadata(String token) {
     try {
       Map<String, dynamic> payload = JwtDecoder.decode(token);

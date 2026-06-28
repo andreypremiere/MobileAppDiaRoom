@@ -54,7 +54,6 @@ class PostFooter extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // const Divider(),
         if (workshopLink.isExist())
           CustomLinkButton(
             icon: Icons.burst_mode_outlined,
@@ -62,7 +61,6 @@ class PostFooter extends StatelessWidget {
             onTap: () => _handleOnTapWorkshop(context),
           ),
 
-        // Хэштеги
         if (hashtags.isNotEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -87,7 +85,6 @@ class PostFooter extends StatelessWidget {
             LikeButton(postId: postId, initialCount: likesCount),
             const SizedBox(width: 24),
 
-            // Просмотры
             Icon(
               Icons.visibility_outlined,
               size: 20,
