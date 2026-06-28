@@ -60,7 +60,6 @@ class _VideoMessageBubbleState extends State<VideoMessageBubble> {
         });
         setState(() => _isInitialized = true);
       } catch (e) {
-        debugPrint("Ошибка загрузки или кэширования видео: $e");
         return;
       }
     }

@@ -15,12 +15,15 @@ class AppTheme {
   static const Color backgroundBeige = Color(0xFFF6F5F4);
 
   static ThemeData buildTheme(Color seedColor, {bool isDark = false}) {
+    final toolbarBackgroundColor = isDark ? const Color(0xFF1E1E1E) : const Color(0xFFFFFFFF);
+
     return ThemeData(
       useMaterial3: true,
       colorScheme: ColorScheme.fromSeed(
         seedColor: seedColor,
         brightness: isDark ? Brightness.dark : Brightness.light,
         primary: seedColor,
+        surface: toolbarBackgroundColor,
       ),
       fontFamily: 'SNPro',
 
@@ -30,7 +33,34 @@ class AppTheme {
         elevation: 0,
         scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
+
+        titleTextStyle: TextStyle(
+          fontFamily: 'SNPro',
+          fontSize: 22,
+          fontWeight: FontWeight.w600,
+          color: isDark ? const Color(0xFFE0E0E0) : const Color(0xFF101010),
+        ),
       ),
+
+      menuTheme: MenuThemeData(
+        style: MenuStyle(
+          backgroundColor: WidgetStateProperty.all(toolbarBackgroundColor),
+          // Здесь же можно настроить скругление углов всего тулбара, если захочешь:
+          shape: WidgetStateProperty.all(
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+        ),
+      ),
+
+      // 2. Бэкап для выпадающих системных списков (копировать/вставить на старых инпутах)
+      popupMenuTheme: PopupMenuThemeData(
+        color: toolbarBackgroundColor,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+
+      // Исторические параметры для старых виджетов, пусть будут для надежности
+      cardColor: toolbarBackgroundColor,
+      canvasColor: toolbarBackgroundColor,
 
       textSelectionTheme: TextSelectionThemeData(
         cursorColor: const Color(0xFF101010),

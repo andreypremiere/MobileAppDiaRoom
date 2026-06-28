@@ -255,7 +255,7 @@ class CreatingPostService {
     try {
       final postCreating = {
         "title": publicationPost.title,
-        "categorySlug": publicationPost.categorySlug.slug,
+        "categorySlug": publicationPost.categorySlug?.slug,
         "hashtags": publicationPost.hashtags,
         "workshopLink": publicationPost.workshopLink.getLink(),
       };

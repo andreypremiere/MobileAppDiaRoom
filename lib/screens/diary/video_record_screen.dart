@@ -265,7 +265,7 @@ class _VideoRecordScreenState extends State<VideoRecordScreen> with WidgetsBindi
       appBar: AppBar(
         backgroundColor: context.ui.appBarColor,
         leading: AppBackButton(onPressed: () {context.pop(); DiaryUtils.deleteFile(_videoPath);},),
-        title: Text('Видеосообщение', style: TextStyle(color: context.ui.fontColorPrimary)),
+        title: Text('Видеосообщение'),
       ),
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,

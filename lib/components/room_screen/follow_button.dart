@@ -27,7 +27,6 @@ class _FollowButtonState extends State<FollowButton> {
   // Метод инициализации состояния с сервера
   Future<void> _checkFollowStatus() async {
     final result = await checkSubscription(widget.roomId);
-    print(result);
     if (result.success) {
       if (mounted) {
         setState(() {

@@ -3,14 +3,15 @@ import 'package:dia_room/components/diary/panel_link_buttons.dart';
 import 'package:dia_room/components/diary/tag_chip.dart';
 import 'package:dia_room/models/diary/tag.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_quill/flutter_quill.dart';
 import 'package:provider/provider.dart';
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:dia_room/models/diary/selected_media.dart';
 import 'package:dia_room/models/enums/diary/attachment_type.dart';
 import 'package:dia_room/services/diary/upload_manager.dart';
 
-class DiaryInputPanel extends StatelessWidget {
-  final TextEditingController controller;
+class DiaryInputPanel extends StatefulWidget {
+  final QuillController controller;
   final List<SelectedMedia> selectedMedia;
   final VoidCallback onSend;
   final Function(int) onRemoveMediaAt;
@@ -18,8 +19,10 @@ class DiaryInputPanel extends StatelessWidget {
   final Widget addMenu;
   final String? linkWorkshop;
   final String? linkPost;
+  final String? linkPostV2;
   final VoidCallback? onCloseWorkshop;
   final VoidCallback? onClosePost;
+  final VoidCallback? onClosePostV2;
   final Function(String)? onCloseTag;
 
   const DiaryInputPanel({
@@ -32,10 +35,84 @@ class DiaryInputPanel extends StatelessWidget {
     required this.selectedTags,
     this.linkWorkshop,
     this.linkPost,
+    this.linkPostV2,
     this.onCloseWorkshop,
     this.onClosePost,
+    this.onClosePostV2,
     this.onCloseTag,
   });
+
+  @override
+  State<DiaryInputPanel> createState() => _DiaryInputPanelState();
+}
+
+class _DiaryInputPanelState extends State<DiaryInputPanel> {
+  // Контроллеры теперь железно живут в State и сохраняют фокус
+  final FocusNode _focusNode = FocusNode();
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  // Методы форматирования rich-текста
+  void _toggleAttribute(Attribute attribute) {
+    final selection = widget.controller.selection;
+    if (!selection.isCollapsed) {
+      widget.controller.formatSelection(attribute);
+    }
+  }
+
+  void _clearSelectionStyles() {
+    final selection = widget.controller.selection;
+    if (!selection.isCollapsed) {
+      widget.controller.formatSelection(Attribute.clone(Attribute.bold, null));
+      widget.controller.formatSelection(Attribute.clone(Attribute.italic, null));
+      widget.controller.formatSelection(Attribute.clone(Attribute.underline, null));
+      widget.controller.formatSelection(Attribute.clone(Attribute.blockQuote, null));
+    }
+  }
+
+  void _showLinkDialog(BuildContext context, void Function() onApplied) {
+    final TextEditingController urlController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: context.ui.containerColor,
+          title: const Text('Вставить ссылку'),
+          content: TextField(
+            controller: urlController,
+            decoration: const InputDecoration(
+              hintText: 'https://example.com',
+              border: OutlineInputBorder(),
+            ),
+            keyboardType: TextInputType.url,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Отмена'),
+            ),
+            TextButton(
+              onPressed: () {
+                final text = urlController.text.trim();
+                if (text.isNotEmpty) {
+                  widget.controller.formatSelection(LinkAttribute(text));
+                }
+                Navigator.pop(context);
+                onApplied();
+              },
+              child: const Text('Применить'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -47,21 +124,20 @@ class DiaryInputPanel extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        // 1. Прогресс загрузки
         _buildUploadProgress(context, isUploading, progress),
-
-        if (linkWorkshop != null || linkPost != null)
+        if (widget.linkWorkshop != null || widget.linkPost != null || widget.linkPostV2 != null)
           AttachedLinksBlock(
-              workshopLink: linkWorkshop,
-              postLink: linkPost,
-              labelWorkshop: 'Ссылка в мастерской', labelPost: 'Ссылка в публикациях', onRemovePost: onClosePost, onRemoveWorkshop: onCloseWorkshop),
-
-        // 2. Список выбранных медиа
-        if (selectedMedia.isNotEmpty) _buildMediaPreview(context),
-
-        if (selectedTags.isNotEmpty) _buildTagsPanel(),
-
-        // 3. Поле ввода и кнопки
+              workshopLink: widget.linkWorkshop,
+              postLink: widget.linkPost,
+              postV2Link: widget.linkPostV2,
+              labelWorkshop: 'Каталог',
+              labelPost: 'Статья',
+              labelPostV2: "Публикация",
+              onRemovePost: widget.onClosePost,
+              onRemoveWorkshop: widget.onCloseWorkshop,
+              onRemovePostV2: widget.onClosePostV2),
+        if (widget.selectedMedia.isNotEmpty) _buildMediaPreview(context),
+        if (widget.selectedTags.isNotEmpty) _buildTagsPanel(),
         _buildInputRow(context, isUploading),
       ],
     );
@@ -75,13 +151,13 @@ class DiaryInputPanel extends StatelessWidget {
         scrollDirection: Axis.horizontal,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.start,
-          children: selectedTags.map((tag) {
+          children: widget.selectedTags.map((tag) {
             return Padding(
-              padding: const EdgeInsets.only(right: 8), // Расстояние между тегами
+              padding: const EdgeInsets.only(right: 8),
               child: TagChip(
                 tag: tag,
-                isSelected: true, // В этой панели они всегда "выбранные"
-                onClose: onCloseTag,
+                isSelected: true,
+                onClose: widget.onCloseTag,
               ),
             );
           }).toList(),
@@ -94,8 +170,8 @@ class DiaryInputPanel extends StatelessWidget {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
       height: isUploading ? 30 : 0,
-      clipBehavior: Clip.hardEdge,
       decoration: const BoxDecoration(),
+      clipBehavior: Clip.hardEdge,
       child: isUploading
           ? OverflowBox(
         alignment: Alignment.topCenter,
@@ -108,17 +184,12 @@ class DiaryInputPanel extends StatelessWidget {
               value: progress,
               minHeight: 4,
               backgroundColor: context.ui.containerColor,
-              valueColor: AlwaysStoppedAnimation<Color>(
-                context.ui.primaryColor,
-              ),
+              valueColor: AlwaysStoppedAnimation<Color>(context.ui.primaryColor),
             ),
             const SizedBox(height: 4),
             Text(
               "${(progress * 100).toInt()}%",
-              style: const TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.bold,
-              ),
+              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
             ),
           ],
         ),
@@ -133,9 +204,9 @@ class DiaryInputPanel extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8),
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        itemCount: selectedMedia.length,
+        itemCount: widget.selectedMedia.length,
         itemBuilder: (context, index) {
-          final media = selectedMedia[index];
+          final media = widget.selectedMedia[index];
           return Padding(
             padding: const EdgeInsets.only(right: 8),
             child: Stack(
@@ -157,7 +228,7 @@ class DiaryInputPanel extends StatelessWidget {
                 Positioned(
                   top: 2, right: 2,
                   child: GestureDetector(
-                    onTap: () => onRemoveMediaAt(index),
+                    onTap: () => widget.onRemoveMediaAt(index),
                     child: Container(
                       decoration: const BoxDecoration(color: Colors.black54, shape: BoxShape.circle),
                       child: const Icon(Icons.close, size: 16, color: Colors.white),
@@ -184,27 +255,154 @@ class DiaryInputPanel extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          addMenu, // Наше выпадающее меню
+          widget.addMenu,
           Expanded(
-            child: TextField(
-              controller: controller,
-              maxLines: 5,
-              minLines: 1,
-              style: TextStyle(color: context.ui.fontColorPrimary),
-              decoration: const InputDecoration(
-                filled: true, fillColor: Colors.transparent,
-                hintText: "Сообщение...",
-                border: InputBorder.none,
-                contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxHeight: 150),
+                child: QuillEditor(
+                  focusNode: _focusNode,
+                  scrollController: _scrollController,
+                  controller: widget.controller,
+                  config: QuillEditorConfig(
+                    placeholder: "Сообщение...",
+                    autoFocus: false,
+                    expands: false,
+                    scrollable: true,
+                    showCursor: true,
+                    enableSelectionToolbar: true,
+
+                    customStyles: DefaultStyles(
+                      // Стиль для обычного текста (абзаца)
+                      paragraph: DefaultTextBlockStyle(
+                        TextStyle(
+                          fontSize: 16, // Делаем крупнее (по дефолту обычно 14)
+                          color: context.ui.fontColorPrimary, // Твой цвет текста из темы
+                          height: 1.3, // Высота строки для красивого отображения
+                        ),
+                        const HorizontalSpacing(0, 0),
+                        const VerticalSpacing(0, 0), // Убираем дефолтные отступы между абзацами
+                        const VerticalSpacing(0, 0),
+                        null,
+                      ),
+                      // Стиль для плейсхолдера (размер должен совпадать с основным текстом)
+                      placeHolder: DefaultTextBlockStyle(
+                        TextStyle(
+                          fontSize: 16,
+                          color: context.ui.fontColorHint, // Серый цвет для подсказки
+                          height: 1.3,
+                        ),
+                        const HorizontalSpacing(0, 0),
+                        const VerticalSpacing(0, 0),
+                        const VerticalSpacing(0, 0),
+                        null,
+                      ),
+                      quote: DefaultTextBlockStyle(
+                        TextStyle(
+                          fontSize: 15, // Можно сделать чуть меньше основного текста
+                          color: context.ui.fontColorPrimary.withAlpha(220), // Слегка приглушенный цвет текста
+                          fontStyle: FontStyle.italic, // Делаем текст курсивным
+                          height: 1.4,
+                        ),
+                        const HorizontalSpacing(2, 2), // Внутренние отступы (padding) слева и справа
+                        const VerticalSpacing(8, 8),   // Отступы (margin) сверху и снизу самого блока цитаты
+                        const VerticalSpacing(6, 6),   // Внутренние отступы между строками внутри цитаты
+                        BoxDecoration(
+                          // Делаем цвет подложки чуть светлее/темнее основного фона панели
+                          // color: context.ui.containerColor.withAlpha(20).addColorMask(Colors.black, 10),
+                          // Либо можно использовать явный полупрозрачный акцентный цвет:
+                          color: context.ui.primaryColor.withAlpha(25),
+
+                          // Скругляем края (твое требование)
+                          borderRadius: BorderRadius.circular(4),
+
+                          // Кастомная граница: делаем толстую вертикальную линию только СЛЕВА
+                          border: Border(
+                            left: BorderSide(
+                              width: 4,
+                              color: context.ui.primaryColor, // Цвет вертикальной полоски (твой акцентный цвет)
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    contextMenuBuilder: (context, rawEditorState) {
+                      final selection = widget.controller.selection;
+
+                      // Если текст не выделен, показываем дефолтное меню (Вставить)
+                      if (selection.isCollapsed) {
+                        return AdaptiveTextSelectionToolbar.buttonItems(
+                          anchors: rawEditorState.contextMenuAnchors,
+                          buttonItems: rawEditorState.contextMenuButtonItems,
+                        );
+                      }
+
+                      // Если текст выделен — выкатываем кастомную панель стилей
+                      return AdaptiveTextSelectionToolbar(
+                        anchors: rawEditorState.contextMenuAnchors,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.format_bold, size: 20),
+                            onPressed: () {
+                              _toggleAttribute(Attribute.bold);
+                              rawEditorState.hideToolbar();
+                            },
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.format_italic, size: 20),
+                            onPressed: () {
+                              _toggleAttribute(Attribute.italic);
+                              rawEditorState.hideToolbar();
+                            },
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.format_underlined, size: 20),
+                            onPressed: () {
+                              _toggleAttribute(Attribute.underline);
+                              rawEditorState.hideToolbar();
+                            },
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.format_quote, size: 20),
+                            onPressed: () {
+                              _toggleAttribute(Attribute.blockQuote);
+                              rawEditorState.hideToolbar();
+                            },
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.link, size: 20, color: Colors.blue),
+                            onPressed: () {
+                              rawEditorState.hideToolbar();
+                              _showLinkDialog(context, () {
+                                rawEditorState.hideToolbar();
+                              });
+                            },
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.format_clear, size: 20, color: Colors.redAccent),
+                            onPressed: () {
+                              _clearSelectionStyles();
+                              rawEditorState.hideToolbar();
+                            },
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ),
               ),
             ),
           ),
-          ListenableBuilder( // Перерисовываем только иконку при вводе текста
-            listenable: controller,
+          ListenableBuilder(
+            listenable: widget.controller,
             builder: (context, child) {
-              final hasContent = controller.text.trim().isNotEmpty || selectedMedia.isNotEmpty;
+              final isTextEmpty = widget.controller.document.toPlainText().trim().isEmpty;
+              final hasContent = !isTextEmpty || widget.selectedMedia.isNotEmpty;
+
               return IconButton(
-                onPressed: isUploading ? null : onSend,
+                onPressed: isUploading ? null : widget.onSend,
                 icon: Icon(
                   Icons.send_rounded,
                   color: hasContent && !isUploading

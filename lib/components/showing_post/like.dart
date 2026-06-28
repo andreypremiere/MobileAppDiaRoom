@@ -43,7 +43,6 @@ class _LikeButtonState extends State<LikeButton> {
 
     final res = await toggleLike(widget.postId, _isLiked);
     if (!res.success) {
-      print("Ошибка лайка: ${res.message}");
       if (mounted) {
         setState(() {
           _isLiked = !_isLiked;

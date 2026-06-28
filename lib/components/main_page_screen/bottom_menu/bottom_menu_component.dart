@@ -38,6 +38,12 @@ class BottomMenu extends StatelessWidget {
             },
           ),
           BottomMenuItem(
+            icon: Icons.people,
+            onPressed: () {
+              context.push('/diaries');
+            },
+          ),
+          BottomMenuItem(
             icon: Icons.search_rounded,
             onPressed: () {
               context.push('/search');

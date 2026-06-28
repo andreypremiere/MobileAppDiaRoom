@@ -35,12 +35,17 @@ class ApiService {
     final HttpClient client = HttpClient(context: context);
 
     client.badCertificateCallback = (X509Certificate cert, String host, int port) {
-      // Пингуем только наш домен, для остальных (если появятся сторонние API) оставляем дефолтную проверку
+      // Если мы стучимся на локальный IP или localhost — отключаем SSL Pinning для тестов
+      if (host == 'localhost' || host == '10.0.2.2' || host.startsWith('192.168.')) {
+        return true; // Разрешаем локальный http/https без проверок
+      }
+
+      // На проде — жесткая проверка хэша
       if (host == 'diaroom.me') {
         final serverDer = cert.der;
         return _checkCertificateHash(serverDer);
       }
-      return false; // Запрещаем соединения с некорректными сертификатами на другие хосты
+      return false;
     };
     return client;
   }
@@ -59,6 +64,7 @@ class ApiService {
   }
 
   static void init(AuthProvider authProvider) {
+    print("🚀 API_SERVICE_INIT: Инициализация! baseUrl равен: '$baseUrl'");
     _dio.interceptors.clear();
     _dio.interceptors.add(QueuedInterceptorsWrapper(
       // 1. ПЕРЕД ОТПРАВКОЙ (Добавляем Access Token)
@@ -132,9 +138,25 @@ class ApiService {
       },
     ));
 
-    _dio.httpClientAdapter = IOHttpClientAdapter(
-      createHttpClient: _getSecureHttpClient,
-    );
+    // _dio.httpClientAdapter = IOHttpClientAdapter(
+    //   createHttpClient: _getSecureHttpClient,
+    // );
+
+    if (baseUrl.startsWith('https')) {
+      _dio.httpClientAdapter = IOHttpClientAdapter(
+        createHttpClient: _getSecureHttpClient,
+      );
+    } else {
+      // Для локального http используем дефолтный клиент без SSL-мусора
+      _dio.httpClientAdapter = IOHttpClientAdapter(
+        createHttpClient: () {
+          final client = HttpClient();
+          // На всякий случай разрешаем плохие сертификаты, если вдруг дернем локальный https
+          client.badCertificateCallback = (cert, host, port) => true;
+          return client;
+        },
+      );
+    }
   }
 
   // Внутренний метод для рефреша

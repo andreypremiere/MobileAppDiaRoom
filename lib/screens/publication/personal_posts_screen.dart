@@ -151,13 +151,7 @@ class _StatePersonalPostsScreen extends State<PersonalPostsScreen> {
       centerTitle: false,
       title: _isMyRoom
           ? Text(
-        'Публикации',
-        style: TextStyle(
-          color: context.ui.fontColorPrimary,
-          fontFamily: 'SNPro',
-          fontSize: 20,
-          fontWeight: FontWeight.w600,
-        ),
+        'Статьи',
       )
           : _isLoadingRoomInfo
           ? AuthorShimmerTile()
@@ -171,6 +165,9 @@ class _StatePersonalPostsScreen extends State<PersonalPostsScreen> {
           onPressed: () => context.push('/newPublicPost'),
           icon: const Icon(Icons.add_rounded, size: 34),
           color: context.ui.fontColorPrimary,
+          // onPressed: () => context.push('/create_post_v2'),
+          // icon: const Icon(Icons.add_rounded, size: 34),
+          // color: context.ui.fontColorPrimary,
         ),
       ]
           : null,
@@ -238,7 +235,7 @@ class _StatePersonalPostsScreen extends State<PersonalPostsScreen> {
               onDelete: () async {
                 final bool? confirm = await AppDialogs.showConfirmDialog(
                   context,
-                  text: "Вы уверены, что хотите удалить пост?",
+                  text: "Вы уверены, что хотите удалить статью?",
                   cancelText: "Отмена",
                   confirmText: "Удалить",
                 );
@@ -256,7 +253,7 @@ class _StatePersonalPostsScreen extends State<PersonalPostsScreen> {
                     if (context.mounted) {
                       await AppInfoDialog.show(
                         context,
-                        result.message ?? "Не удалось удалить пост.",
+                        result.message ?? "Не удалось удалить статью.",
                       );
                     }
                   }

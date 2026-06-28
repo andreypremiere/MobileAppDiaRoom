@@ -1,4 +1,5 @@
 import 'package:dia_room/components/diary/tag_chip.dart';
+import 'package:dia_room/components/info_dialog_component.dart';
 import 'package:dia_room/contracts/diary/requests/creating_tag.dart';
 import 'package:dia_room/contracts/diary/requests/updating_tag.dart';
 import 'package:dia_room/utils/app_theme.dart';
@@ -51,7 +52,9 @@ class _TagPickerSheetState extends State<TagPickerSheet> {
       final response = await createTag(tag: CreatingTag(name: _newTagController.text.trim(), color: _selectedColorValue));
 
       if (!response.success) {
-        print("Не удалось создать тег");
+        if (mounted) {
+          await AppInfoDialog.show(context, response.message ?? "Не удалось создать тег");
+        }
         return;
       }
 
@@ -69,7 +72,9 @@ class _TagPickerSheetState extends State<TagPickerSheet> {
     final response = await deleteTag(tagId: tag.id);
 
     if (!response.success) {
-      print("Не удалось удалить тег");
+      if (mounted) {
+        await AppInfoDialog.show(context, response.message ?? "Не удалось удалить тег");
+      }
       return;
     }
 
@@ -77,8 +82,10 @@ class _TagPickerSheetState extends State<TagPickerSheet> {
       _allUserTags.removeWhere((t) => t.id == tag.id);
       _tempSelected.removeWhere((t) => t.id == tag.id);
     });
-    Navigator.pop(context); // Закрыть подтверждение
-    Navigator.pop(this.context); // Закрыть основное окно редактирования
+    if (mounted) {
+      Navigator.pop(context); // Закрыть подтверждение
+      Navigator.pop(this.context); // Закрыть основное окно редактирования
+    }
   }
 
   void _showColorGridDialog({required int currentColor, required Function(int) onColorSelected}) {
@@ -230,7 +237,9 @@ class _TagPickerSheetState extends State<TagPickerSheet> {
     final response = await updateTag(tagId: tag.id, tag: UpdatingTag(name: newName, color: newColor));
 
     if (!response.success) {
-      print("Не удалось обновить тег;");
+      if (mounted) {
+        await AppInfoDialog.show(context, response.message ?? "Не удалось обновить тег");
+      }
     }
 
     final MessageTag newTag = MessageTag.fromMap(response.data);
@@ -251,7 +260,9 @@ class _TagPickerSheetState extends State<TagPickerSheet> {
 
     final response = await getTagsByRoomId(roomId: widget.roomId);
     if (!response.success) {
-      print("Ошибка при получении тегов");
+      if (mounted) {
+        await AppInfoDialog.show(context, response.message ?? "Не удалось запросить теги");
+      }
       setState(() => _isLoading = false);
       return;
     }

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:dia_room/contracts/account-microservice/requests/check_version_request.dart';
 import 'package:dia_room/contracts/room/requests/updating_avatar_request.dart';
 import 'package:dia_room/contracts/room/requests/updating_background_request.dart';
 import 'package:dia_room/contracts/room/requests/updating_categories_request.dart';
@@ -387,6 +388,18 @@ Future<AuthResponse> deleteAvatar() async {
     return AuthResponse(success: true);
   } on DioException catch (e) {
     return handleDioError(e, "Не удалось удалить аватар комнаты.");
+  } catch (e) {
+    return handleSystemError(e);
+  }
+}
+
+Future<AuthResponse> checkVersion(CheckVersionRequest request) async {
+  try {
+    final response = await ApiService.post('/account/checkVersion',
+        data: request.toMap());
+    return AuthResponse(success: true, data: response.data);
+  } on DioException catch (e) {
+    return handleDioError(e, "Ошибка проверки версии. Технические неполадки.");
   } catch (e) {
     return handleSystemError(e);
   }

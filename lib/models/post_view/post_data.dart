@@ -7,7 +7,7 @@ class PostData {
   final String postId;
   final String title;
   final String preview;
-  final Categories category;
+  final Categories? category;
   final String canvasId;
   final WorkshopLink workshopLink;
 

@@ -9,6 +9,7 @@ import 'package:dia_room/models/enums/diary/message_action.dart';
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_quill/flutter_quill.dart' as quill;
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
@@ -47,7 +48,7 @@ class DiaryScreen extends StatefulWidget {
 
 class _DiaryScreenState extends State<DiaryScreen> {
   final ScrollController _scrollController = ScrollController();
-  final TextEditingController _messageController = TextEditingController();
+  final quill.QuillController _messageController = quill.QuillController.basic();
 
   // Состояние
   final List<MessagePresentation> _messages = [];
@@ -62,6 +63,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
   bool isMyRoom = false;
   String? _linkWorkshop;
   String? _linkPost;
+  String? _linkPostV2;
 
   bool _isLoadingRoomInfo = false;
   Author? author;
@@ -187,6 +189,14 @@ class _DiaryScreenState extends State<DiaryScreen> {
     }
   }
 
+  void _handleClearPostV2() {
+    if (mounted) {
+      setState(() {
+        _linkPostV2 = null;
+      });
+    }
+  }
+
   Future<void> _actionMessage(
     MessageAction action,
     MessagePresentation message,
@@ -233,7 +243,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
 
       uploadProvider.addMessage(
         type: MessageType.voiceNote,
-        messageText: null,
+        contentJson: null,
         media: null,
         videoNote: null,
         audioNote: audio,
@@ -261,7 +271,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
 
       uploadProvider.addMessage(
         type: MessageType.videoNote,
-        messageText: null,
+        contentJson: null,
         media: null,
         videoNote: video,
         audioNote: null,
@@ -299,13 +309,24 @@ class _DiaryScreenState extends State<DiaryScreen> {
             }
           }
           break;
-        case LinkAction.linkPost:
+        case LinkAction.linkArticle:
           if (mounted) {
             final postId = await context.push<String?>('/select_post_diary');
 
             if (postId != null) {
               setState(() {
                 _linkPost = postId;
+              });
+            }
+          }
+          break;
+        case LinkAction.linkPost:
+          if (mounted) {
+            final postId = await context.push<String?>('/select_post_v2');
+
+            if (postId != null) {
+              setState(() {
+                _linkPostV2 = postId;
               });
             }
           }
@@ -318,19 +339,24 @@ class _DiaryScreenState extends State<DiaryScreen> {
     final uploader = context.read<UploadManager>();
     if (uploader.isUploading) return;
 
-    final text = _messageController.text.trim();
+    final plainText = _messageController.document.toPlainText().trim();
+
+    final List<dynamic> jsonDelta = _messageController.document.toDelta().toJson();
+
     final media = List<SelectedMedia>.from(_selectedMedia);
     final linkWorkshop = _linkWorkshop;
     final linkPost = _linkPost;
+    final linkPostV2 = _linkPostV2;
     final selectedTags = List<MessageTag>.from(_currentSelectedTags);
 
-    if (text.isEmpty && media.isEmpty) return;
+    if (plainText.isEmpty && media.isEmpty) return;
 
     _messageController.clear();
     if (mounted) {
       setState(() {
         _linkWorkshop = null;
         _linkPost = null;
+        _linkPostV2 = null;
         _selectedMedia.clear();
         _currentSelectedTags.clear();
       });
@@ -343,10 +369,11 @@ class _DiaryScreenState extends State<DiaryScreen> {
 
     uploader.addMessage(
       type: MessageType.standard,
-      messageText: text,
+      contentJson: jsonDelta,
       media: media,
       selectedTags: selectedTags,
       linkWorkshop: linkWorkshop,
+      linkPostV2: linkPostV2,
       linkPost: linkPost,
       addMessageCallback: (newMessage) {
         if (mounted) {
@@ -483,6 +510,22 @@ class _DiaryScreenState extends State<DiaryScreen> {
                 return DiaryMessageCard(
                   message: _messages[index],
                   onLongPress: isMyRoom ? _actionMessage : null,
+                  onCommentsTap: () async {
+                    final currentMessage = _messages[index];
+
+                    // Переходим на созданный нами универсальный CommentsScreen
+                    final int? addedCommentsCount = await context.push<int?>(
+                      '/message/comments/${currentMessage.message.id}',
+                    );
+
+                    // Если пользователь написал комментарии и вернулся назад
+                    if (addedCommentsCount != null && addedCommentsCount > 0 && mounted) {
+                      setState(() {
+                        // Прямо по ссылке инкрементируем счетчик внутри нашего массива сообщений
+                        currentMessage.message.countComments += addedCommentsCount;
+                      });
+                    }
+                  },
                 );
               },
             ),
@@ -502,8 +545,10 @@ class _DiaryScreenState extends State<DiaryScreen> {
               addMenu: _buildAddMenu(),
               linkPost: _linkPost,
               linkWorkshop: _linkWorkshop,
+              linkPostV2: _linkPostV2,
               onClosePost: _handleClearPost,
               onCloseWorkshop: _handleClearWorkshop,
+              onClosePostV2: _handleClearPostV2,
               selectedTags: _currentSelectedTags,
               onCloseTag: (String id) {
                 if (mounted) {

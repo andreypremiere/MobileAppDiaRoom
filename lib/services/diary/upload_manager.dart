@@ -46,10 +46,11 @@ class UploadManager extends ChangeNotifier {
 
   Future<void> addMessage({
     required MessageType type,
-    String? messageText,
+    List<dynamic>? contentJson,
     List<SelectedMedia>? media,
     VideoRecordResult? videoNote,
     String? linkWorkshop,
+    String? linkPostV2,
     List<MessageTag>? selectedTags,
     String? linkPost,
     VoiceRecordResult? audioNote,
@@ -158,17 +159,19 @@ class UploadManager extends ChangeNotifier {
           }
         }
         updateProgress(0.5);
-        if ((messageText == null || messageText.isEmpty) && attachments.isEmpty) {
-          return;
-        }
+
         // Когда прошли по списку для стандартного сообщения
         final CreatingMessage creatingMessage = CreatingMessage(
           type: type,
-          text: messageText,
+          contentJson: contentJson,
           attachments: attachments,
           workshopFolderId: linkWorkshop,
-          publicationPostId: linkPost, tags: selectedTags ?? []
+          publicationPostId: linkPost,
+          publicationPostV2Id: linkPostV2,
+          tags: selectedTags ?? []
         );
+
+        print("ContentJson: ${creatingMessage.contentJson}");
 
         updateProgress(0.6);
         // Отправка запроса

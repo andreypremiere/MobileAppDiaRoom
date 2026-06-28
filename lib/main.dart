@@ -1,11 +1,16 @@
 import 'package:dia_room/models/enums/file_type.dart';
 import 'package:dia_room/models/post_creator/post_draft.dart';
 import 'package:dia_room/screens/authorization/registration_screen.dart';
+import 'package:dia_room/screens/comments_screen.dart';
 import 'package:dia_room/screens/diary/diary_screen.dart';
+import 'package:dia_room/screens/diary/list_diaries_screen.dart';
 import 'package:dia_room/screens/diary/search_messages.dart';
 import 'package:dia_room/screens/diary/select_folder_diary.dart';
 import 'package:dia_room/screens/diary/select_post_diary.dart';
 import 'package:dia_room/screens/global_search_screen.dart';
+import 'package:dia_room/screens/main_page_v2.dart';
+import 'package:dia_room/screens/publication_v2/create_post_v2_screen.dart';
+import 'package:dia_room/screens/publication_v2/personal_posts_screen_v2.dart';
 import 'package:dia_room/screens/room/room_settings_screen.dart';
 import 'package:dia_room/screens/publication/full_image_screen.dart';
 import 'package:dia_room/screens/publication/full_video_screen.dart';
@@ -19,6 +24,7 @@ import 'package:dia_room/screens/publication/set_settings_for_post_screen.dart';
 import 'package:dia_room/screens/publication/showing_post_screen.dart';
 import 'package:dia_room/screens/authorization/verify_code_screen.dart';
 import 'package:dia_room/screens/room/settings_screen.dart';
+import 'package:dia_room/screens/version_update_screen.dart';
 import 'package:dia_room/screens/workshop/select_folder_screen.dart';
 import 'package:dia_room/screens/workshop/workshop_screen.dart';
 import 'package:dia_room/services/diary/upload_manager.dart';
@@ -27,13 +33,23 @@ import 'package:dia_room/utils/auth_service.dart';
 import 'package:dia_room/utils/dio_service.dart';
 import 'package:dia_room/utils/draft_provider.dart';
 import 'package:dia_room/utils/theme_provider.dart';
+import 'package:dia_room/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import 'components/loading_widget/loader_widget.dart';
+import 'api/diary_api.dart';
+import 'api/post_v2_api.dart';
+import 'components/diary/select_post_v2.dart';
+import 'components/post-v2/post_view_v2_screen.dart';
+import 'contracts/diary/response/comment_response.dart' as message_contract;
+import 'contracts/posts_v2/responses/comment_response.dart' as post_contract;
+import 'contracts/posts_v2/responses/post_response.dart';
 import 'models/enums/diary/search_method.dart';
+import 'models/enums/global_search/global_search_method.dart';
+import 'package:flutter_quill/flutter_quill.dart';
+import 'package:flutter_localizations/flutter_localizations.dart'; // Нужен для Global локализаций
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -44,12 +60,12 @@ void main() async {
   ApiService.init(authProvider);
   await authProvider.loadSession();
 
+  await authProvider.checkApplicationVersion();
+
   print(
     'Пользователь аутентифицирован?\nuserId: ${authProvider.userId}\nroomId: ${authProvider.roomId}\n'
     'isAuthenticated: ${authProvider.isAuthenticated}\nisConfigured: ${authProvider.isConfigured} ',
   );
-
-  print(authProvider.accessToken);
 
   runApp(
     MultiProvider(
@@ -74,6 +90,20 @@ class App extends StatelessWidget {
     final auth = context.watch<AuthProvider>();
     final themeProvider = context.watch<ThemeProvider>();
     return MaterialApp.router(
+      localizationsDelegates: const [
+        // Стандартные делегаты для работы компонентов Flutter (кнопки, даты, инпуты)
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+
+        // Делегат самого flutter_quill, который исправляет ошибку
+        FlutterQuillLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('ru', 'RU'), // Основной язык твоего приложения DiaRoom
+        Locale('en', 'US'),
+      ],
+
       builder: (context, child) {
         final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -101,6 +131,17 @@ class App extends StatelessWidget {
         redirect: (context, state) {
           final bool loggedIn = auth.isAuthenticated;
           final location = state.uri.path;
+
+          if (auth.versionStatus == 'UPDATE_CRITICAL') {
+            return '/update_critical';
+          }
+
+          if (auth.versionStatus == 'UPDATE' &&
+              !auth.isOptionalUpdateDismissed &&
+              location != '/update_optional') {
+            return '/update_optional';
+          }
+
           final publicRoutes = ['/login', '/registration', '/verifyCode'];
 
           final bool isPublicPage = publicRoutes.any(
@@ -127,11 +168,34 @@ class App extends StatelessWidget {
         },
         routes: [
           // Главный экран ленты
-          GoRoute(path: '/', builder: (context, state) => MainPageScreen()),
+          GoRoute(path: '/', builder: (context, state) => MainPageScreenV2()),
+          // GoRoute(path: '/', builder: (context, state) => QuillEditorScreen()),
+
+          GoRoute(
+            path: '/update_critical',
+            builder: (context, state) => VersionUpdateScreen(
+              message: auth.versionMessage,
+              isCritical: true,
+            ),
+          ),
+          GoRoute(
+            path: '/update_optional',
+            builder: (context, state) => VersionUpdateScreen(
+              message: auth.versionMessage,
+              isCritical: false,
+            ),
+          ),
+
           GoRoute(
             path: '/settings',
             builder: (context, state) {
               return SettingsScreen();
+            },
+          ),
+          GoRoute(
+            path: '/create_post_v2',
+            builder: (context, state) {
+              return CreateInstagramPostScreen();
             },
           ),
 
@@ -162,7 +226,22 @@ class App extends StatelessWidget {
           GoRoute(
             path: '/search',
             builder: (context, state) {
-              return GlobalSearchScreen();
+              final textParam = state.uri.queryParameters['text'];
+
+              final methodParamStr = state.uri.queryParameters['method'];
+
+              GlobalSearchMethod? methodParam;
+              if (methodParamStr != null) {
+                methodParam = GlobalSearchMethod.values.firstWhere(
+                      (e) => e.name == methodParamStr,
+                  orElse: () => GlobalSearchMethod.room,
+                );
+              }
+
+              return GlobalSearchScreen(
+                text: textParam,
+                method: methodParam,
+              );
             },
           ),
           GoRoute(
@@ -188,6 +267,11 @@ class App extends StatelessWidget {
             path: '/configureRoom',
             builder: (context, state) {
               return RoomSettingsScreen();
+            },
+          ),
+          GoRoute(path: "/diaries",
+            builder: (context, state) {
+              return DiaryListScreen();
             },
           ),
 
@@ -243,6 +327,70 @@ class App extends StatelessWidget {
               final String roomId = state.pathParameters['roomId']!;
 
               return PersonalPostsScreen(roomId: roomId);
+            },
+          ),
+          GoRoute(
+            path: '/personalRoomPostsV2/:roomId',
+            builder: (context, state) {
+              final String roomId = state.pathParameters['roomId']!;
+
+              return PersonalPostsScreenV2(roomId: roomId);
+            },
+          ),
+          GoRoute(
+            path: '/posts_v2/comments/:postId',
+            builder: (context, state) {
+              final postId = state.pathParameters['postId']!;
+              return CommentsScreen<post_contract.CommentResponse>(
+                targetId: postId,
+                fromMap: post_contract.CommentResponse.fromMap,
+                onLoadCommentsApi: ({required id, required page, required limit}) =>
+                    getComments(postId: id, page: page, limit: limit), // твой метод API для постов
+                onSendCommentApi: ({required id, required text}) =>
+                    createComment(postId: id, text: text), // твой метод API для постов
+              );
+            },
+          ),
+          GoRoute(
+            path: '/message/comments/:messageId',
+            builder: (context, state) {
+              final messageId = state.pathParameters['messageId']!;
+              return CommentsScreen<message_contract.CommentResponse>(
+                targetId: messageId,
+                fromMap: message_contract.CommentResponse.fromMap,
+                onLoadCommentsApi: ({required id, required page, required limit}) =>
+                    getMessageComments(messageId: id, page: page, limit: limit), // твой метод API для сообщений (замени имя на свое)
+                onSendCommentApi: ({required id, required text}) =>
+                    createMessageComment(messageId: id, text: text), // твой метод API для сообщений (замени имя на свое)
+              );
+            },
+          ),
+
+          GoRoute(
+            path: '/share/post/:id', // Слушаем именно браузерный путь из Gateway
+            redirect: (context, state) {
+              final postId = state.pathParameters['id'] ?? '';
+              // Мгновенно перенаправляем пользователя на твой стандартный экран
+              return '/post_v2/$postId';
+            },
+          ),
+
+          GoRoute(
+            path: '/post_v2/:id',
+            builder: (context, state) {
+              final postId = state.pathParameters['id'] ?? '';
+              final postResponse = state.extra as PostResponse?;
+
+              return PostViewScreen(
+                postId: postId,
+                post: postResponse,
+              );
+            },
+          ),
+          GoRoute(
+            path: '/select_post_v2',
+            builder: (context, state) {
+              return SelectPostV2();
             },
           ),
 
