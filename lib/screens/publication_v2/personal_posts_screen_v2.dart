@@ -234,12 +234,6 @@ class _StatePersonalPostsScreen extends State<PersonalPostsScreenV2> {
       title: _isMyRoom
           ? Text(
         'Публикации',
-        style: TextStyle(
-          color: context.ui.fontColorPrimary,
-          fontFamily: 'SNPro',
-          fontSize: 20,
-          fontWeight: FontWeight.w600,
-        ),
       )
           : _isLoadingRoomInfo
           ? const AuthorShimmerTile()

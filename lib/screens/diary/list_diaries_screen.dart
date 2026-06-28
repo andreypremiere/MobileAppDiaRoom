@@ -1,4 +1,5 @@
 import 'package:dia_room/components/general/app_back_button.dart';
+import 'package:dia_room/models/enums/diary/message_type.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../components/loading_widget/error_widget.dart';
@@ -174,7 +175,21 @@ class _DiaryListScreenState extends State<DiaryListScreen> {
         }
 
         final room = _rooms[index];
-        final String displayMessage = room.message?.content ?? "";
+
+        String displayMessage = room.message?.content ?? "";
+
+        if (displayMessage.isEmpty) {
+          if (room.message?.msgType == MessageType.voiceNote) {
+            displayMessage = "Аудиосообщение";
+          } else if (room.message?.attachedObjectPostV2Id != null ||
+              room.message?.attachedObjectPostId != null ||
+              room.message?.attachedObjectWorkshopId != null
+          ) {
+            displayMessage = "Ссылка";
+          } else if (room.message != null) {
+            displayMessage = "Медиавложения";
+          }
+        }
 
         // Потом сделать отображение видеозаметки, аудиосообщения или медиавложения
 

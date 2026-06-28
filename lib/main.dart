@@ -24,6 +24,7 @@ import 'package:dia_room/screens/publication/set_settings_for_post_screen.dart';
 import 'package:dia_room/screens/publication/showing_post_screen.dart';
 import 'package:dia_room/screens/authorization/verify_code_screen.dart';
 import 'package:dia_room/screens/room/settings_screen.dart';
+import 'package:dia_room/screens/version_update_screen.dart';
 import 'package:dia_room/screens/workshop/select_folder_screen.dart';
 import 'package:dia_room/screens/workshop/workshop_screen.dart';
 import 'package:dia_room/services/diary/upload_manager.dart';
@@ -32,6 +33,7 @@ import 'package:dia_room/utils/auth_service.dart';
 import 'package:dia_room/utils/dio_service.dart';
 import 'package:dia_room/utils/draft_provider.dart';
 import 'package:dia_room/utils/theme_provider.dart';
+import 'package:dia_room/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -39,6 +41,7 @@ import 'package:provider/provider.dart';
 
 import 'api/diary_api.dart';
 import 'api/post_v2_api.dart';
+import 'components/diary/select_post_v2.dart';
 import 'components/post-v2/post_view_v2_screen.dart';
 import 'contracts/diary/response/comment_response.dart' as message_contract;
 import 'contracts/posts_v2/responses/comment_response.dart' as post_contract;
@@ -57,12 +60,12 @@ void main() async {
   ApiService.init(authProvider);
   await authProvider.loadSession();
 
+  await authProvider.checkApplicationVersion();
+
   print(
     'Пользователь аутентифицирован?\nuserId: ${authProvider.userId}\nroomId: ${authProvider.roomId}\n'
     'isAuthenticated: ${authProvider.isAuthenticated}\nisConfigured: ${authProvider.isConfigured} ',
   );
-
-  print(authProvider.accessToken);
 
   runApp(
     MultiProvider(
@@ -128,6 +131,17 @@ class App extends StatelessWidget {
         redirect: (context, state) {
           final bool loggedIn = auth.isAuthenticated;
           final location = state.uri.path;
+
+          if (auth.versionStatus == 'UPDATE_CRITICAL') {
+            return '/update_critical';
+          }
+
+          if (auth.versionStatus == 'UPDATE' &&
+              !auth.isOptionalUpdateDismissed &&
+              location != '/update_optional') {
+            return '/update_optional';
+          }
+
           final publicRoutes = ['/login', '/registration', '/verifyCode'];
 
           final bool isPublicPage = publicRoutes.any(
@@ -156,6 +170,21 @@ class App extends StatelessWidget {
           // Главный экран ленты
           GoRoute(path: '/', builder: (context, state) => MainPageScreenV2()),
           // GoRoute(path: '/', builder: (context, state) => QuillEditorScreen()),
+
+          GoRoute(
+            path: '/update_critical',
+            builder: (context, state) => VersionUpdateScreen(
+              message: auth.versionMessage,
+              isCritical: true,
+            ),
+          ),
+          GoRoute(
+            path: '/update_optional',
+            builder: (context, state) => VersionUpdateScreen(
+              message: auth.versionMessage,
+              isCritical: false,
+            ),
+          ),
 
           GoRoute(
             path: '/settings',
@@ -338,6 +367,15 @@ class App extends StatelessWidget {
           ),
 
           GoRoute(
+            path: '/share/post/:id', // Слушаем именно браузерный путь из Gateway
+            redirect: (context, state) {
+              final postId = state.pathParameters['id'] ?? '';
+              // Мгновенно перенаправляем пользователя на твой стандартный экран
+              return '/post_v2/$postId';
+            },
+          ),
+
+          GoRoute(
             path: '/post_v2/:id',
             builder: (context, state) {
               final postId = state.pathParameters['id'] ?? '';
@@ -347,6 +385,13 @@ class App extends StatelessWidget {
                 postId: postId,
                 post: postResponse,
               );
+            },
+          ),
+
+          GoRoute(
+            path: '/select_post_v2',
+            builder: (context, state) {
+              return SelectPostV2();
             },
           ),
 

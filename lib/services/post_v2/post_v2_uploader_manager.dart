@@ -116,6 +116,7 @@ class PostV2UploaderManager {
         description: draft.description,
         hashtags: draft.hashtags,
         workshopLink: draft.workshopLinkId,
+        articleLink: draft.articleLinkId,
         files: listMediaFileItem);
 
     final response = await api.createPost(post: newPost);

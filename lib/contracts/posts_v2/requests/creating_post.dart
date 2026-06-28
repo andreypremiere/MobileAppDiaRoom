@@ -4,12 +4,14 @@ class PostCreateRequest {
   final String? description;
   final List<String> hashtags;
   final String? workshopLink; // uuid.UUID -> String?
+  final String? articleLink;
   final List<MediaFileItem> files;
 
   PostCreateRequest({
     this.description,
     required this.hashtags,
     this.workshopLink,
+    this.articleLink,
     required this.files,
   });
 
@@ -18,6 +20,7 @@ class PostCreateRequest {
       'description': description,
       'hashtags': hashtags,
       'workshopLink': workshopLink,
+      'articleLink': articleLink,
       'files': files.map((x) => x.toMap()).toList(),
     };
   }
@@ -27,6 +30,7 @@ class PostCreateRequest {
       description: map['description'] as String?,
       hashtags: List<String>.from(map['hashtags'] ?? []),
       workshopLink: map['workshopLink'] as String?,
+      articleLink: map['articleLink'] as String?,
       files: List<MediaFileItem>.from(
         (map['files'] ?? []).map((x) => MediaFileItem.fromMap(x as Map<String, dynamic>)),
       ),

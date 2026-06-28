@@ -63,6 +63,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
   bool isMyRoom = false;
   String? _linkWorkshop;
   String? _linkPost;
+  String? _linkPostV2;
 
   bool _isLoadingRoomInfo = false;
   Author? author;
@@ -188,6 +189,14 @@ class _DiaryScreenState extends State<DiaryScreen> {
     }
   }
 
+  void _handleClearPostV2() {
+    if (mounted) {
+      setState(() {
+        _linkPostV2 = null;
+      });
+    }
+  }
+
   Future<void> _actionMessage(
     MessageAction action,
     MessagePresentation message,
@@ -300,13 +309,24 @@ class _DiaryScreenState extends State<DiaryScreen> {
             }
           }
           break;
-        case LinkAction.linkPost:
+        case LinkAction.linkArticle:
           if (mounted) {
             final postId = await context.push<String?>('/select_post_diary');
 
             if (postId != null) {
               setState(() {
                 _linkPost = postId;
+              });
+            }
+          }
+          break;
+        case LinkAction.linkPost:
+          if (mounted) {
+            final postId = await context.push<String?>('/select_post_v2');
+
+            if (postId != null) {
+              setState(() {
+                _linkPostV2 = postId;
               });
             }
           }
@@ -326,6 +346,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
     final media = List<SelectedMedia>.from(_selectedMedia);
     final linkWorkshop = _linkWorkshop;
     final linkPost = _linkPost;
+    final linkPostV2 = _linkPostV2;
     final selectedTags = List<MessageTag>.from(_currentSelectedTags);
 
     if (plainText.isEmpty && media.isEmpty) return;
@@ -335,6 +356,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
       setState(() {
         _linkWorkshop = null;
         _linkPost = null;
+        _linkPostV2 = null;
         _selectedMedia.clear();
         _currentSelectedTags.clear();
       });
@@ -351,6 +373,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
       media: media,
       selectedTags: selectedTags,
       linkWorkshop: linkWorkshop,
+      linkPostV2: linkPostV2,
       linkPost: linkPost,
       addMessageCallback: (newMessage) {
         if (mounted) {
@@ -522,8 +545,10 @@ class _DiaryScreenState extends State<DiaryScreen> {
               addMenu: _buildAddMenu(),
               linkPost: _linkPost,
               linkWorkshop: _linkWorkshop,
+              linkPostV2: _linkPostV2,
               onClosePost: _handleClearPost,
               onCloseWorkshop: _handleClearWorkshop,
+              onClosePostV2: _handleClearPostV2,
               selectedTags: _currentSelectedTags,
               onCloseTag: (String id) {
                 if (mounted) {

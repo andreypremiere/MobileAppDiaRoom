@@ -76,6 +76,16 @@ class _PostViewScreenState extends State<PostViewScreen> {
     }
   }
 
+  void _handleBack(BuildContext context) {
+    final navigator = Navigator.of(context);
+
+    if (navigator.canPop()) {
+      navigator.pop(_post);
+    } else {
+      navigator.pushNamedAndRemoveUntil('/', (route) => false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return PopScope(
@@ -83,13 +93,13 @@ class _PostViewScreenState extends State<PostViewScreen> {
         onPopInvokedWithResult: (didPop, result) async {
           if (didPop) return;
           // Возвращаем текущее состояние поста на предыдущий экран
-          Navigator.of(context).pop(_post);
+          _handleBack(context);
         },
         child: Scaffold(
       appBar: AppBar(
         backgroundColor: context.ui.appBarColor,
         elevation: 0,
-        leading: AppBackButton(onPressed: () => Navigator.of(context).pop(_post),),
+        leading: AppBackButton(onPressed: () => _handleBack(context)),
       ),
       body: _isLoading
           ? const Center(child: DiaRoomLoader())

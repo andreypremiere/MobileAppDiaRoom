@@ -106,12 +106,7 @@ class _RoomListScreenState extends State<RoomListScreen> {
         elevation: 0,
         leading: AppBackButton(),
         title: Text(
-          widget.title,
-          style: TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.w600,
-            color: context.ui.fontColorPrimary,
-          ),
+          widget.title
         ),
       ),
       body: _buildBody()

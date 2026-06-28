@@ -33,6 +33,13 @@ class AppTheme {
         elevation: 0,
         scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
+
+        titleTextStyle: TextStyle(
+          fontFamily: 'SNPro',
+          fontSize: 22,
+          fontWeight: FontWeight.w600,
+          color: isDark ? const Color(0xFFE0E0E0) : const Color(0xFF101010),
+        ),
       ),
 
       menuTheme: MenuThemeData(

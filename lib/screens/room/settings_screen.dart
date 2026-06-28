@@ -285,6 +285,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _handleUpdateUniqueId(String newValue) async {
     final resultCheck = isValidRoomId(newValue);
     if (resultCheck != null) {
+      if (mounted) {
+        await AppInfoDialog.show(context, resultCheck);
+      }
       return;
     }
 
@@ -293,6 +296,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
 
     if (!response.success) {
+      if (mounted) {
+        await AppInfoDialog.show(context, response.message ?? "Не удалось обновить уникальный никнейм или неверный формат строки.");
+      }
       return;
     }
 
@@ -610,12 +616,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
         centerTitle: false,
         title: const Text(
           'Настройки',
-          style: TextStyle(
-            color: Colors.black,
-            fontWeight: FontWeight.w600,
-            fontSize: 22,
-            fontFamily: 'SNPro',
-          ),
         ),
         iconTheme: const IconThemeData(color: Colors.black),
       ),

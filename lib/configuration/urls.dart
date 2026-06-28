@@ -9,3 +9,8 @@ const String s3BaseUrl = String.fromEnvironment(
   'S3_BASE_URL',
   defaultValue: 'https://storage.yandexcloud.net/',
 );
+
+const String baseUrlClean = String.fromEnvironment(
+  'S3_BASE_URL_CLEAN',
+  defaultValue: 'https://diaroom.me',
+);

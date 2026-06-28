@@ -27,7 +27,6 @@ class _PinterestPostCardState extends State<PinterestPostCard> {
       widget.post.isLiked = oldIsLiked;
       widget.post.likesCount = oldLikesCount;
     });
-    print('⚠️ Откат лайка: $message');
   }
 
   Future<void> _toggleLike() async {
@@ -119,7 +118,6 @@ class _PinterestPostCardState extends State<PinterestPostCard> {
                       final rawUrl = file.urlSmall;
 
                       if (rawUrl == null || rawUrl.isEmpty) {
-                        print('⚠️ PinterestCard: Empty image URL for post ${widget.post.id}');
                         return Container(
                           color: Colors.grey[200],
                           child: const Icon(Icons.image_not_supported_rounded, color: Colors.grey),
@@ -142,7 +140,6 @@ class _PinterestPostCardState extends State<PinterestPostCard> {
                           ),
                         ),
                         errorWidget: (context, url, error) {
-                          print('❌ ERROR CacheImage: Failed to load $url. Error: $error');
                           return Container(
                             color: Colors.grey[200],
                             child: Column(
@@ -193,22 +190,7 @@ class _PinterestPostCardState extends State<PinterestPostCard> {
               padding: const EdgeInsets.all(8.0),
               child: Row(
                 children: [
-                  // Лайки (Работаем напрямую с widget.post)
-                  Icon(
-                    widget.post.isLiked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-                    color: widget.post.isLiked ? Colors.redAccent : context.ui.fontColorHint,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    '${widget.post.likesCount}',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: context.ui.fontColorHint,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-
+                  Spacer(),
                   // Комментарии (Работаем напрямую с widget.post)
                   Icon(
                     Icons.chat_bubble_outline_rounded,
@@ -218,6 +200,20 @@ class _PinterestPostCardState extends State<PinterestPostCard> {
                   const SizedBox(width: 4),
                   Text(
                     "${widget.post.commentsCount}",
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: context.ui.fontColorHint,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Icon(
+                    widget.post.isLiked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                    color: widget.post.isLiked ? Colors.redAccent : context.ui.fontColorHint,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    '${widget.post.likesCount}',
                     style: TextStyle(
                       fontSize: 13,
                       color: context.ui.fontColorHint,

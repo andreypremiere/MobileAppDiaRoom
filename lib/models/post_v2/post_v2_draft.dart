@@ -3,4 +3,5 @@ class PostV2Draft {
   String description = '';
   List<String> hashtags = [];
   String? workshopLinkId;
+  String? articleLinkId;
 }

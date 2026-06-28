@@ -80,6 +80,7 @@ class PostResponse {
   final String? description;
   final List<String> hashtags;
   final String? workshopLink;
+  final String? articleLink;
   final PostStatus status;
   final DateTime createdAt;
   final List<PostMediaResponse> files;
@@ -95,6 +96,7 @@ class PostResponse {
     this.description,
     required this.hashtags,
     this.workshopLink,
+    this.articleLink,
     required this.status,
     required this.createdAt,
     required this.files,
@@ -114,6 +116,7 @@ class PostResponse {
       description: map['description'] as String?,
       hashtags: List<String>.from(map['hashtags'] ?? []),
       workshopLink: map['workshopLink'] as String?,
+      articleLink: map['articleLink'] as String?,
       status: PostStatus.fromMap(map['status']), // Твой кастомный парсинг
       createdAt: map['createdAt'] != null
           ? DateTime.parse(map['createdAt'])
@@ -142,6 +145,7 @@ class PostResponse {
       description: postBase.description,
       hashtags: postBase.hashtags,
       workshopLink: postBase.workshopLink,
+      articleLink: postBase.articleLink,
       status: postBase.status,
       createdAt: postBase.createdAt,
       files: postBase.files.map((file) => PostMediaResponse.fromMap(file.toMap())).toList(),

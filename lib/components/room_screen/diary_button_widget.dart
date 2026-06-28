@@ -215,7 +215,7 @@ class _ShowcaseButtonWidgetState extends State<ShowcaseButtonWidget> {
                   Icon(Icons.featured_video_outlined, size: 36, color: context.ui.primaryColor),
                   const SizedBox(height: 12),
                   Text(
-                    'Витрина',
+                    'Публикации',
                     style: TextStyle(
                       color: context.ui.fontColorPrimary,
                       fontSize: 16,
@@ -318,14 +318,124 @@ class _WorkshopButtonWidgetState extends State<WorkshopButtonWidget> {
             child: Row(
               children: [
                 // Убрана сложная подложка, оставлена лаконичная иконка
-                Icon(Icons.storage_outlined, color: context.ui.primaryColor, size: 28),
+                Icon(Icons.burst_mode_outlined, color: context.ui.primaryColor, size: 28),
                 const SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Мастерская',
+                        'Каталоги',
+                        style: TextStyle(
+                          color: context.ui.fontColorPrimary,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      // const SizedBox(height: 6),
+                      // if (isLoading)
+                      //   const _StatShimmer(width: 120)
+                      // else if (hasError)
+                      //   Text(
+                      //     'Ошибка загрузки',
+                      //     style: TextStyle(color: Colors.redAccent.withAlpha(200), fontSize: 13),
+                      //   )
+                      // else
+                      //   Text(
+                      //     '$foldersCount папок • $valuesCount значений',
+                      //     style: TextStyle(
+                      //       color: context.ui.fontColorHint,
+                      //       fontSize: 13,
+                      //       fontWeight: FontWeight.w500,
+                      //     ),
+                      //   ),
+                    ],
+                  ),
+                ),
+                Icon(Icons.chevron_right_rounded, color: context.ui.fontColorHint),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class ArticleButtonWidget extends StatefulWidget {
+  final String roomId;
+  const ArticleButtonWidget({super.key, required this.roomId});
+
+  @override
+  State<ArticleButtonWidget> createState() => _ArticleButtonWidgetState();
+}
+
+class _ArticleButtonWidgetState extends State<ArticleButtonWidget> {
+  int? foldersCount;
+  int? valuesCount;
+  bool isLoading = true;
+  bool hasError = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // _fetchWorkshopStats();
+  }
+
+  // Future<void> _fetchWorkshopStats() async {
+  //   try {
+  //     // TODO: Твой запрос к API
+  //     await Future.delayed(const Duration(milliseconds: 2000));
+  //     if (mounted) {
+  //       setState(() {
+  //         foldersCount = 5;
+  //         valuesCount = 42;
+  //         isLoading = false;
+  //       });
+  //     }
+  //   } catch (e) {
+  //     if (mounted) {
+  //       setState(() {
+  //         isLoading = false;
+  //         hasError = true;
+  //       });
+  //     }
+  //   }
+  // }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: context.ui.containerColor, // Сплошной чистый фон
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(20),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () => context.push('/personalRoomPosts/${widget.roomId}'),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+            child: Row(
+              children: [
+                // Убрана сложная подложка, оставлена лаконичная иконка
+                Icon(Icons.article_outlined, color: context.ui.primaryColor, size: 28),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Статьи',
                         style: TextStyle(
                           color: context.ui.fontColorPrimary,
                           fontSize: 18,

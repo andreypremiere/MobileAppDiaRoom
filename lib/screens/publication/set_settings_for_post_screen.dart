@@ -83,10 +83,10 @@ class _SetSettingsForPostState extends State<SetSettingsForPostScreen> {
       return;
     }
 
-    if (widget.postDraft.category == Categories.defaultVal) {
-      AppInfoDialog.show(context, "Необходимо выбрать категорию публикации.");
-      return;
-    }
+    // if (widget.postDraft.category == Categories.defaultVal) {
+    //   AppInfoDialog.show(context, "Необходимо выбрать категорию публикации.");
+    //   return;
+    // }
 
     CreatingPostService service = CreatingPostService(post: widget.postDraft);
     service.startCreating();
@@ -176,6 +176,72 @@ class _SetSettingsForPostState extends State<SetSettingsForPostScreen> {
     );
   }
 
+  // @override
+  // Widget build(BuildContext context) {
+  //   return GestureDetector(
+  //     onTap: () => FocusScope.of(context).unfocus(),
+  //     child: Scaffold(
+  //       backgroundColor: const Color(0xFFF8F8F8),
+  //       appBar: _buildAppBar(context),
+  //       body: ListView(
+  //         padding: const EdgeInsets.all(16),
+  //         children: [
+  //           _buildSectionTitle("Название"),
+  //           // Название поста
+  //           _buildCustomField(
+  //             controller: _namePostController,
+  //             // hint: 'Название поста',
+  //           ),
+  //
+  //           const SizedBox(height: 20),
+  //           _buildSectionTitle("Превью"),
+  //           const SizedBox(height: 8),
+  //           _buildImagePicker(),
+  //
+  //           // const SizedBox(height: 24),
+  //           // _buildSectionTitle("Категория"),
+  //           // const SizedBox(height: 8),
+  //           // _buildCategorySelector(),
+  //           //
+  //           // const SizedBox(height: 24),
+  //           // _buildSectionTitle("Хештеги"),
+  //           // const SizedBox(height: 8),
+  //           // _buildTagsDisplay(),
+  //           //
+  //           // TextField(
+  //           //   controller: _tagsController,
+  //           //   onChanged: _handleTagInput, // Привязываем обработчик
+  //           //   style: const TextStyle(fontFamily: 'SNPro', fontSize: 16),
+  //           //   decoration: InputDecoration(
+  //           //     hintText: 'Введите тег и нажмите пробел...',
+  //           //     filled: true,
+  //           //     fillColor: Colors.white,
+  //           //     contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+  //           //     enabledBorder: OutlineInputBorder(
+  //           //       borderRadius: BorderRadius.circular(12),
+  //           //       borderSide: const BorderSide(color: Color(0xFFD1D1D1)),
+  //           //     ),
+  //           //     focusedBorder: OutlineInputBorder(
+  //           //       borderRadius: BorderRadius.circular(12),
+  //           //       borderSide: const BorderSide(color: Color(0xFFB4B4B4), width: 1.5),
+  //           //     ),
+  //           //   ),
+  //           // ),
+  //           //
+  //           // const SizedBox(height: 24),
+  //           // _buildSectionTitle("Ссылка на мастерскую"),
+  //           // const SizedBox(height: 8),
+  //           // _buildWorkShopBinding(),
+  //
+  //           const Spacer(),
+  //           _buildPublishButton(),
+  //           SizedBox(height: MediaQuery.of(context).padding.bottom,)
+  //         ],
+  //       ),
+  //     ),
+  //   );
+  // }
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -183,60 +249,42 @@ class _SetSettingsForPostState extends State<SetSettingsForPostScreen> {
       child: Scaffold(
         backgroundColor: const Color(0xFFF8F8F8),
         appBar: _buildAppBar(context),
-        body: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            _buildSectionTitle("Название"),
-            // Название поста
-            _buildCustomField(
-              controller: _namePostController,
-              // hint: 'Название поста',
-            ),
+        body: SafeArea(
+          child: CustomScrollView(
+            slivers: [
+              SliverPadding(
+                padding: const EdgeInsets.all(16),
+                sliver: SliverList(
+                  delegate: SliverChildListDelegate([
+                    _buildSectionTitle("Название"),
+                    const SizedBox(height: 8),
+                    _buildCustomField(
+                      controller: _namePostController,
+                    ),
 
-            const SizedBox(height: 20),
-            _buildSectionTitle("Превью"),
-            const SizedBox(height: 8),
-            _buildImagePicker(),
+                    const SizedBox(height: 20),
+                    _buildSectionTitle("Превью"),
+                    const SizedBox(height: 8),
+                    _buildImagePicker(),
 
-            const SizedBox(height: 24),
-            _buildSectionTitle("Категория"),
-            const SizedBox(height: 8),
-            _buildCategorySelector(),
-
-            const SizedBox(height: 24),
-            _buildSectionTitle("Хештеги"),
-            const SizedBox(height: 8),
-            _buildTagsDisplay(),
-
-            TextField(
-              controller: _tagsController,
-              onChanged: _handleTagInput, // Привязываем обработчик
-              style: const TextStyle(fontFamily: 'SNPro', fontSize: 16),
-              decoration: InputDecoration(
-                hintText: 'Введите тег и нажмите пробел...',
-                filled: true,
-                fillColor: Colors.white,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: Color(0xFFD1D1D1)),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: Color(0xFFB4B4B4), width: 1.5),
+                  ]),
                 ),
               ),
-            ),
-
-            const SizedBox(height: 24),
-            _buildSectionTitle("Ссылка на мастерскую"),
-            const SizedBox(height: 8),
-            _buildWorkShopBinding(),
-
-            const SizedBox(height: 40),
-            _buildPublishButton(),
-            SizedBox(height: MediaQuery.of(context).padding.bottom,)
-          ],
+              // Магия здесь: заполняет оставшееся пространство экрана
+              SliverFillRemaining(
+                hasScrollBody: false, // Важно! Позволяет внутреннему Column не ломать скролл
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.end, // Прижимает контент к низу
+                    children: [
+                      _buildPublishButton(),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -250,11 +298,7 @@ class _SetSettingsForPostState extends State<SetSettingsForPostScreen> {
       elevation: 0,
       leading: const AppBackButton(),
       title: const Text(
-        'Настройки публикации',
-        style: TextStyle(
-          fontWeight: FontWeight.w600,
-          fontSize: 22,
-        ),
+        'Настройка',
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       ),
@@ -376,39 +420,39 @@ class _SetSettingsForPostState extends State<SetSettingsForPostScreen> {
     );
   }
 
-  Widget _buildCategorySelector() {
-    return InkWell(
-      onTap: _showCategoryDialog,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0xFFD1D1D1)),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              // Если категория дефолтная — пишем заглушку, иначе — её название
-              widget.postDraft.category == Categories.defaultVal
-                  ? "Выберите категорию..."
-                  : widget.postDraft.category.label,
-              style: TextStyle(
-                fontFamily: 'SNPro',
-                fontSize: 16,
-                color: widget.postDraft.category == Categories.defaultVal
-                    ? Colors.black26
-                    : Colors.black,
-              ),
-            ),
-            const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
-          ],
-        ),
-      ),
-    );
-  }
+  // Widget _buildCategorySelector() {
+  //   return InkWell(
+  //     onTap: _showCategoryDialog,
+  //     borderRadius: BorderRadius.circular(12),
+  //     child: Container(
+  //       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+  //       decoration: BoxDecoration(
+  //         color: Colors.white,
+  //         borderRadius: BorderRadius.circular(12),
+  //         border: Border.all(color: const Color(0xFFD1D1D1)),
+  //       ),
+  //       child: Row(
+  //         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //         children: [
+  //           Text(
+  //             // Если категория дефолтная — пишем заглушку, иначе — её название
+  //             widget.postDraft.category == Categories.defaultVal
+  //                 ? "Выберите категорию..."
+  //                 : widget.postDraft.category.label,
+  //             style: TextStyle(
+  //               fontFamily: 'SNPro',
+  //               fontSize: 16,
+  //               color: widget.postDraft.category == Categories.defaultVal
+  //                   ? Colors.black26
+  //                   : Colors.black,
+  //             ),
+  //           ),
+  //           const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
+  //         ],
+  //       ),
+  //     ),
+  //   );
+  // }
 
   void _showCategoryDialog() {
     // Прячем клавиатуру перед открытием диалога, чтобы UI не прыгал

@@ -202,15 +202,14 @@ class _StateMainPageScreen extends State<MainPageScreenV2> {
               slivers: [
                 SliverAppBar(
                   backgroundColor: context.ui.appBarColor,
-                  floating: true, // Скрывается при скролле вниз, появляется при скролле вверх
+                  floating: false, // Скрывается при скролле вниз, появляется при скролле вверх
                   title: Text(
                     'Главная',
-                    style: TextStyle(color: context.ui.fontColorPrimary),
                   ),
                   actions: [
                     IconButton(
                       icon: Icon(
-                        _isPinterestView ? Icons.view_agenda_rounded : Icons.grid_view_rounded,
+                        _isPinterestView ? Icons.view_agenda_outlined : Icons.grid_view_outlined,
                         color: context.ui.iconColorPrimary,
                       ),
                       onPressed: () {

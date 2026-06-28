@@ -1,8 +1,9 @@
 // Функция для создания полного пути из базового url и postfix
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-
+import 'package:package_info_plus/package_info_plus.dart';
 import '../configuration/urls.dart';
+import '../contracts/account-microservice/requests/check_version_request.dart';
 
 String createFullPathAvatar(String prefix, String postfix) {
   return "$prefix/$postfix";
@@ -98,4 +99,12 @@ String formatSmartDate(DateTime date) {
     // Для старых дат выводим день и время
     return "$timePart · ${DateFormat('dd.MM.yy').format(localDate)}";
   }
+}
+
+Future<CheckVersionRequest> getAppVersionRequest() async {
+  PackageInfo packageInfo = await PackageInfo.fromPlatform();
+  return CheckVersionRequest(
+    version: packageInfo.version,
+    numberBuild: packageInfo.buildNumber,
+  );
 }

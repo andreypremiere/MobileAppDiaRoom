@@ -1,17 +1,19 @@
+import 'package:dia_room/components/post-v2/post_article_link.dart';
 import 'package:dia_room/components/post-v2/post_description.dart';
 import 'package:dia_room/components/post-v2/post_hashtags.dart';
 import 'package:dia_room/components/post-v2/post_media_carousel.dart';
 import 'package:dia_room/components/post-v2/post_workshop_link.dart';
+import 'package:dia_room/configuration/urls.dart';
 import 'package:dia_room/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-
 import '../../api/auth_response.dart';
 import '../../api/post_v2_api.dart';
 import '../../contracts/posts_v2/responses/post_response.dart';
 import '../../models/post_view/author.dart';
 import '../../utils/utils.dart';
 import '../general/author_tile_appbar/author_tile.dart';
+import 'package:share_plus/share_plus.dart';
 
 class PostCard extends StatefulWidget {
   final PostResponse post;
@@ -128,6 +130,7 @@ class _PostCardState extends State<PostCard> {
           PostDescription(description: widget.post.description), // Используем общий виджет
           PostHashtags(hashtags: widget.post.hashtags), // Используем общий виджет
           PostWorkshopLink(workshopLink: widget.post.workshopLink, roomId: widget.post.roomId), // Используем общий виджет
+          PostArticleLink(articleLink: widget.post.articleLink, roomId: widget.post.roomId),
           const SizedBox(height: 6),
         ],
       ),
@@ -145,8 +148,23 @@ class _PostCardState extends State<PostCard> {
             onTap: () => context.push("/room/${author.roomId}"),),
           Spacer(),
           IconButton(
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Поделиться (заглушка)")));
+            onPressed: () async {
+              // 1. Формируем ссылку и текст
+              final String shareUrl = '$baseUrlClean/share/post/${widget.post.id}';
+              final String shareText = 'Посмотри пост в DiaRoom! \n$shareUrl';
+
+              // 2. Высчитываем координаты для iPad
+              final box = context.findRenderObject() as RenderBox?;
+              final sharePositionOrigin = box != null ? box.localToGlobal(Offset.zero) & box.size : null;
+
+              // 3. Новый синтаксис share_plus 10.0+ через SharePlus.instance
+              await SharePlus.instance.share(
+                ShareParams(
+                  text: shareText,
+                  subject: 'Пост из социальной сети DiaRoom',
+                  sharePositionOrigin: sharePositionOrigin
+                )
+              );
             },
             icon: Icon(Icons.share_outlined, color: context.ui.fontColorHint),
           ),

@@ -8,6 +8,7 @@ class CreatingMessage {
   final List<AttachmentCreating> attachments;
   final String? workshopFolderId;
   final String? publicationPostId;
+  final String? publicationPostV2Id;
   final List<MessageTag> tags;
 
   CreatingMessage({
@@ -16,6 +17,7 @@ class CreatingMessage {
     this.attachments = const [],
     this.workshopFolderId,
     this.publicationPostId,
+    this.publicationPostV2Id,
     required this.tags,
   });
 
@@ -26,6 +28,7 @@ class CreatingMessage {
       'attachments': attachments.map((x) => x.toMap()).toList(),
       'workshopFolderId': workshopFolderId,
       'publicationPostId': publicationPostId,
+      'publicationPostV2Id': publicationPostV2Id,
       'tags': tags.map((x) => x.toMap()).toList()
     };
   }
