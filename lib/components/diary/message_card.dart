@@ -85,7 +85,6 @@ class DiaryMessageCard extends StatelessWidget {
     );
 
     if (result != null) {
-      print('Выбрано действие: ${result.label}');
       await onLongPress!(result, message);
     }
   }
@@ -112,7 +111,6 @@ class DiaryMessageCard extends StatelessWidget {
   }
 
   void _handleOnTapWorkshop(BuildContext context) {
-    print('Там по мастерской');
     final workshopId = message.message.attachedObjectWorkshopId;
     final roomId = message.message.roomId;
 
@@ -127,7 +125,6 @@ class DiaryMessageCard extends StatelessWidget {
   }
 
   void _handleOnTapPost(BuildContext context) {
-    print('Там по посту');
     final postId = message.message.attachedObjectPostId;
     if (postId == null) return;
     final String path = "/showPost/${message.message.roomId}/$postId";

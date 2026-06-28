@@ -10,6 +10,7 @@ import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../api/auth_response.dart';
 import '../../api/post_v2_api.dart';
+import '../../configuration/urls.dart';
 import '../../contracts/posts_v2/responses/post_response.dart';
 import '../../utils/app_theme.dart';
 import '../../utils/utils.dart';
@@ -153,7 +154,6 @@ class _PostManageCardState extends State<PostManageCard> {
     );
 
     if (result != null && mounted) {
-      print('Выбрано действие: ${result.name}');
       await widget.processAction(result, widget.post);
     }
   }
@@ -235,7 +235,7 @@ class _PostManageCardState extends State<PostManageCard> {
           IconButton(
             onPressed: () async {
               // 1. Формируем ссылку и текст
-              final String shareUrl = 'https://diaroom.me/share/post/${widget.post.id}';
+              final String shareUrl = '$baseUrlClean/share/post/${widget.post.id}';
               final String shareText = 'Посмотри пост в DiaRoom! \n$shareUrl';
 
               // 2. Высчитываем координаты для iPad
@@ -267,7 +267,6 @@ class _PostManageCardState extends State<PostManageCard> {
 
               // Логика выбора элемента
               onSelected: (ActionPost action) async {
-                print('Выбрано действие: ${action.name}');
                 await widget.processAction(action, widget.post);
               },
 

@@ -33,7 +33,6 @@ Future<bool> uploadSingleMediaFile(String filePath, String presignedUrl, String 
     final res = await ApiService.putBinaryFile(url: presignedUrl, file: file, contentType: contentType);
     return res.statusCode == 200 || res.statusCode == 201;
   } catch (e) {
-    print('Ошибка загрузки: $e');
     return false;
   }
 }

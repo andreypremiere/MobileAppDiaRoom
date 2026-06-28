@@ -151,7 +151,7 @@ class _PostCardState extends State<PostCard> {
           IconButton(
             onPressed: () async {
               // 1. Формируем ссылку и текст
-              final String shareUrl = 'https://diaroom.me/share/post/${widget.post.id}';
+              final String shareUrl = '$baseUrlClean/share/post/${widget.post.id}';
               final String shareText = 'Посмотри пост в DiaRoom! \n$shareUrl';
 
               // 2. Высчитываем координаты для iPad

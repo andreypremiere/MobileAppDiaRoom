@@ -54,7 +54,6 @@ class SelectablePostCard extends StatelessWidget {
                   ),
                 ),
                 errorWidget: (context, url, error) {
-                  print('❌ ERROR CacheImage: Failed to load $url. Error: $error');
                   return Container(
                     color: Colors.grey[200],
                     child: const Icon(Icons.broken_image_rounded, color: Colors.grey),

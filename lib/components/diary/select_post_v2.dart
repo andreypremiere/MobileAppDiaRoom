@@ -96,7 +96,6 @@ class _StateSelectPostV2 extends State<SelectPostV2> {
 
       if (response.success) {
         final postsRoom = PostsRoom.fromMap(response.data as Map<String, dynamic>);
-        print('postsRoom: ${postsRoom.posts.length}');
         final List<PostResponse> allPosts = postsRoom.posts;
 
         // Фильтруем публикации
